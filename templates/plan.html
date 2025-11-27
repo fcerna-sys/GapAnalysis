@@ -37,7 +37,7 @@
     {% endwith %}
     <div class="header">
       <h1>Plan inferido: {{ plan.title }}</h1>
-      <form action="/convert" method="post">
+      <form action="/start_convert" method="post">
         <input type="hidden" name="batch_id" value="{{ batch_id }}" />
         <input type="hidden" name="google_api_key" value="{{ google_api_key }}" />
         <input type="hidden" name="enable_slicing" value="{{ enable_slicing }}" />

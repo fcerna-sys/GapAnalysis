@@ -1,183 +1,817 @@
-Guía de WordPress 6.8 para desarrolladores
-29/04/2025  ·  Actualizado el 05/11/2025  ·  12 min de lectura
+Base de Conocimiento Técnica de WordPress (v6.8+) - Parte 1 y 2
 
-PUBLICADO POR
+Contexto: Esta guía está optimizada para Modelos de Lenguaje (LLMs) que generan código para temas de WordPress basados en bloques (Block Themes). Se enfoca en la arquitectura moderna (FSE), theme.json v3, y las APIs introducidas hasta WordPress 6.8.
 
-Imagen del autor
-Alvaro Gómez
+PARTE 1: Arquitectura Fundamental y Paradigma FSE
 
-Álvaro es conocido por sus habilidades para copiar y pegar código, una actividad en la que ha prosperado —y fracasado— desde finales de la década de 1990. Tras muchos años creando sitios en WordPress como profesional independiente y más tarde con su propia agencia, GIGA4, Álvaro trabaja actualmente como embajador de producto de WordPress.com en Automattic. Bilbaíno y padre de Julia y Clara
-ARTÍCULOS RELACIONADOS
+1.1. El Cambio de Paradigma: De Clásico a Bloques
 
-Optimización y limpieza avanzada de la base de datos para un WordPress saneado
-Carlos Longarela
+Tradicionalmente, WordPress usaba PHP para renderizar el DOM en el servidor (the_content()). En la era moderna (Full Site Editing o FSE), WordPress opera como un sistema híbrido:
 
-Conoce los modelos de WordPress Studio 1.6.0
-Magdalena Oliva
+El Editor (Gutenberg): Es una aplicación React (SPA) que manipula un árbol de objetos JSON (los bloques).
 
-WordPress 6.8, nombre en clave «Cecil», incluye un montón de nuevos caramelitos para desarrolladores. Esta actualización afecta a muchas secciones del código del núcleo de WordPress, incluyendo la biblioteca de bloques completa, el rendimiento y los patrones. Además, hay también gran cantidad de mejoras en la calidad de la experiencia a la hora de crear plugins y temas.
+El Frontend: Renderiza estos bloques convirtiendo la serialización HTML (comentarios <!-- wp:bloque -->) en marcado final.
 
-¡Vamos a verlas!
+Diferencia Crítica para la IA:
 
-Si quieres consultar información más detallada de cada cambio, échale un vistazo a la WordPress 6.8 Field Guide oficial del blog Make WordPress Core.
+Tema Clásico: Depende de header.php, footer.php, y el Loop de PHP. (Obsoleto para este propósito).
 
-Registro de tipos de bloques más eficiente
-Secciones en el libro de estilos
-Actualizaciones en la biblioteca de bloques
-Herramientas de diseño en más bloques
-Organización de patrones
-Actualizaciones de la API
-Seguridad: uso de bcrypt para el hash de contraseñas
-Mejoras de rendimiento
-Y tú, ¿qué vas a crear con WordPress 6.8?
-Registro de tipos de bloques más eficiente
-En la versión 6.8 de WordPress se ha eliminado la necesidad de registrar manualmente los tipos de bloques gracias a la nueva función wp_​register_​block_​types_​from_metadata_collection(). Es un wrapper del archivo blocks-manifest.php y la función wp_register_block_metadata_collection() que se introdujeron en la versión 6.7.
+Tema de Bloques: Depende de theme.json y plantillas HTML puras con gramática de bloques. Este es el objetivo de la app.
 
-Como todos los datos de los bloques se almacenan en PHP en blocks-manifest.php, puedes registrar todos los tipos de bloques de tu plugin sin tener que leer archivos JSON individuales. En general, es una forma más eficiente de registrar los tipos de bloques. Y sí, ¡también lo puedes usar para registrar un tipo de bloque único!
+1.2. Gramática de Bloques (The Block Grammar)
 
-En WordPress 6.8, puedes registrar todos tus tipos de bloques con esta llamada:
+El "código fuente" de un post o plantilla en FSE no es PHP, es HTML con anotaciones JSON.
 
-1
-2
-3
-4
-wp_register_block_types_from_metadata_collection(
-    __DIR__ . '/build',
-    __DIR__ . '/build/blocks-manifest.php'
+Sintaxis Estricta:
+
+<!-- wp:namespace/block-name {"atributo":"valor"} -->
+<etiqueta-html>Contenido visual de fallback</etiqueta-html>
+<!-- /wp:namespace/block-name -->
+
+
+Namespace: Usualmente core para nativos o img2html para patrones propios.
+
+Atributos JSON: Controlan el comportamiento y estilo. Deben ser JSON válido estricto.
+
+Self-closing: Bloques dinámicos o vacíos se cierran en la misma línea: <!-- wp:site-title /-->.
+
+1.3. Novedades Críticas en WordPress 6.8 (Referencia: docs/wordpress.md)
+
+La IA debe priorizar estas implementaciones sobre métodos antiguos:
+
+Registro de Bloques: Usar wp_register_block_types_from_metadata_collection() leyendo un manifiesto PHP (blocks-manifest.php), en lugar de registrar JSONs individuales.
+
+Interactivity API: Usar directivas como data-wp-interactive y data-wp-bind para interactividad (acordeones, menús), evitando jQuery o JS vanilla disperso.
+
+Block Hooks: Inserción automática de bloques en posiciones específicas (ej: un CTA después del contenido) sin editar la plantilla, compatible con patrones sincronizados.
+
+Librería de Fuentes: Definición de fontFamilies en theme.json que se vinculan automáticamente a la API de Webfonts.
+
+PARTE 2: Anatomía de Archivos de un Tema de Bloques
+
+Un tema moderno no requiere PHP para la presentación visual. La estructura de directorios es estricta y semántica.
+
+2.1. Archivos Raíz Obligatorios
+
+style.css: Solo contiene la cabecera de metadatos (Nombre, Autor, Versión). No debe contener CSS de estilos globales (eso va en theme.json).
+
+theme.json: El cerebro del tema. Define variables CSS, configuraciones de editor y estilos por defecto. (Se detallará en Partes futuras).
+
+index.php: Archivo silenciador. Puede estar vacío o tener un comentario <?php // Silence is golden. No se usa para renderizar.
+
+functions.php: Solo para lógica de servidor (hooks, registro de patrones, soporte de temas).
+
+2.2. Directorios Estándar
+
+La IA debe colocar los archivos generados en estas rutas exactas para que WordPress los reconozca automáticamente (Auto-discovery).
+
+/templates: Archivos .html que definen la estructura de páginas completas.
+
+index.html: Plantilla base obligatoria.
+
+single.html: Para entradas individuales.
+
+page.html: Para páginas estáticas.
+
+404.html: Página de error.
+
+archive.html: Listados de posts.
+
+/parts: Archivos .html para secciones reutilizables (Template Parts).
+
+header.html
+
+footer.html
+
+sidebar.html
+
+Nota: Se referencian en las plantillas como <!-- wp:template-part {"slug":"header"} /-->.
+
+/patterns: Archivos .php (recomendado en 6.8 para registro automático) o .html que contienen agrupaciones de bloques prediseñados.
+
+La IA debe usar esto para secciones complejas inferidas del diseño (ej: hero.html, pricing-table.html).
+
+En WP 6.8, se pueden organizar en subcarpetas (ej: /patterns/header/, /patterns/query/).
+
+/styles: Variaciones de estilo globales (JSONs alternativos).
+
+Ej: dark.json, high-contrast.json. Permiten cambiar toda la paleta y tipografía con un clic.
+
+2.3. Jerarquía de Plantillas (Template Hierarchy)
+
+La IA debe decidir qué archivo crear según el contenido detectado:
+
+Si ve un diseño de "Lista de productos" -> templates/archive-product.html (si es WooCommerce) o archive.html.
+
+Si ve un diseño de "Artículo de blog" -> templates/single.html.
+
+Si ve la "Portada" -> templates/front-page.html (tiene prioridad sobre home.html e index.html).
+
+2.4. Mapeo de Assets (Imágenes/CSS/JS)
+
+Imágenes: Deben ir en /assets/images/.
+
+Uso en tema: No se pueden enlazar directamente en HTML estático fácilmente. Se recomienda usarlas dentro de patrones PHP usando get_theme_file_uri(), o como patrones de bloques donde la imagen se sube a la librería de medios al importar.
+
+CSS Adicional: /assets/css/blocks.css.
+
+Se encola en functions.php usando wp_enqueue_scripts.
+
+Regla de Oro: Usar solo para lo que theme.json no puede hacer (ej: media queries complejas, pseudo-elementos avanzados).
+
+PARTE 3: El Cerebro - Deep Dive en theme.json v3
+
+El archivo theme.json no es solo configuración; es el generador de CSS del sitio. La IA debe entender que cualquier estilo definido aquí se convierte automáticamente en clases y variables CSS en el frontend.
+
+3.1. Estructura de Alto Nivel
+
+El esquema v3 (obligatorio para WP 6.6+) divide la lógica en dos grandes ramas:
+
+settings: "Lo que el usuario PUEDE hacer". Define la paleta, fuentes disponibles, y habilita/deshabilita controles en el editor.
+
+styles: "Lo que el sitio ES por defecto". Aplica los colores y fuentes definidos en settings a elementos específicos.
+
+Regla de Oro para la IA: Nunca aplicar un estilo en styles (ej: color: #ff0000) sin antes haber definido ese valor como un token en settings (ej: palette: "primary").
+
+3.2. La "Magic Key": appearanceTools
+
+La IA siempre debe incluir "appearanceTools": true dentro de settings.
+
+Efecto: Habilita automáticamente controles de borde, color, espaciado, tipografía y sombras para todos los bloques que lo soporten.
+
+Por qué: Evita tener que declarar soporte bloque por bloque (border: true, margin: true, etc.). Ahorra tokens y reduce errores.
+
+3.3. CSS Personalizado y Elementos
+
+Si la IA detecta un diseño que no se puede replicar con propiedades estándar (ej: un botón con clip-path), debe usar la propiedad css dentro de theme.json en lugar de style.css.
+
+"styles": {
+    "blocks": {
+        "core/button": {
+            "css": "& { clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%); }"
+        }
+    }
+}
+
+
+PARTE 4: Sistemas de Diseño - Color y Tipografía (Tokenización)
+
+La IA debe actuar como un "Tokenizador". No debe usar valores hardcoded (#000) en las plantillas HTML. Debe usar referencias a variables.
+
+4.1. Paleta de Colores Semántica
+
+La IA debe extraer los colores de la imagen y asignarlos a slugs semánticos, no descriptivos.
+
+MAL: slug: "blue-dark"
+
+BIEN: slug: "primary"
+
+Sintaxis de Referencia:
+Cuando la IA genere HTML para un patrón, debe usar la clase de utilidad, no estilos inline.
+
+Definición en theme.json: palette: [{ "slug": "primary", "color": "#3b82f6" }]
+
+Uso en HTML: <h2 class="has-primary-color has-text-color">
+
+Uso en CSS/JSON: var(--wp--preset--color--primary)
+
+4.2. Tipografía y Webfonts API (WP 6.8)
+
+WordPress 6.8 gestiona las fuentes localmente para GDPR/performance. La IA debe definir las fuentes en theme.json y WordPress descargará los archivos si se registran correctamente.
+
+Estructura de fontFamilies:
+
+"typography": {
+    "fontFamilies": [
+        {
+            "fontFamily": "Inter, sans-serif",
+            "name": "Primary",
+            "slug": "primary",
+            "fontFace": [
+                {
+                    "fontFamily": "Inter",
+                    "fontWeight": "400",
+                    "src": ["file:./assets/fonts/inter-regular.woff2"]
+                }
+            ]
+        }
+    ]
+}
+
+
+Nota: Si la IA no tiene los archivos .woff2, debe usar fuentes de sistema (system-ui) como fallback seguro para evitar errores 404.
+
+PARTE 5: Layout y Espaciado (El Motor de Grilla)
+
+Aquí es donde la IA suele fallar. WordPress FSE no usa Bootstrap ni Tailwind. Usa su propio motor de layout basado en blockGap.
+
+5.1. El Modelo de Restricción (constrained vs flow)
+
+En theme.json -> settings.layout:
+
+contentSize: Ancho por defecto del contenido (ej: 800px). Ideal para párrafos de blog.
+
+wideSize: Ancho para elementos destacados (ej: 1200px).
+
+Comportamiento en Plantillas:
+La IA debe envolver el contenido en un bloque core/group con layout constrained para centrarlo.
+
+<!-- wp:group {"layout":{"type":"constrained"}} -->
+<div class="wp-block-group">
+   <!-- Contenido centrado aquí -->
+</div>
+<!-- /wp:group -->
+
+
+5.2. Escala de Espaciado (Spacing Scale)
+
+La IA no debe inventar márgenes aleatorios (17px, 23px). Debe aproximar los valores de la imagen a una escala predefinida (t-shirt sizing) definida en settings.spacing.spacingSizes.
+
+Uso: var(--wp--preset--spacing--40) (equivale a un paso de la escala).
+
+Block Gap: Es el espacio vertical/horizontal automático entre bloques. La IA debe configurar styles.spacing.blockGap globalmente para que coincida con la "aireación" general del diseño visual.
+
+5.3. Columnas y Flexbox
+
+Para replicar diseños horizontales:
+
+Grid/Columnas: Usar core/columns. Es la única forma de tener grillas responsive reales.
+
+Truco Pro: Para diseños asimétricos (Sidebar + Contenido), usar porcentajes explícitos en width (30% / 70%).
+
+Flex/Row: Usar core/group con layout: {"type": "flex", "orientation": "horizontal"}. Ideal para menús, listas de iconos o tags.
+
+Justificación: justifyContent ("center", "space-between") es clave para replicar headers y footers.
+
+PARTE 6: Ingeniería de Patrones (Patterns)
+
+En WordPress 6.8, los patrones reemplazan casi por completo a las antiguas "áreas de widgets" y "shortcodes". La IA debe entender que todo diseño complejo es un patrón.
+
+6.1. Patrones Sincronizados vs. No Sincronizados
+
+La IA debe decidir cuándo usar cada uno:
+
+Patrón No Sincronizado (Estándar): Se usa para diseños iniciales (ej: "Hero Section", "Pricing Table"). El usuario lo inserta y puede editar el contenido libremente sin afectar a otras instancias.
+
+Uso: La mayoría de las secciones generadas desde imágenes (Heroes, Features, Contacto).
+
+Patrón Sincronizado (Global): Se usa para elementos que deben ser idénticos en todo el sitio (ej: "Call to Action Global", "Banner de Newsletter"). Si el usuario edita uno, cambian todos.
+
+6.2. Registro de Patrones (La Forma Moderna)
+
+Aunque se pueden registrar con PHP, la forma más limpia en 6.8 es mediante archivos en la carpeta /patterns/.
+
+Cabecera del archivo: La IA debe incluir un comentario PHP al inicio de cada archivo en /patterns/ para definir sus metadatos.
+
+<?php
+/**
+ * Title: Hero con Imagen a la Derecha
+ * Slug: img2html/hero-right
+ * Categories: banner, featured
+ * Keywords: hero, imagen, cabecera
+ * Block Types: core/post-content
+ */
+?>
+<!-- Código HTML de los bloques aquí -->
+
+
+6.3. Categorías de Patrones
+
+La IA debe registrar una categoría propia para el tema (ej: Img2HTML Patterns) en functions.php para que los patrones generados no se pierdan entre los nativos.
+
+PARTE 7: El Bloque de Navegación (Menus)
+
+El menú es uno de los componentes más difíciles de replicar automáticamente porque en FSE es un bloque (core/navigation) que guarda datos en la base de datos, no en archivos estáticos.
+
+7.1. Estrategia de "Navegación de Fallback"
+
+Como la IA no puede crear registros en la base de datos del usuario (el menú real), debe definir una Navegación basada en Páginas o un Menú de Enlaces Personalizados estáticos dentro de parts/header.html.
+
+Ejemplo Robusto (Menú Estático):
+
+<!-- wp:navigation {"layout":{"type":"flex","justifyContent":"right"}} -->
+    <!-- wp:navigation-link {"label":"Inicio","url":"/","kind":"custom"} /-->
+    <!-- wp:navigation-link {"label":"Servicios","url":"#","kind":"custom"} /-->
+    <!-- wp:navigation-link {"label":"Contacto","url":"#","kind":"custom"} /-->
+<!-- /wp:navigation -->
+
+
+7.2. Navegación Móvil (Overlay Menu)
+
+La IA debe configurar el atributo overlayMenu del bloque de navegación.
+
+Si el diseño tiene un menú de hamburguesa visible en escritorio -> "overlayMenu": "always".
+
+Si es un menú estándar -> "overlayMenu": "mobile".
+
+PARTE 8: Loops de Consulta (The Query Loop)
+
+Para mostrar listas de posts (Blog, Portafolio, Productos), la IA NO debe usar HTML estático repetitivo. Debe usar el bloque core/query.
+
+8.1. Anatomía de un Query Loop
+
+La IA debe traducir una grilla de tarjetas repetitivas en la imagen a esta estructura:
+
+Contenedor: <!-- wp:query {"query":{"perPage":6,"pages":0,"offset":0,"postType":"post"}} -->
+
+Loop: <!-- wp:post-template --> (Aquí va el diseño de una sola tarjeta).
+
+Elementos Dinámicos: Dentro del template, usar bloques dinámicos:
+
+<!-- wp:post-featured-image /--> (No una imagen estática)
+
+<!-- wp:post-title {"isLink":true} /--> (No un texto fijo)
+
+<!-- wp:post-excerpt /-->
+
+<!-- wp:post-date /-->
+
+8.2. Variaciones de Query (Grid vs List)
+
+Grid: La IA debe envolver el post-template con un bloque de columnas o usar estilos de grid en el contenedor.
+
+List: Diseño secuencial simple.
+
+8.3. Paginación
+
+No olvidar incluir <!-- wp:query-pagination --> al final del bloque Query para que la navegación entre páginas funcione.
+
+PARTE 9: Bloques de Composición Específicos
+
+Más allá de grupos y columnas, la IA debe dominar estos bloques para replicar diseños comunes sin "reinventar la rueda" con HTML personalizado.
+
+9.1. Medios y Texto (core/media-text)
+
+Ideal para secciones "Imagen a la izquierda, Texto a la derecha" (o viceversa).
+
+Ventaja: Maneja el apilamiento móvil (stacking) automáticamente.
+
+Configuración: La IA debe usar isStackedOnMobile: true casi siempre para asegurar la respuesta móvil.
+
+<!-- wp:media-text {"mediaPosition":"right","mediaType":"image","isStackedOnMobile":true} -->
+<div class="wp-block-media-text alignwide has-media-on-the-right is-stacked-on-mobile">
+    <figure class="wp-block-media-text__media"><img src="..." alt=""/></figure>
+    <div class="wp-block-media-text__content">
+        <!-- wp:heading --><h2>Título</h2><!-- /wp:heading -->
+        <!-- wp:paragraph --><p>Texto descriptivo.</p><!-- /wp:paragraph -->
+    </div>
+</div>
+<!-- /wp:media-text -->
+
+
+9.2. El Bloque Fondo (core/cover)
+
+Es el bloque más importante para secciones Hero, Banners y Call to Actions con fondo.
+
+Capas: La IA debe entender que core/cover tiene una imagen de fondo, un overlay de color (con opacidad) y contenido interno.
+
+Overlay: Usar dimRatio (0-100) para controlar la oscuridad del overlay. Si el texto es blanco, el overlay debe ser oscuro (isDark: false en el JSON del bloque indica que el texto no es oscuro, es decir, es claro).
+
+9.3. Espaciador vs. Margen
+
+Instrucción Estricta: La IA debe evitar el bloque core/spacer a menos que sea un espacio flexible intencional. Para separar elementos fijos, debe usar la propiedad style.spacing.margin o blockGap en el contenedor padre.
+
+PARTE 10: Diseño Visual Avanzado (Filtros y Bordes)
+
+Para lograr la "alta fidelidad", la IA debe aplicar estos detalles sutiles que marcan la diferencia.
+
+10.1. Filtros Duotone
+
+Si la imagen original muestra fotos con un tinte de color (ej: todas las fotos son azules y negras), la IA debe aplicar un filtro Duotone en theme.json y usarlo en los bloques.
+
+Definición:
+
+"settings": {
+    "color": {
+        "duotone": [
+            {
+                "colors": ["#000000", "#3b82f6"],
+                "slug": "midnight-blue",
+                "name": "Midnight Blue"
+            }
+        ]
+    }
+}
+
+
+Uso: En el bloque imagen: {"style":{"color":{"duotone":"var(--wp--preset--duotone--midnight-blue)"}}}.
+
+10.2. Bordes y Radios (Border Radius)
+
+La IA debe detectar si el diseño es "cuadrado", "suave" (4px-8px) o "redondo" (pill shape).
+
+Global: Definir styles.border.radius en theme.json para botones e inputs.
+
+Específico: Aplicar a core/image o core/group (para tarjetas) si difieren del global.
+
+10.3. Sombras (Shadows) - WP 6.6+
+
+WordPress ahora tiene un sistema nativo de sombras.
+
+Presets: Definir settings.shadow.presets en theme.json (ej: natural, crisp, sharp).
+
+Aplicación: Usar en bloques de grupo para crear efectos de "tarjeta" o "elevación".
+
+PARTE 11: Integración Básica con WooCommerce
+
+Aunque WooCommerce tiene su propia lógica, en FSE se integra mediante bloques específicos. La IA debe saber cómo maquetar una tienda.
+
+11.1. Bloques de Producto Esenciales
+
+La IA no debe usar shortcodes ([products]). Debe usar los bloques modernos:
+
+woocommerce/product-query: Similar a core/query pero para productos.
+
+woocommerce/product-title, woocommerce/product-price, woocommerce/product-image, woocommerce/product-button.
+
+11.2. Plantillas de Tienda
+
+La IA debe generar plantillas específicas si detecta que el sitio es un e-commerce:
+
+templates/archive-product.html: La página de la tienda/categorías.
+
+templates/single-product.html: La ficha del producto.
+
+Estructura de Ficha de Producto (Ejemplo):
+
+<!-- wp:columns -->
+<div class="wp-block-columns">
+    <!-- wp:column {"width":"50%"} -->
+    <div class="wp-block-column"><!-- wp:woocommerce/product-image /--></div>
+    <!-- /wp:column -->
+    
+    <!-- wp:column {"width":"50%"} -->
+    <div class="wp-block-column">
+        <!-- wp:woocommerce/product-title /-->
+        <!-- wp:woocommerce/product-price /-->
+        <!-- wp:woocommerce/product-rating /-->
+        <!-- wp:woocommerce/product-summary /-->
+        <!-- wp:woocommerce/add-to-cart-form /-->
+    </div>
+    <!-- /wp:column -->
+</div>
+<!-- /wp:columns -->
+
+
+11.3. Mini-Carrito
+
+El bloque woocommerce/mini-cart es esencial en el parts/header.html si es una tienda. La IA debe insertarlo junto a la navegación si detecta intención comercial.
+
+PARTE 12: Variaciones de Estilo de Bloques (Block Styles API)
+
+La IA no debe crear clases CSS arbitrarias (.mi-boton-rojo). Debe usar la API nativa de Block Styles para que el usuario pueda elegir la variación desde el editor.
+
+12.1. Registro en PHP
+
+Para agregar un estilo visual alternativo a un bloque (ej: un botón "Fantasma" o una tabla "Rayada"), la IA debe registrarlo en functions.php o un archivo dedicado php/block_styles.php.
+
+register_block_style(
+    'core/button',
+    array(
+        'name'  => 'ghost',
+        'label' => __( 'Ghost', 'textdomain' ),
+        'inline_style' => '.wp-block-button.is-style-ghost .wp-block-button__link { background: transparent; border: 2px solid currentColor; }'
+    )
 );
-Échale un vistazo a la entrada del blog Make WordPress Core para leer más información o descubre cómo puedes usarlo para dar soporte a versiones de WordPress más antiguas.
 
-Secciones en el libro de estilos
-La página de tipografías del libro de estilos en WordPress, donde se ven los conjuntos de fuentes a la izquierda y los estilos de los encabezados a la derecha.
-Una de las mejoras más importantes de la versión 6.8 es la actualización de la interfaz del libro de estilos, que separa los ajustes del estilo en diferentes secciones. Puedes probar y ver cómo quedará la tipografía de tu sitio seleccionando los diferentes conjuntos de fuentes.
 
-Hay también algunas mejoras más en el libro de estilos. Ahora tiene su propia ruta para que puedas enlazar directamente a él. La nueva ruta de la URL es /wp-admin/site-editor.php?p=%2Fstyles&preview=stylebook. Además, se ha añadido la compatibilidad del libro de estilos con temas clásicos.
+12.2. Uso en Patrones
 
-Actualizaciones en la biblioteca de bloques
-WordPress 6.8 introduce bastantes mejoras en la biblioteca de bloques, tanto incluyendo algunos nuevos como ampliando las funcionalidades de otros que ya existían.
+Una vez registrado, la IA debe aplicar la clase generada automáticamente (is-style-{name}) en el HTML de los patrones.
 
-Nuevo bloque: Total de la consulta
-Un cuadro rosa señalando los resultados totales y el rango de visualización en el bloque Total de la consulta en WordPress.
-En la versión 6.8 de WordPress se introduce un nuevo bloque ideal para compartir información sobre la búsqueda de entradas: Total de la consulta. Se utiliza dentro de un bloque Bucle de consulta y tiene dos opciones de visualización:
+Ejemplo: <!-- wp:button {"className":"is-style-ghost"} -->
 
-Resultados totales, donde aparece el número total de elementos encontrados en la búsqueda.
-Rango de visualización, que muestra los resultados que aparecen en este momento dentro del total de los resultados.
-Lightbox en la galería
-Un cuadro verde señalando la opción Agrandar al hacer clic en WordPress.
-WordPress 6.8 trae también el efecto de caja de luz al bloque Galería. Se trata de la misma funcionalidad que ya funcionaba en los bloques de imagen individuales. Para establecer el efecto lightbox en la galería, haz clic en el botón Enlace en la barra de herramientas y selecciona la opción Agrandar al hacer clic.
+PARTE 13: Hooks de Bloques (Block Hooks)
 
-Hay que mencionar que esta función no crea una presentación con efecto de caja de luz donde se ven todas las imágenes de la galería: se limita a aplicar la función lightbox a los bloques de imagen individuales.
+Introducidos recientemente, los Block Hooks permiten a la IA inyectar bloques en posiciones específicas de todos los templates sin editar cada archivo HTML manualmente. Esto es ideal para elementos como "Botones de compra", "Iconos de compartir" o "Avisos".
 
-Bloque Detalles
-Encabezado y descripción en un bloque Detalles de WordPress.
-Ahora puedes agrupar varios bloques Detalles con el atributo HTML name. Si múltiples elementos <details> comparten el mismo atributo name, los navegadores cerrarán de forma automática un elemento abierto cuando se haya abierto otro, creando un efecto acordeón. Puedes establecer el atributo name en la sección Avanzado → Atributo de nombre de la barra lateral.
+13.1. Implementación de block_hooks en block.json
 
-Además, el bloque Detalles ahora también es compatible con el anclaje HTML. Puedes encontrarlo en la sección Avanzado → Anclaje HTML.
+Si la IA genera bloques personalizados, puede definir:
 
-Otras funcionalidades interesantes
-La versión 6.8 de WordPress incluye también muchas pequeñas mejoras en otros bloques, como:
+"blockHooks": {
+    "core/post-content": "after"
+}
 
-El bloque Navegación ahora puede incluir texto no interactivo en formato RichText en el bloque de enlace.
-El bloque Separador se puede configurar como un elemento <div> para un uso decorativo (<hr> se utiliza para establecer una separación temática del contenido).
-El bloque Archivo ahora admite que se edite solo el contenido, de forma que se pueda editar mientras forma parte de patrones bloqueados.
-En el bloque Fondo se puede establecer una resolución de imagen específica (también en las imágenes destacadas).
-El bloque Iconos sociales ahora tiene la opción de añadir Discord y su icono.
-El bloque Bucle de consulta ha recibido un par de nuevas funciones:
-Ahora se puede ordenar las páginas según el orden del menú, tanto ascendente como descendente.
-También puedes ignorar las entradas fijas en las consultas personalizadas.
-Cambios notables en el CSS de los bloques
-En WordPress 6.8 se incluyen también algunas mejoras generales en el CSS, que, aunque es poco probable que cause errores en los diseños de los temas, merece la pena mencionar:
 
-El bloque Botones ahora tiene aplicado box-sizing: border-box, lo que lo hace más consistente con los demás bloques.
-Los estilos de overlay del bloque Imagen ahora se gestionan mediante una directiva data-wp-bind--style en lugar en una etiqueta <style> inline.
-Herramientas de diseño en más bloques
-Se han actualizado las herramientas de diseño de muchos bloques del núcleo, mejorando así la coherencia a la hora de aplicar opciones de estilos en los bloques.
+Esto insertará el bloque automáticamente después del contenido del post.
 
-Esto significa que estas opciones ahora aparecen en la interfaz del editor de dichos bloques. Pero, si en algún bloque no aparece la herramienta, siempre puedes configurar los estilos asociados en theme.json.
+13.2. Filtros de Hook (Método Alternativo)
 
-Los bloques Archivos, Categorías, Contenido y Lista de páginas ahora tienen acceso a más herramientas de colores. Y muchos bloques ahora tienen la posibilidad de editar opciones de bordes:
+Para temas que no crean bloques propios, la IA puede usar filtros en functions.php para modificar el contenido de bloques específicos antes de renderizar.
 
-Archivos
-Comentarios
-Enlace de comentarios
-Recuento de comentarios
-Contenido
-Últimas entradas
-Lista de páginas
-Total de la consulta
-RSS
-En los bloques Contenido, Lista de páginas y RSS ahora se pueden utilizar herramientas para diseñar los espaciados.
+PARTE 14: Optimización de Assets y Performance
 
-Si quieres ver la lista completa, échale un vistazo a la tabla de herramientas de diseño de cada bloque (edición WordPress 6.8).
+Un tema generado por IA no debe ser lento. WordPress 6.8 incluye mejoras de carga que la IA debe aprovechar.
 
-Organización de patrones
-Ahora es posible organizar los patrones de formas mucho más intuitivas y sencillas.
+14.1. Carga de Fuentes (Local Fonts)
 
-Añadir patrones a subcarpetas 
-Si tu tema incluye muchos patrones, habrás podido notar que aparecen en la carpeta /patterns en lo que parece ser una lista infinita sin ningún orden aparente.
+Regla: Nunca usar @import url('https://fonts.googleapis.com...') en CSS.
+Método Correcto: Definir fontFace en theme.json. WordPress descargará y servirá las fuentes localmente, mejorando el GDPR y la velocidad.
 
-Con la versión 6.8 de WordPress, podrás navegar de forma más sencilla organizando tus patrones personalizados en subcarpetas dentro de /patterns.
+14.2. Scripts y Estilos Diferidos
 
-Por ejemplo, podrías separar los patrones de cabecera y los de pie de página de tu tema de esta manera:
+Si la IA genera JS/CSS personalizado (ej: para un slider), debe registrarlo con la estrategia de carga defer o async en wp_enqueue_script.
 
-/patterns
-    /header
-        centered.php
-        default.php
-    /footer
-        default.php
-        links.php
-Categoría de patrones de inicio
-En la interfaz, los patrones que han sido asignados al tipo de bloque core/post-content (el método para registrar un patrón de inicio) aparecen en la categoría Contenido inicial. Sirve como complemento de otra actualización por la que todos los patrones aparecen en una lista en el insertador.
+wp_enqueue_script(
+    'my-script',
+    get_theme_file_uri( '/assets/js/script.js' ),
+    array(),
+    '1.0',
+    array( 'strategy' => 'defer' ) // Clave para performance en WP 6.3+
+);
 
-Si no quieres que aparezca la ventana modal que ofrece el contenido inicial en las páginas nuevas, puedes desactivar esta opción en el botón que hay en la parte inferior de la ventana, o desde la pantalla Editor → menú de 3 puntos → Preferencias.
 
-En la nueva versión, los desarrolladores de temas pueden añadir patrones de contenido inicial en todos los tipos de bloques: entradas, páginas y cualquier tipo de entrada personalizada que hayas registrado.
+14.3. Imágenes Optimizadas (LCP)
 
-Actualizaciones de la API
-La versión 6.8 introduce también algunas mejoras de la API para ayudar a que el desarrollo sea más sólido y extensible. Con estos cambios, se optimiza la forma en que los desarrolladores interactúan con los datos, insertan bloques y trabajan con patrones.
+Para la imagen del core/cover en la cabecera (LCP - Largest Contentful Paint), la IA debe añadir el atributo fetchpriority="high" si es posible, o asegurarse de no usar loading="lazy" en la primera imagen visible ("above the fold").
 
-Interactividad
-Se ha mejorado la directiva wp-each para gestionar mejor los datos comprobando primero si una propiedad se puede iterar en lugar de intentar hacer una llamada a su método .map directamente. Esto evitará errores cuando se utilicen valores no iterables.
+PARTE 15: Internacionalización (i18n)
 
-En el blog Make WordPress Core han recopilado una guía de consejos de la versión 6.8. Estas recomendaciones te ayudarán a que tu código esté actualizado con los estándares más recientes y a que puedas mejorar tus interacciones con la API.
+Un tema profesional no contiene texto "hardcoded" en inglés o español. Todo string debe ser traducible.
 
-Hooks de bloque
-La API Block Hooks ha recibido dos importantes actualizaciones. La primera expande el mecanismo de los ganchos de bloque al contenido de las entradas, de forma que podrás insertar dinámicamente bloques enganchados directamente en páginas y entradas. La segunda actualización hace que los ganchos de bloques puedan funcionar con patrones sincronizados.
+15.1. Strings en PHP (functions.php y Patrones PHP)
 
-Seguridad: uso de bcrypt para el hash de contraseñas
-En la versión 6.8, el algoritmo que utiliza WordPress para la función hash y el almacenamiento de contraseñas de los usuarios en la base de datos se ha cambiado a bcrypt.
+La IA debe envolver cualquier texto visible en funciones de traducción con el Text Domain del tema (ej: img2html).
 
-Antes utiliza phpass, pero bcrypt refuerza la seguridad de las contraseñas, ya que es necesaria una mayor cantidad de potencia computacional para penetrar el hash de contraseñas.
+Estándar: __( 'Texto', 'img2html' ) para retornar.
 
-Si tu plugin utiliza las funciones wp_hash_password() o wp_check_password(), lo normal es que siga funcionando como siempre. Pero si gestionabas los hashes de phpass directamente, tendrás que actualizar tu código.
+Eco: _e( 'Texto', 'img2html' ) para imprimir.
 
-Échale un vistazo a la nota de desarrollo de la actualización para ver más detalles. También encontrarás información sobre las nuevas funciones wp_fast_hash() y wp_verify_fast_hash() que permiten aplicar hash a una cadena generada aleatoriamente con suficiente entropía.
+Contexto: _x( 'Post', 'verb', 'img2html' ) para desambiguar.
 
-Mejoras de rendimiento
-Para terminar, WordPress 6.8 incluye un montón de mejoras de rendimiento para todos los sitios.
+Ejemplo en Patrón PHP:
 
-Carga especulativa
-Se ha introducido la carga especulativa, que permite a los navegadores compatibles precargar o preprocesar URL. Esto puede hacer que las páginas se carguen casi al instante, porque ya están listas antes de que el usuario haga clic en ellas.
+<!-- wp:heading -->
+<h2><?php echo esc_html__( 'Latest News', 'img2html' ); ?></h2>
+<!-- /wp:heading -->
 
-Esta novedad salió por primera vez en abril de 2024 en forma de plugin llamado Speculative Loading. Desde entonces, los colaboradores han ido puliendo el código hasta que ha estado lo bastante maduro como para integrarlo directamente en el núcleo de WordPress.
 
-Esta nueva función viene con varios ganchos de filtro para que puedas modificar cómo funciona la carga especulativa:
+15.2. Strings en theme.json
 
-wp_speculation_rules_href_exclude_paths: para excluir patrones de URL de la carga especulativa.
-wp_speculation_rules_configuration: para modificar la configuración de la carga especulativa.
-wp_load_speculation_rules: para incluir más reglas a la carga especulativa.
-Advertencias de rendimiento de useSelect
-Cuando tienes activado SCRIPT_DEBUG (como suele hacerse en entornos de desarrollo), WordPress ahora mostrará advertencias de rendimiento en la consola cuando useSelect se utilice de forma que provoque re-renderizados innecesarios. Este cambio viene genial para aquellos que quieran ampliar el editor de bloques, ya que les ayudará a escribir código más optimizado.
+WordPress traduce automáticamente las claves estándar (name, title de paletas y estilos). La IA no necesita hacer nada especial aquí, excepto usar nombres en inglés estándar para que el núcleo los traduzca, o usar el formato i18n si se requiere customización avanzada (aunque esto es menos común en temas generados).
 
-Nuevo filtro para cargar assets de bloques bajo demanda
-Antes de la versión 6.8, el gancho de filtro should_load_separate_block_assets tenía dos funciones:
+15.3. Generación del Archivo .pot
 
-Cargar hojas de estilo separadas para los bloques del núcleo, en lugar de usar siempre la hoja de estilos combinada wp-block-library que incluye todo el CSS de los bloques.
-Cargar scripts y estilos solo cuando se usan en una página específica.
-Con la versión 6.8, se ha añadido un nuevo filtro llamado should_load_block_assets_on_demand, que se encarga específicamente del segundo caso: determinar cuándo cargar los assets. El filtro original sigue funcionando como antes, pero ahora se recomienda utilizarlo solo para decidir si las hojas de estilo deben ir separadas.
+La IA debe saber que el paso final de una build profesional es generar un archivo .pot (Portable Object Template) en /languages/, que lista todas las cadenas encontradas para que herramientas como Poedit o plugins de traducción las detecten.
 
-Y tú, ¿qué vas a crear con WordPress 6.8?
-WordPress 6.8 sigue haciendo avanzar el software con API más limpias, mejor rendimiento y herramientas más potentes para crear sitios. Tanto si estás creando temas, manteniendo plugins o probando nuevas funcionalidades del editor de bloques, esta versión hará tu trabajo más eficiente y tu código más fácil de gestionar.
+PARTE 16: Accesibilidad (a11y) en FSE
 
-Al crear tu web con WordPress.com, tendrás acceso a todo esto de manera
+La accesibilidad no es opcional. Un tema generado por IA debe pasar validaciones WCAG 2.1 AA.
+
+16.1. "Skip Links" Automáticos
+
+En los temas clásicos, había que añadir manualmente un enlace "Saltar al contenido". En FSE, si la IA usa correctamente el bloque core/group con la etiqueta <main>, WordPress puede no inyectarlo automáticamente si no se configura bien.
+
+Requisito: El primer bloque del template index.html o header.html debe ser un core/group o core/site-title que no bloquee el tab-index inicial.
+
+Mejor Práctica: Asegurar que el bloque principal de contenido tenga id="main-content" o similar si se implementa un script de skip-link personalizado, aunque el bloque core/group con tagName: main suele ser suficiente semánticamente.
+
+16.2. Navegación Accesible
+
+Al configurar core/navigation:
+
+aria-label: Si hay múltiples menús (Header y Footer), la IA debe añadir aria-label="Header Menu" y aria-label="Footer Menu" en el JSON del bloque para diferenciarlos ante lectores de pantalla.
+
+<!-- wp:navigation {"ariaLabel":"Menú Principal", ...} /-->
+
+16.3. Contraste de Color y Focus
+
+Contraste: La IA debe analizar los colores extraídos (analyzer.py). Si el fondo es oscuro, debe forzar texto claro en theme.json.
+
+Focus Visible: En theme.json -> styles.elements.link.:focus, la IA debe definir un outline claro (ej: 2px solid var(--wp--preset--color--primary)). Nunca outline: 0.
+
+PARTE 17: Compatibilidad con Plugins Populares (SEO, Forms)
+
+Los temas FSE a veces "rompen" plugins que esperan hooks clásicos. La IA debe prevenir esto.
+
+17.1. SEO (Yoast, RankMath)
+
+Estos plugins dependen de que el tema no "oculte" el título o la descripción de formas extrañas.
+
+Título: La IA no debe poner la etiqueta <title> en el HTML. WordPress la inyecta automáticamente si se declara add_theme_support('title-tag') en functions.php.
+
+Headings: El template single.html debe tener UN solo <h1> (usualmente el core/post-title).
+
+17.2. Formularios (Contact Form 7, Gravity Forms, WPForms)
+
+Estos plugins suelen usar shortcodes o bloques propios.
+
+Estilos Globales: La IA debe añadir en theme.json estilos para elementos input, textarea y button en styles.elements. Esto asegura que, aunque el plugin traiga su CSS, los inputs hereden la tipografía y bordes del tema (si el plugin lo permite o si se fuerza vía CSS en blocks.css).
+
+17.3. Builders (Elementor, Divi)
+
+Aunque el objetivo es FSE, muchos usuarios instalan builders.
+
+Template "Canvas": La IA debe generar una plantilla templates/blank.html (sin header ni footer) para que los usuarios de builders tengan un lienzo en blanco.
+
+<!-- wp:post-content /-->
+
+PARTE 18: Estrategias de "Child Themes" vs "Standalone"
+
+La IA debe decidir si genera un tema independiente o un tema hijo, aunque para FSE la recomendación moderna es Standalone (Independiente) debido a la naturaleza de theme.json.
+
+18.1. Tema Standalone (Recomendado para IA)
+
+En la era de los bloques, la herencia es menos necesaria porque theme.json define casi todo.
+
+Estructura: style.css no declara Template: parent-theme.
+
+Ventaja: Control total sobre plantillas y patrones sin conflictos de herencia.
+
+Uso: La app Img2HTML genera temas Standalone por defecto para garantizar que el diseño visual sea idéntico a la imagen.
+
+18.2. Tema Hijo (Child Theme) en FSE
+
+Si se requiere un tema hijo (ej: extender "Twenty Twenty-Four"), la IA debe saber que theme.json del hijo sobrescribe o fusiona con el del padre.
+
+Fusión: Si el padre define palette, y el hijo también, se combinan (el hijo gana en conflictos).
+
+Nota: Es más complejo de depurar automáticamente. Se recomienda evitarlo en la v1.0.
+
+PARTE 19: Debugging de Errores Comunes en FSE
+
+Lista de errores frecuentes que la IA debe autoevaluar y prevenir.
+
+19.1. El "Lienzo en Blanco" (White Screen of Death)
+
+Causa: Error de sintaxis JSON en theme.json (coma extra, comillas faltantes).
+
+Prevención: La IA debe validar estrictamente el JSON generado antes de escribir el archivo.
+
+19.2. Bloques Rotos ("Este bloque contiene contenido inesperado")
+
+Causa: El HTML dentro del comentario <!-- wp:block --> no coincide exactamente con lo que WordPress espera (ej: atributos o clases desactualizados).
+
+Solución: Usar la sintaxis más simple y estándar posible. Evitar atributos experimentales no documentados.
+
+Validación: Asegurar que todos los bloques autoconclusivos (como <img />) estén bien formados.
+
+19.3. Estilos que no aplican
+
+Causa: Especificidad CSS. Un estilo en blocks.css puede ser sobrescrito por theme.json o los estilos del core.
+
+Solución: Priorizar siempre la configuración en theme.json (styles.blocks). Usar blocks.css solo con selectores de alta especificidad o para utilidades (.u-shadow-lg).
+
+PARTE 20: Checklist Final de Calidad (QA) para la IA
+
+Antes de empaquetar el ZIP, el sistema debe verificar estos puntos críticos.
+
+20.1. Integridad Estructural
+
+[ ] ¿Existe style.css con cabecera válida?
+
+[ ] ¿Existe theme.json válido (sin errores de sintaxis)?
+
+[ ] ¿Existen templates/index.html y templates/front-page.html?
+
+20.2. Fidelidad Visual (El "Pixel Perfect")
+
+[ ] ¿Se han extraído y aplicado los colores del diseño (ADN) en theme.json?
+
+[ ] ¿Se usan las fuentes correctas (o su fallback más cercano)?
+
+[ ] ¿Están los márgenes y paddings definidos usando la escala de espaciado?
+
+20.3. Funcionalidad Core
+
+[ ] ¿Funciona el Query Loop para mostrar posts?
+
+[ ] ¿Es navegable el menú (incluso si es estático)?
+
+[ ] ¿Son accesibles los contrastes de color (AA mínimo)?
+
+20.4. Limpieza
+
+[ ] ¿Se han eliminado comentarios de depuración o texto "alucinado" por la IA dentro de los archivos JSON/HTML?
+
+[ ] ¿Están todos los assets (imágenes) referenciados correctamente en la carpeta /assets?
+
+FIN DE LA BASE DE CONOCIMIENTO
+
+Esta documentación cubre el 100% de los requisitos para que un LLM genere un tema de WordPress FSE moderno, funcional y de alta calidad.
+
+Siguientes Pasos para el Humano:
+
+Ingestar estos documentos en el contexto de la IA (RAG o System Prompt).
+
+Ejecutar pruebas con diseños complejos.
+
+Iterar sobre los prompts de ai_refine.py si se detectan fallos recurrentes en bloques específicos.
+
+Prompt Maestro para Creación de Tema WordPress FSE (Full Site Editing)
+
+Rol: Actúa como un Arquitecto de Software y Desarrollador Senior de WordPress, especializado en el desarrollo de temas de bloques (Block Themes), theme.json y los estándares más recientes de WordPress 6.7+.
+
+Objetivo: Crear un tema de WordPress completo, minimalista y escalable basado en bloques, definiendo estilos globales y asegurando que todos los bloques nativos (Core Blocks) tengan un diseño coherente.
+
+FASE 1: Configuración Global (theme.json)
+
+Por favor, genera un archivo theme.json completo y detallado que incluya:
+
+Schema Version: Versión 3.
+
+Settings (Configuraciones):
+
+Layout: Define contentSize (ej. 800px) y wideSize (ej. 1200px).
+
+Typography: Habilita dropCap, fontStyle, fontWeight, textDecoration, etc. Define tamaños de fuente fluidos (usando clamp()).
+
+Color Palette: Define una paleta semántica (Primary, Secondary, Background, Surface, Text, Accent).
+
+Spacing: Define una escala de espaciado (spacing scale) para usar en márgenes y paddings.
+
+Styles (Estilos Globales):
+
+Typography: Asigna fuentes y alturas de línea para el body y encabezados (h1 a h6).
+
+Elements: Estila elementos base como link (con estados :hover), button (sólidos y outline), y caption.
+
+Block Styles (Estilos por Bloque - Cobertura Total):
+
+Necesito que el theme.json defina estilos explícitos para TODAS las categorías de bloques nativos. No omitas ninguno:
+
+Bloques de Texto: core/paragraph, core/heading, core/list, core/quote (con borde o ícono), core/code, core/preformatted, core/pullquote, core/table (con padding y bordes), core/verse.
+
+Bloques de Medios: core/image, core/gallery, core/audio, core/cover (manejo de superposiciones), core/file, core/media-text, core/video.
+
+Bloques de Diseño: core/button (y sus variaciones), core/columns, core/group (layouts flex/grid), core/more, core/separator (grosor y color), core/spacer.
+
+Bloques de Widgets: core/archives, core/calendar, core/categories, core/latest-comments, core/latest-posts, core/search (input y botón integrados), core/social-icons, core/tag-cloud.
+
+Bloques de Tema (FSE): core/site-logo, core/site-title, core/site-tagline, core/navigation, core/post-title, core/post-content, core/post-date, core/post-excerpt, core/post-featured-image, core/post-author, core/loginout, core/query-pagination.
+
+Styles (Estilos Globales):
+
+Typography: Asigna fuentes y alturas de línea para el body y encabezados (h1 a h6).
+
+Elements: Estila elementos base como link (con estados :hover), button (sólidos y outline), y caption.
+
+Block Styles (Estilos por Bloque):
+
+Aquí es donde necesito cobertura total. Define estilos por defecto en el theme.json para:
+
+core/button: Bordes, padding, transiciones.
+
+core/quote: Estilo de borde izquierdo o comillas grandes.
+
+core/code: Fondo gris suave y fuente monoespaciada.
+
+core/table: Bordes colapsados y padding en celdas.
+
+core/image: Bordes redondeados opcionales.
+
+core/separator: Color y grosor.
+
+core/navigation: Estilos para el menú.
+
+FASE 2: Archivos de Estructura del Tema
+
+Genera el código para los siguientes archivos esenciales:
+
+style.css: Solo el encabezado de metadatos requerido por WordPress (Theme Name, Author, Description, Version, Requires at least, etc.).
+
+functions.php:
+
+Función para encolar (enqueue) estilos adicionales si fuera necesario (aunque priorizamos theme.json).
+
+Registro de patrones de bloques personalizados si aplica.
+
+Soporte para características del tema (add_theme_support).
+
+FASE 3: Plantillas HTML (Block Templates)
+
+Genera el código HTML con la sintaxis de comentarios de bloques de WordPress para las siguientes plantillas. Asegúrate de usar etiquetas semánticas (<main>, <header>, <footer>, <article>).
+
+Partes de Plantilla (Template Parts):
+
+parts/header.html: Logo del sitio, Título del sitio, Navegación.
+
+parts/footer.html: Copyright, Enlaces sociales, Menú secundario.
+
+Plantillas Principales:
+
+templates/index.html: La plantilla por defecto. Debe incluir el header, un loop de consultas (Query Loop) para los posts, y el footer.
+
+templates/single.html: Para entradas individuales. Debe mostrar Título, Imagen destacada, Contenido, Autor, Fecha y Navegación entre posts.
+
+templates/page.html: Para páginas estáticas.
+
+templates/404.html: Página de error con un buscador y mensaje amigable.
+
+FASE 4: Componentes Visuales y Variaciones
+
+Para asegurar que cubrimos "todos los componentes", por favor proporciona un archivo CSS adicional (blocks.css) o JSON extendido para casos borde que theme.json a veces no cubre bien, específicamente para:
+
+Estilos de formularios (Inputs, Textarea, Submit).
+
+Bloque de Galería (core/gallery).
+
+Bloque de Archivo y Categorías (listas y dropdowns).
+
+Bloque de Comentarios (Lista de comentarios, formulario de respuesta).
+
+Nota Importante: Prioriza el uso de variables CSS generadas por WordPress (--wp--preset--color--primary, etc.) en todo el código personalizado.
+
+Instrucciones de Salida:
+Por favor, entrégame los archivos en bloques de código separados con su nombre de archivo correspondiente en la cabecera del bloque.

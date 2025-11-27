@@ -4,11 +4,13 @@ import os
 import zipfile
 import uuid
 import json
-from analyzer import analyze_images, extract_design_dna, identify_pattern, segment_image
+from analyzer import analyze_images, extract_design_dna, identify_pattern, segment_image, segment_columns
 from ocr import extract_texts
 from ai_refine import refine_and_generate_wp
 from wp_theme.prompts.runner import ThemeBuilder
 from dotenv import load_dotenv
+import threading
+import time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
@@ -27,6 +29,7 @@ except Exception:
     pass
 
 ALLOWED_EXTENSIONS = {'.zip'}
+PROGRESS = {}
 
 def allowed_file(filename):
     ext = os.path.splitext(filename)[1].lower()
@@ -160,6 +163,261 @@ def upload():
     request.environ['img2html_batch_dir'] = batch_dir
     request.environ['img2html_plan'] = plan
     return render_template('plan.html', plan=plan, batch_id=batch_id, google_api_key=google_api_key, enable_slicing=enable_slicing, precise_slicing=precise_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
+
+def _set_progress(batch_id, percent, message):
+    try:
+        PROGRESS.setdefault(batch_id, {})
+        PROGRESS[batch_id]['percent'] = int(max(0, min(100, percent)))
+        PROGRESS[batch_id]['message'] = str(message or '')
+        PROGRESS[batch_id]['ready'] = bool(PROGRESS[batch_id].get('ready'))
+    except Exception:
+        pass
+
+@app.route('/progress/<batch_id>', methods=['GET'])
+def progress_status(batch_id):
+    st = PROGRESS.get(batch_id) or {'percent': 0, 'message': 'Esperando...', 'ready': False}
+    return app.response_class(response=json.dumps(st), status=200, mimetype='application/json')
+
+@app.route('/result/<batch_id>', methods=['GET'])
+def conversion_result(batch_id):
+    st = PROGRESS.get(batch_id) or {}
+    used_ai = bool(st.get('used_ai'))
+    provider = st.get('provider') or ''
+    ocr_provider = st.get('ocr_provider') or ''
+    saved_env = bool(st.get('saved_env'))
+    return render_template('done.html', output_dir='temp_out', theme_dir='wp_theme', used_ai=used_ai, saved_env=saved_env, provider=provider, ocr_provider=ocr_provider)
+
+def _do_convert_async(ctx):
+    batch_id = ctx.get('batch_id')
+    google_api_key = ctx.get('google_api_key') or ''
+    enable_slicing = ctx.get('enable_slicing') or ''
+    precise_slicing = ctx.get('precise_slicing') or ''
+    save_env = ctx.get('save_env') or ''
+    google_application_credentials = ctx.get('google_application_credentials') or ''
+    _set_progress(batch_id, 5, 'Inicializando conversión')
+    try:
+        batch_dir = os.path.join(UPLOAD_DIR, batch_id)
+        images = []
+        for root, _, files in os.walk(batch_dir):
+            for f in files:
+                ext = os.path.splitext(f)[1].lower()
+                if ext in {'.png', '.jpg', '.jpeg', '.webp', '.gif'}:
+                    images.append(os.path.join(root, f))
+        _set_progress(batch_id, 10, 'Cargando imágenes')
+        plan = analyze_images(images)
+        for s in plan['sections']:
+            s['pattern'] = identify_pattern(s)
+        _set_progress(batch_id, 20, 'Detectando patrones y secciones')
+        dna = extract_design_dna(images)
+        _set_progress(batch_id, 30, 'Extrayendo paleta DNA')
+        try:
+            ocr_texts, ocr_provider = extract_texts(images)
+        except Exception:
+            ocr_texts, ocr_provider = ({}, '')
+        _set_progress(batch_id, 40, f'OCR: {ocr_provider or "N/A"}')
+        os.makedirs(TEMP_OUT_DIR, exist_ok=True)
+        assets_dir = os.path.join(TEMP_OUT_DIR, 'assets')
+        os.makedirs(assets_dir, exist_ok=True)
+        copied = []
+        for section in plan['sections']:
+            for img in section['images']:
+                name = os.path.basename(img)
+                dst = os.path.join(assets_dir, name)
+                if not os.path.isfile(dst):
+                    with open(img, 'rb') as rf, open(dst, 'wb') as wf:
+                        wf.write(rf.read())
+                copied.append(name)
+            try:
+                from PIL import Image as PILImage
+                if section.get('images'):
+                    p0 = section['images'][0]
+                    im = PILImage.open(p0)
+                    w, h = im.size
+                    ratio = h / float(max(1, w))
+                    if enable_slicing or ratio >= 1.5:
+                        segs = segment_image(p0, assets_dir, precise=bool(precise_slicing))
+                        if segs:
+                            layout_rows = []
+                            images_flat = []
+                            for sp in segs:
+                                copied.append(os.path.basename(sp))
+                                cols = segment_columns(sp, assets_dir, precise=bool(precise_slicing))
+                                if cols:
+                                    widths = []
+                                    total_w = 0
+                                    for c in cols:
+                                        try:
+                                            cim = PILImage.open(c)
+                                            w2, _ = cim.size
+                                            widths.append(w2)
+                                            total_w += w2
+                                        except Exception:
+                                            widths.append(0)
+                                    ratios = []
+                                    ratios_percent = []
+                                    if total_w > 0:
+                                        ratios = [round(w2/float(total_w), 3) for w2 in widths]
+                                        ratios_percent = [int(round(r*100)) for r in ratios]
+                                    row = {
+                                        'segment': os.path.basename(sp),
+                                        'columns': [os.path.basename(c) for c in cols],
+                                        'ratios': ratios,
+                                        'ratios_percent': ratios_percent
+                                    }
+                                    layout_rows.append(row)
+                                    for c in cols:
+                                        images_flat.append(c)
+                                        copied.append(os.path.basename(c))
+                            if images_flat:
+                                section['images'] = images_flat
+                            else:
+                                section['images'] = segs
+                            section['segments'] = [os.path.basename(s) for s in segs]
+                            if layout_rows:
+                                section['layout_rows'] = layout_rows
+                    section['pattern'] = identify_pattern(section)
+            except Exception:
+                pass
+        _set_progress(batch_id, 65, 'Generando HTML estático')
+        info_md = ''
+        if os.path.isfile(DOC_INFO_PATH):
+            try:
+                with open(DOC_INFO_PATH, 'r', encoding='utf-8') as f:
+                    info_md = f.read()
+            except Exception:
+                info_md = ''
+        html_path = os.path.join(TEMP_OUT_DIR, 'index.html')
+        css_path = os.path.join(TEMP_OUT_DIR, 'styles.css')
+        title = plan['title']
+        sections_html = []
+        section_files = []
+        for idx, section in enumerate(plan['sections']):
+            section_file = f"{section['slug']}.html"
+            section_files.append(section_file)
+            file_name = os.path.join(TEMP_OUT_DIR, section_file)
+            html_file = open(file_name, 'w', encoding='utf-8')
+            paragraph_texts = []
+            for p in section['images']:
+                t = ocr_texts.get(p, '')
+                if t:
+                    paragraph_texts.append(t)
+            paragraph = '\n\n'.join(paragraph_texts) if paragraph_texts else ''
+            paragraph = paragraph.replace('\n\n', '<br/><br/>')
+            prev_link = ''
+            if idx > 0:
+                prev_chapter_file = f"{plan['sections'][idx-1]['slug']}.html"
+                prev_link = f'<p><a href="{prev_chapter_file}">Anterior</a></p>'
+            next_link = ''
+            if idx < len(plan['sections']) - 1:
+                next_chapter_file = f"{plan['sections'][idx+1]['slug']}.html"
+                next_link = f'<p><a href="{next_chapter_file}">Siguiente</a></p>'
+            content = f"""
+<html>
+  <head>
+    <link rel=\"stylesheet\" href=\"styles.css\">
+  </head>
+  <body>
+    <div>
+      <h1>{section['label']}</h1>
+      <p>{paragraph}</p>
+      {prev_link}
+      {next_link}
+    </div>
+  </body>
+</html>
+"""
+            html_file.write(content)
+            html_file.close()
+            imgs_html = ''.join([f'<img src="assets/{os.path.basename(p)}" alt="{section["name"]}">' for p in section['images']])
+            sections_html.append(f'<section id="{section["slug"]}"><h2>{section["label"]}</h2><p><a href="{section_file}">Abrir sección</a></p>{imgs_html}</section>')
+        html_content = f"""
+<!doctype html>
+<html lang=\"es\">
+<head>
+  <meta charset=\"utf-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  <meta name=\"description\" content=\"Sitio generado desde imágenes\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap\" rel=\"stylesheet\">\n  <link rel=\"stylesheet\" href=\"styles.css\">\n  <title>{title}</title>
+</head>
+<body>
+  <header class=\"site-header\"><div class=\"container\"><h1>{title}</h1></div></header>
+  <main class=\"site-main\"><div class=\"container\">
+    {''.join(sections_html)}
+  </div></main>
+  <footer class=\"site-footer\"><div class=\"container\">Generado con img2html</div></footer>
+  <script type=\"application/json\" id=\"img2html-plan\">{plan}</script>
+  <script type=\"application/json\" id=\"img2html-info\">{info_md}</script>
+</body>
+</html>
+"""
+        with open(html_path, 'w', encoding='utf-8') as hf:
+            hf.write(html_content)
+        css_content = """
+:root { --bg: #0b0c0f; --fg: #ffffff; --muted: #a3a3a3; --primary: #4f46e5; }
+* { box-sizing: border-box }
+html, body { height: 100% }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif }
+.container { width: min(1100px, 92%); margin: 0 auto; padding: 24px }
+.site-header, .site-footer { background: #121318 }
+h1 { font-size: 28px; margin: 0 }
+h2 { font-size: 22px; margin: 24px 0 12px }
+section { padding: 16px 0; border-top: 1px solid #1f2330 }
+img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
+"""
+        with open(css_path, 'w', encoding='utf-8') as cf:
+            cf.write(css_content)
+        _set_progress(batch_id, 80, 'Construyendo tema FSE')
+        wp_theme_dir = os.path.join(BASE_DIR, 'wp_theme')
+        os.makedirs(wp_theme_dir, exist_ok=True)
+        try:
+            if google_api_key:
+                os.environ['GOOGLE_API_KEY'] = google_api_key
+                if save_env:
+                    _update_env_file(ENV_PATH, 'GOOGLE_API_KEY', google_api_key)
+            if google_application_credentials:
+                os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = google_application_credentials
+                if save_env:
+                    _update_env_file(ENV_PATH, 'GOOGLE_APPLICATION_CREDENTIALS', google_application_credentials)
+            builder = ThemeBuilder(output_dir=wp_theme_dir, context=dna)
+            builder.bootstrap()
+            builder.run_prompt('01_theme_json_full.json')
+            builder.run_prompt('52_template_parts_catalog.json')
+            builder.run_prompt('51_templates_catalog.json')
+            builder.run_prompt('53_patterns_catalog.json')
+            result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images, dna=dna)
+            used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
+            provider = (result.get('provider') if isinstance(result, dict) else '') or ''
+        except Exception:
+            used_ai = False
+            provider = ''
+        PROGRESS.setdefault(batch_id, {})
+        PROGRESS[batch_id]['used_ai'] = used_ai
+        PROGRESS[batch_id]['provider'] = provider
+        PROGRESS[batch_id]['ocr_provider'] = ocr_provider
+        PROGRESS[batch_id]['saved_env'] = bool(save_env)
+        PROGRESS[batch_id]['ready'] = True
+        _set_progress(batch_id, 100, 'Conversión completada')
+    except Exception as e:
+        _set_progress(batch_id, 100, 'Error en conversión')
+
+@app.route('/start_convert', methods=['POST'])
+def start_convert():
+    batch_id = request.form.get('batch_id')
+    ctx = {
+        'batch_id': batch_id,
+        'google_api_key': request.form.get('google_api_key') or '',
+        'enable_slicing': request.form.get('enable_slicing') or '',
+        'precise_slicing': request.form.get('precise_slicing') or '',
+        'save_env': request.form.get('save_env') or '',
+        'google_application_credentials': request.form.get('google_application_credentials') or ''
+    }
+    _set_progress(batch_id, 1, 'Preparando...')
+    t = threading.Thread(target=_do_convert_async, args=(ctx,), daemon=True)
+    t.start()
+    return redirect(url_for('progress_ui', batch_id=batch_id))
+
+@app.route('/progress_ui')
+def progress_ui():
+    batch_id = request.args.get('batch_id') or ''
+    return render_template('progress.html', batch_id=batch_id)
 
 @app.route('/convert', methods=['POST'])
 def convert():
@@ -405,8 +663,21 @@ def download_theme():
                 zf.write(full, arc)
     return send_from_directory(BASE_DIR, 'wp_theme.zip', as_attachment=True)
 
+@app.route('/download_static', methods=['GET'])
+def download_static():
+    out_dir = TEMP_OUT_DIR
+    zip_path = os.path.join(BASE_DIR, 'static_site.zip')
+    import zipfile
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, _, files in os.walk(out_dir):
+            for f in files:
+                full = os.path.join(root, f)
+                arc = os.path.relpath(full, out_dir)
+                zf.write(full, arc)
+    return send_from_directory(BASE_DIR, 'static_site.zip', as_attachment=True)
+
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8000))
+    port = int(os.environ.get('PORT', 8001))
     app.run(host='0.0.0.0', port=port, debug=True)
 def _update_env_file(path, key, value):
     try:

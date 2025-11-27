@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Progreso de conversión</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0b0c0f; --panel:#121318; --fg:#fff; --muted:#a3a3a3; --primary:#4f46e5; --ok:#22c55e; --warn:#f59e0b; --error:#ef4444 }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui}
+    .container{width:min(780px,92%);margin:0 auto;padding:32px}
+    .card{background:var(--panel);border:1px solid #1f2330;border-radius:16px;padding:24px}
+    h1{margin:0 0 12px;font-size:22px}
+    .bar{position:relative;height:14px;background:#1f2330;border-radius:999px;overflow:hidden;border:1px solid #2a3145}
+    .bar > .fill{position:absolute;left:0;top:0;height:100%;width:0;background:linear-gradient(90deg,#4f46e5,#7c3aed);transition:width 300ms ease}
+    .status{margin-top:12px;color:var(--muted)}
+    .percent{font-weight:700;color:#e5e7eb}
+    .steps{margin-top:16px;color:#a3a3a3;font-size:14px}
+    .list{margin-top:10px;list-style:none;padding:0}
+    .item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #1f2330;border-radius:12px;margin-top:8px;transition:border-color 200ms ease, background 200ms ease}
+    .item .dot{width:10px;height:10px;border-radius:50%;background:#2a3145}
+    .item .icon{width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center}
+    .item .icon svg{width:16px;height:16px;fill:#a3a3a3}
+    .item .label{font-weight:600;color:#e5e7eb}
+    .item .info{color:#a3a3a3}
+    .item.pending{opacity:0.7}
+    .item.active{border-color:#2a3145;animation:pulse 1200ms ease-in-out infinite alternate}
+    .item.done{border-color:#284a2b;background:#0f1a12}
+    .item.done .dot{background:var(--ok)}
+    .item.error{border-color:#58343a;background:#1a1012}
+    .item.error .dot{background:var(--error)}
+    @keyframes pulse{from{box-shadow:0 0 0 0 rgba(124,58,237,.2)}to{box-shadow:0 0 0 6px rgba(124,58,237,.0)}}
+    .spinner{width:16px;height:16px;border:2px solid #2a3145;border-top-color:#7c3aed;border-radius:50%;display:inline-block;animation:spin 0.8s linear infinite;margin-right:8px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+  </style>
+  <meta name="description" content="Seguimiento de progreso de la conversión en tiempo real" />
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Convirtiendo a HTML y tema FSE</h1>
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <div class="status"><span class="spinner" id="spin"></span><span id="msg">Preparando...</span> — <span class="percent" id="pct">0%</span></div>
+      <div class="steps" id="hint">No cierres esta ventana. Te redirigiremos al finalizar.</div>
+      <ul class="list" id="steps">
+        <li class="item pending" data-key="Preparando"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm8.14 5a8.2 8.2 0 0 1-.68 1.64l1.46 1.46-2.12 2.12-1.46-1.46c-.52.28-1.07.5-1.64.68L15 20h-3v-2.16c-.57-.18-1.12-.4-1.64-.68L8.9 18.62l-2.12-2.12 1.46-1.46c-.28-.52-.5-1.07-.68-1.64L4 13V10l2.16-.34c.18-.57.4-1.12.68-1.64L5.38 6.56 7.5 4.44 8.96 5.9c.52-.28 1.07-.5 1.64-.68L13 4h3l.34 2.16c.57.18 1.12.4 1.64.68l1.46-1.46 2.12 2.12-1.46 1.46c.28.52.5 1.07.68 1.64L20 10v3Z"/></svg></span><span class="label">Preparando</span><span class="info"></span></li>
+        <li class="item pending" data-key="Inicializando conversión"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M5 20h14l-7-16-7 16Z"/></svg></span><span class="label">Inicializando conversión</span><span class="info"></span></li>
+        <li class="item pending" data-key="Cargando imágenes"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v12H4V6Zm3 9 3-4 2 3 3-4 3 5H7Z"/></svg></span><span class="label">Cargando imágenes</span><span class="info"></span></li>
+        <li class="item pending" data-key="Detectando patrones y secciones"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 0h8v8h-8v-8Z"/></svg></span><span class="label">Detectando patrones y secciones</span><span class="info"></span></li>
+        <li class="item pending" data-key="Extrayendo paleta DNA"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18 9 9 0 0 0 0-18Zm0 4a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"/></svg></span><span class="label">Extrayendo paleta DNA</span><span class="info"></span></li>
+        <li class="item pending" data-key="OCR"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M4 4h16v4H4V4Zm0 6h10v10H4V10Zm12 0h4v10h-4V10Z"/></svg></span><span class="label">OCR</span><span class="info"></span></li>
+        <li class="item pending" data-key="Generando HTML estático"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2Zm8 1.5V8h4.5L14 3.5Z"/></svg></span><span class="label">Generando HTML estático</span><span class="info"></span></li>
+        <li class="item pending" data-key="Construyendo tema FSE"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M3 3h8v8H3V3Zm10 0h8v8h-8V3ZM3 13h8v8H3v-8Zm10 6h8v2h-8v-2Zm0-4h8v2h-8v-2Z"/></svg></span><span class="label">Construyendo tema FSE</span><span class="info"></span></li>
+        <li class="item pending" data-key="Conversión completada"><span class="dot"></span><span class="icon"><svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.41 1.41L9 19 21 7l-1.41-1.41L9 16.17Z"/></svg></span><span class="label">Conversión completada</span><span class="info"></span></li>
+      </ul>
+    </div>
+  </div>
+  <script>
+    const batchId = "{{ batch_id }}";
+    const fill = document.getElementById('fill');
+    const msg = document.getElementById('msg');
+    const pct = document.getElementById('pct');
+    const spin = document.getElementById('spin');
+    let last = 0;
+    const order = [
+      {key:'Preparando', thr:1},
+      {key:'Inicializando conversión', thr:5},
+      {key:'Cargando imágenes', thr:10},
+      {key:'Detectando patrones y secciones', thr:20},
+      {key:'Extrayendo paleta DNA', thr:30},
+      {key:'OCR', thr:40},
+      {key:'Generando HTML estático', thr:65},
+      {key:'Construyendo tema FSE', thr:80},
+      {key:'Conversión completada', thr:100}
+    ];
+    function setStepClasses(activeKey, error){
+      const items = Array.from(document.querySelectorAll('#steps .item'));
+      const idx = order.findIndex(o => o.key === activeKey);
+      items.forEach((el, i) => {
+        el.classList.remove('pending','active','done','error');
+        if(error && i === idx){ el.classList.add('error'); return; }
+        if(i < idx){ el.classList.add('done'); }
+        else if(i === idx){ el.classList.add('active'); }
+        else { el.classList.add('pending'); }
+      });
+    }
+    function updateInfos(st){
+      const ocr = document.querySelector('#steps .item[data-key="OCR"] .info');
+      const tm = document.querySelector('#steps .item[data-key="Construyendo tema FSE"] .info');
+      if(ocr){ ocr.textContent = st.ocr_provider ? ` — ${String(st.ocr_provider)}` : ''; }
+      if(tm){
+        const prov = st.provider ? String(st.provider) : '';
+        const ai = st.used_ai ? ' (IA)' : '';
+        tm.textContent = prov ? ` — ${prov}${ai}` : '';
+      }
+    }
+    function inferActiveKey(p, message){
+      const m = (message||'').toLowerCase();
+      if(m.includes('error')) return 'Error';
+      for(const o of order){
+        if(o.key === 'OCR' && m.startsWith('ocr')) return 'OCR';
+        const k = o.key.toLowerCase();
+        if(k.length > 0 && m.includes(k)) return o.key;
+      }
+      for(let i=order.length-1;i>=0;i--){
+        if(p >= order[i].thr) return order[i].key;
+      }
+      return order[0].key;
+    }
+    async function poll(){
+      try{
+        const r = await fetch(`/progress/${batchId}`, {cache:'no-store'});
+        if(!r.ok){ throw new Error('request failed') }
+        const st = await r.json();
+        const p = Math.max(0, Math.min(100, parseInt(st.percent||0)));
+        if(p < last){ last = p }
+        const smooth = Math.max(p, last);
+        fill.style.width = smooth + '%';
+        pct.textContent = p + '%';
+        msg.textContent = st.message || '';
+        const activeKey = inferActiveKey(p, st.message||'');
+        setStepClasses(activeKey, (st.message||'').toLowerCase().includes('error'));
+        updateInfos(st);
+        if(st.ready){
+          spin.style.display = 'none';
+          window.location.href = `/result/${batchId}`;
+          return;
+        }
+      }catch(e){ /* ignore */ }
+    }
+    poll();
+    const id = setInterval(poll, 800);
+    window.addEventListener('beforeunload', ()=> clearInterval(id));
+  </script>
+  </body>
+</html>

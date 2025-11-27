@@ -3,26 +3,44 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>img2html</title>
+  <title>GapAnalysis</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0b0c0f; --panel:#121318; --fg:#fff; --muted:#a3a3a3; --primary:#4f46e5 }
+    :root { --bg:#0b0c0f; --panel:#121318; --fg:#fff; --muted:#a3a3a3; --primary:#7c3aed; --accent:#22c55e }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui}
-    .container{width:min(720px,92%);margin:0 auto;padding:32px}
-    .card{background:var(--panel);border:1px solid #1f2330;border-radius:12px;padding:24px}
-    h1{margin:0 0 16px;font-size:26px}
+    body{margin:0;background:radial-gradient(1200px 600px at 10% 0%, #131524 0, #0b0c0f 50%, #0b0c0f 100%);color:var(--fg);font-family:'Inter',system-ui}
+    .container{width:min(920px,92%);margin:0 auto;padding:32px}
+    .hero{padding:56px 0}
+    .hero .brand{display:inline-block;padding:8px 12px;border:1px solid #262a3a;border-radius:999px;color:#a3a3a3;font-size:12px}
+    .hero h1{font-size:44px;line-height:1.05;margin:16px 0;background:linear-gradient(90deg,#fff,#cbd5e1);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .hero p{color:#a3a3a3;font-size:16px;max-width:720px}
+    .actions{display:flex;gap:12px;margin-top:20px}
+    .button{background:var(--primary);color:#fff;border:none;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+    .button.secondary{background:#1f2330;color:#fff;border:1px solid #2a3145}
+    .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:24px}
+    .card{background:var(--panel);border:1px solid #1f2330;border-radius:16px;padding:24px}
+    h2{margin:0 0 12px;font-size:18px}
     p{color:var(--muted)}
-    form{margin-top:16px;display:flex;gap:12px;align-items:center}
+    form{margin-top:16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
     input[type=file]{flex:1}
-    button{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer}
+    input[type=text]{flex:1;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f}
+    button{background:var(--accent);color:#000;border:none;border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer}
   </style>
   <meta name="description" content="Convierte un ZIP de imágenes en HTML base para un tema de WordPress" />
 </head>
 <body>
   <div class="container">
+    <section class="hero">
+      <span class="brand">GapAnalysis</span>
+      <h1>Clonación visual extrema de diseños a WordPress FSE</h1>
+      <p>Convierte un ZIP con imágenes en un tema FSE que replica proporciones, colores, micro‑espaciados y patrones visuales. Con soporte para IA, slicing preciso y paleta DNA.</p>
+      <div class="actions">
+        <a class="button" href="#upload">Empezar</a>
+        <a class="button secondary" href="/wp_theme/" target="_blank">Explorar tema</a>
+      </div>
+    </section>
     {% if env %}
     <div class="card" style="margin-bottom:16px">
       <h2 style="font-size:18px;margin:0 0 8px">Estado de entorno</h2>
@@ -45,13 +63,13 @@
     </div>
     {% endif %}
     {% endwith %}
-    <div class="card">
-      <h1>Adjuntar ZIP de imágenes</h1>
+    <div class="card" id="upload">
+      <h2>Adjuntar ZIP de imágenes</h2>
       <p>Sube un archivo .zip con todas las imágenes del diseño. La app analizará los nombres para inferir orden y secciones. Para segmentación avanzada, sube assets sueltos o habilita slicing experimental si tienes rembg instalado.</p>
       <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="zipfile" accept=".zip" />
-        <input type="text" name="google_api_key" placeholder="GOOGLE_API_KEY (opcional)" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2330;color:#fff;background:#0b0c0f" />
-        <input type="text" name="google_application_credentials" placeholder="Ruta a GOOGLE_APPLICATION_CREDENTIALS (opcional)" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2330;color:#fff;background:#0b0c0f" />
+        <input type="text" name="google_api_key" placeholder="GOOGLE_API_KEY (opcional)" />
+        <input type="text" name="google_application_credentials" placeholder="Ruta a GOOGLE_APPLICATION_CREDENTIALS (opcional)" />
         <input type="file" name="google_application_credentials_file" accept=".json" />
         <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3">
           <input type="checkbox" name="save_env" checked /> Guardar .env
