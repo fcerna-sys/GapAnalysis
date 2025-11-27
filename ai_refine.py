@@ -496,6 +496,51 @@ def _mapping_to_fse(theme_dir, mapping):
     except Exception:
         pass
 
+def _plan_to_fse(theme_dir, plan):
+    try:
+        templates_dir = os.path.join(theme_dir, 'templates')
+        os.makedirs(templates_dir, exist_ok=True)
+        rows = []
+        for sec in (plan.get('sections') or []):
+            for row in (sec.get('layout_rows') or []):
+                cols = row.get('columns') or []
+                ratios = row.get('ratios_percent') or []
+                if not cols:
+                    continue
+                rows.append((cols, ratios))
+        blocks = []
+        for cols, ratios in rows:
+            blocks.append('<!-- wp:columns {"align":"wide"} -->')
+            blocks.append('<div class="wp-block-columns alignwide">')
+            n = len(cols)
+            for i, _ in enumerate(cols):
+                pct = '0%'
+                if i < len(ratios) and isinstance(ratios[i], (int, float)):
+                    pct = f"{int(ratios[i])}%"
+                elif n > 0:
+                    pct = f"{int(round(100/n))}%"
+                blocks.append(f'<!-- wp:column {{"width":"{pct}"}} -->')
+                blocks.append(f'<div class="wp-block-column" style="flex-basis:{pct}">')
+                blocks.append('<!-- wp:group {"layout":{"type":"constrained"}} -->')
+                blocks.append('<div class="wp-block-group"></div>')
+                blocks.append('<!-- /wp:group -->')
+                blocks.append('</div>')
+                blocks.append('<!-- /wp:column -->')
+            blocks.append('</div>')
+            blocks.append('<!-- /wp:columns -->')
+        content = "\n".join(blocks)
+        layout = f"""<!-- wp:template-part {{"slug":"header"}} /-->
+<!-- wp:group {{"tagName":"main","layout":{{"type":"constrained"}}}} -->
+<main>
+{content}
+</main>
+<!-- /wp:group -->
+<!-- wp:template-part {{"slug":"footer"}} /-->
+"""
+        _write_file(os.path.join(templates_dir, 'front-page-layout.html'), layout)
+    except Exception:
+        pass
+
 def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_dir: str, images=None):
     html = _read_file(os.path.join(temp_out_dir, 'index.html'))
     css = _read_file(os.path.join(temp_out_dir, 'styles.css'))
@@ -506,7 +551,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
         runtime_path = os.path.join(base_dir, 'wp_theme', 'prompts', 'runtime.json')
         runtime = _read_json(runtime_path) or {}
         selection = runtime.get('selection') or {}
-        temp = selection.get('temperature')
+        temp = 0.1
         top_p = selection.get('top_p')
         strategy = (selection.get('strategy') or '').lower()
         provider = ''
@@ -556,11 +601,19 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             api_key = os.environ.get('GOOGLE_API_KEY') or ''
         prompt_md = _read_file(os.path.join(base_dir, 'docs', 'prompt.md'))
         prompt = (
-            "Refina el HTML para accesibilidad, semántica y responsive. "
+            "MODO ESTRICTO: Clonación visual estricta del diseño. Prioriza REFERENCIAS VISUALES sobre HTML base y sobre OCR. "
+            "Replica márgenes y micro-espaciados exactos usando style=\"margin-top/bottom/left/right\" cuando sea necesario. "
+            "Infiera tipografía real (Serif/Sans y peso aparente Bold/Light) y ajuste heading/paragraph acorde. "
+            "Si el OCR alucina, corrige usando visión. "
             "Genera un tema de bloques (FSE) con theme.json v3 y plantillas. "
             "Archivos esperados en JSON: style.css, functions.php, theme.json, "
             "parts/header.html, parts/footer.html, templates/index.html, templates/single.html, "
-            "templates/page.html, templates/404.html. Sigue las pautas adjuntas. "
+            "templates/page.html, templates/404.html. "
+            "Para core/columns: NO USES anchos automáticos si el diseño es asimétrico; usa porcentajes exactos. "
+        )
+        strict = (
+            "Rol: Maquetador Web Senior Experto en WordPress FSE. "
+            "Entrega SOLO JSON válido. Usa REFERENCIAS VISUALES como fuente de verdad. "
         )
         selected = []
         if images:
@@ -573,9 +626,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
         provider_used = provider
         if provider == 'google' and api_key:
             import google.generativeai as genai
-            gcfg = {"response_mime_type": "application/json"}
-            if isinstance(temp, (int, float)):
-                gcfg["temperature"] = float(temp)
+            gcfg = {"response_mime_type": "application/json", "temperature": 0.1}
             if isinstance(top_p, (int, float)):
                 gcfg["top_p"] = float(top_p)
             config = genai.GenerationConfig(**gcfg)
@@ -583,6 +634,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             model = genai.GenerativeModel(model_name, generation_config=config)
             content = [
                 {"role":"user","parts":[{"text":prompt}]},
+                {"role":"user","parts":[{"text":"SISTEMA"},{"text":strict}]},
                 {"role":"user","parts":[{"text":"PROMPT_MD"},{"text":prompt_md}]},
                 {"role":"user","parts":[{"text":"HTML"},{"text":html}]},
                 {"role":"user","parts":[{"text":"CSS"},{"text":css}]},
@@ -609,11 +661,11 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                     response_text = ''
         elif provider == 'openai' and api_key and endpoint:
             msgs = []
-            msgs.append({"role":"system","content":"Eres un asistente que solo responde con un objeto JSON válido."})
+            msgs.append({"role":"system","content":"Eres un Maquetador Web Senior Experto en WordPress FSE. Debes responder SOLO con un objeto JSON válido. Prioriza REFERENCIAS VISUALES sobre HTML y OCR. Genera clonación visual estricta con micro-espaciados y tipografía inferida."})
             ucontent = [{"type":"text","text":prompt}, {"type":"text","text":"PROMPT_MD"}, {"type":"text","text":prompt_md}, {"type":"text","text":"HTML"}, {"type":"text","text":html}, {"type":"text","text":"CSS"}, {"type":"text","text":css}, {"type":"text","text":"INFO"}, {"type":"text","text":info_md}, {"type":"text","text":"PLAN"}, {"type":"text","text":json.dumps(plan, ensure_ascii=False)}]
             ucontent.append({"type":"text","text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje)."})
             if selected:
-                ucontent.append({"type":"text","text":"Referencias visuales"})
+                ucontent.append({"type":"text","text":"Referencias visuales (PRIORIDAD MÁXIMA)"})
                 for p in selected:
                     b64 = _encode_image(p)
                     if b64:
@@ -625,8 +677,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 "messages": msgs,
                 "response_format": {"type": "json_object"}
             }
-            if isinstance(temp, (int, float)):
-                body["temperature"] = float(temp)
+            body["temperature"] = 0.1
             if isinstance(top_p, (int, float)):
                 body["top_p"] = float(top_p)
             req = urllib.request.Request(endpoint, data=json.dumps(body).encode('utf-8'), headers={"Authorization": "Bearer "+api_key, "Content-Type": "application/json"})
@@ -640,9 +691,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 prompt + "\nPROMPT_MD\n" + prompt_md + "\nHTML\n" + html + "\nCSS\n" + css + "\nINFO\n" + info_md + "\nPLAN\n" + json.dumps(plan, ensure_ascii=False) + "\nSi el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje).\nENTREGA SOLO JSON."
             )
             body = {"model": model_name, "prompt": prompt_text, "format": "json", "stream": False}
-            opts = {}
-            if isinstance(temp, (int, float)):
-                opts["temperature"] = float(temp)
+            opts = {"temperature": 0.1}
             if isinstance(top_p, (int, float)):
                 opts["top_p"] = float(top_p)
             if opts:
@@ -664,6 +713,8 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
         mapping = data.pop('mapping', None)
         if mapping:
             _mapping_to_fse(theme_dir, mapping)
+        if plan and isinstance(plan, dict):
+            _plan_to_fse(theme_dir, plan)
         for name, value in data.items():
             _write_file(os.path.join(theme_dir, name), value)
         used_ai = True
