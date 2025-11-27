@@ -24,10 +24,25 @@
 </head>
 <body>
   <div class="container">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="card" style="margin-bottom:16px">
+      <ul>
+        {% for m in messages %}
+        <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="header">
       <h1>Plan inferido: {{ plan.title }}</h1>
       <form action="/convert" method="post">
         <input type="hidden" name="batch_id" value="{{ batch_id }}" />
+        <input type="hidden" name="google_api_key" value="{{ google_api_key }}" />
+        <input type="hidden" name="enable_slicing" value="{{ enable_slicing }}" />
+        <input type="hidden" name="save_env" value="{{ save_env }}" />
+        <input type="hidden" name="google_application_credentials" value="{{ google_application_credentials }}" />
         <button type="submit">Convertir a HTML</button>
       </form>
     </div>

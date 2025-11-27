@@ -27,6 +27,20 @@
       <p style="margin-top:16px">Tema de WordPress generado en {{ theme_dir }}.</p>
       <a class="button" href="/{{ theme_dir }}/style.css" target="_blank">Ver style.css del tema</a>
       <p style="margin-top:16px"><a class="button" href="/download_theme">Descargar ZIP del tema</a></p>
+      {% if used_ai %}
+      <p style="margin-top:16px;color:#22c55e">Generación con IA activada.</p>
+      {% if provider %}
+      <p style="margin-top:8px;color:#a3a3a3">Proveedor: {{ provider|title }}</p>
+      {% endif %}
+      {% if ocr_provider %}
+      <p style="margin-top:8px;color:#a3a3a3">OCR: {{ ocr_provider|title }}</p>
+      {% endif %}
+      {% else %}
+      <p style="margin-top:16px;color:#f59e0b">Se usó fallback local. Define GOOGLE_API_KEY o ingrésala en la pantalla inicial para habilitar IA.</p>
+      {% endif %}
+      {% if saved_env %}
+      <p style="margin-top:16px;color:#22c55e">API key guardada en .env.</p>
+      {% endif %}
     </div>
   </div>
 </body>

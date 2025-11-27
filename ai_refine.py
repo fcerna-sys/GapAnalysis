@@ -2,6 +2,9 @@ import os
 import json
 from typing import Dict
 import base64
+import urllib.request
+import urllib.error
+import ssl
 
 def _read_file(path):
     try:
@@ -445,15 +448,61 @@ def _mapping_to_fse(theme_dir, mapping):
 def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_dir: str, images=None):
     html = _read_file(os.path.join(temp_out_dir, 'index.html'))
     css = _read_file(os.path.join(temp_out_dir, 'styles.css'))
+    used_ai = False
+    provider_used = ''
     try:
-        import google.generativeai as genai
-        api_key = os.environ.get('GOOGLE_API_KEY')
-        if not api_key:
-            _fallback_wp(theme_dir, html, css, plan)
-            return
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-pro-latest')
         base_dir = os.path.dirname(os.path.abspath(__file__))
+        runtime_path = os.path.join(base_dir, 'wp_theme', 'prompts', 'runtime.json')
+        runtime = _read_json(runtime_path) or {}
+        selection = runtime.get('selection') or {}
+        temp = selection.get('temperature')
+        top_p = selection.get('top_p')
+        strategy = (selection.get('strategy') or '').lower()
+        provider = ''
+        model_name = ''
+        api_key = ''
+        endpoint = ''
+        chosen_local = None
+        for lm in (runtime.get('local_models') or []):
+            if lm.get('enabled') and (lm.get('runner') or '') == 'ollama':
+                chosen_local = lm
+                break
+        chosen_remote_google = None
+        chosen_remote_openai = None
+        for rm in (runtime.get('remote_models') or []):
+            if rm.get('enabled') and rm.get('provider') == 'google':
+                chosen_remote_google = rm
+            if rm.get('enabled') and rm.get('provider') == 'openai':
+                chosen_remote_openai = rm
+        if 'prefer_local' in strategy and chosen_local:
+            provider = 'ollama'
+            model_name = chosen_local.get('id') or chosen_local.get('name') or 'llama3.1:8b'
+            endpoint = os.environ.get('OLLAMA_ENDPOINT') or 'http://localhost:11434/api/generate'
+        elif chosen_remote_google:
+            provider = 'google'
+            model_name = chosen_remote_google.get('name') or 'gemini-1.5-pro-latest'
+            for name in (chosen_remote_google.get('tokens') or []):
+                val = os.environ.get(name)
+                if val:
+                    api_key = val
+                    break
+            if not api_key:
+                api_key = os.environ.get('GOOGLE_API_KEY') or ''
+        elif chosen_remote_openai:
+            provider = 'openai'
+            model_name = chosen_remote_openai.get('name') or 'gpt-4.1'
+            endpoint = chosen_remote_openai.get('endpoint') or 'https://api.openai.com/v1/chat/completions'
+            for name in (chosen_remote_openai.get('tokens') or []):
+                val = os.environ.get(name)
+                if val:
+                    api_key = val
+                    break
+            if not api_key:
+                api_key = os.environ.get('OPENAI_API_KEY') or ''
+        else:
+            provider = 'google'
+            model_name = 'gemini-1.5-pro-latest'
+            api_key = os.environ.get('GOOGLE_API_KEY') or ''
         prompt_md = _read_file(os.path.join(base_dir, 'docs', 'prompt.md'))
         prompt = (
             "Refina el HTML para accesibilidad, semántica y responsive. "
@@ -462,14 +511,6 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             "parts/header.html, parts/footer.html, templates/index.html, templates/single.html, "
             "templates/page.html, templates/404.html. Sigue las pautas adjuntas. "
         )
-        content = [
-            {"role":"user","parts":[{"text":prompt}]},
-            {"role":"user","parts":[{"text":"PROMPT_MD"},{"text":prompt_md}]},
-            {"role":"user","parts":[{"text":"HTML"},{"text":html}]},
-            {"role":"user","parts":[{"text":"CSS"},{"text":css}]},
-            {"role":"user","parts":[{"text":"INFO"},{"text":info_md}]},
-            {"role":"user","parts":[{"text":"PLAN"},{"text":json.dumps(plan, ensure_ascii=False)}]},
-        ]
         selected = []
         if images:
             selected = images[:5]
@@ -477,20 +518,91 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             for sec in plan['sections'][:3]:
                 if sec.get('images'):
                     selected.append(sec['images'][0])
-        if selected:
-            content.append({"role":"user","parts":[{"text":"Referencias visuales"}]})
-            for p in selected:
-                b64 = _encode_image(p)
-                if b64:
-                    content.append({"role":"user","parts":[{"inline_data":{"mime_type":"image/jpeg","data": b64}}]})
-        content.append({"role":"user","parts":[{"text":"Primero entrega JSON 'mapping' con regiones visuales → bloques FSE (core/cover, core/columns, core/group, core/heading, core/paragraph, core/image, core/navigation, core/query). Si la imagen es diseño complejo, replica con columns/group/heading/paragraph; si es foto simple, usa image/cover. Luego entrega el JSON con archivos esperados."}]})
-        resp = model.generate_content(content)
-        text = resp.text or ''
-        try:
-            data = json.loads(text)
-        except Exception:
+        response_text = ''
+        provider_used = provider
+        if provider == 'google' and api_key:
+            import google.generativeai as genai
+            gcfg = {"response_mime_type": "application/json"}
+            if isinstance(temp, (int, float)):
+                gcfg["temperature"] = float(temp)
+            if isinstance(top_p, (int, float)):
+                gcfg["top_p"] = float(top_p)
+            config = genai.GenerationConfig(**gcfg)
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(model_name, generation_config=config)
+            content = [
+                {"role":"user","parts":[{"text":prompt}]},
+                {"role":"user","parts":[{"text":"PROMPT_MD"},{"text":prompt_md}]},
+                {"role":"user","parts":[{"text":"HTML"},{"text":html}]},
+                {"role":"user","parts":[{"text":"CSS"},{"text":css}]},
+                {"role":"user","parts":[{"text":"INFO"},{"text":info_md}]},
+                {"role":"user","parts":[{"text":"PLAN"},{"text":json.dumps(plan, ensure_ascii=False)}]},
+            ]
+            if selected:
+                content.append({"role":"user","parts":[{"text":"Referencias visuales"}]})
+                for p in selected:
+                    b64 = _encode_image(p)
+                    if b64:
+                        content.append({"role":"user","parts":[{"inline_data":{"mime_type":"image/jpeg","data": b64}}]})
+            content.append({"role":"user","parts":[{"text":"Primero entrega JSON 'mapping' con regiones visuales → bloques FSE (core/cover, core/columns, core/group, core/heading, core/paragraph, core/image, core/navigation, core/query). Si la imagen es diseño complejo, replica con columns/group/heading/paragraph; si es foto simple, usa image/cover. Luego entrega el JSON con archivos esperados."}]})
+            resp = model.generate_content(content)
+            response_text = getattr(resp, 'text', '') or ''
+            if not response_text:
+                try:
+                    if getattr(resp, 'candidates', None):
+                        parts = resp.candidates[0].content.parts
+                        if parts and hasattr(parts[0], 'text'):
+                            response_text = parts[0].text or ''
+                except Exception:
+                    response_text = ''
+        elif provider == 'openai' and api_key and endpoint:
+            msgs = []
+            msgs.append({"role":"system","content":"Eres un asistente que solo responde con un objeto JSON válido."})
+            ucontent = [{"type":"text","text":prompt}, {"type":"text","text":"PROMPT_MD"}, {"type":"text","text":prompt_md}, {"type":"text","text":"HTML"}, {"type":"text","text":html}, {"type":"text","text":"CSS"}, {"type":"text","text":css}, {"type":"text","text":"INFO"}, {"type":"text","text":info_md}, {"type":"text","text":"PLAN"}, {"type":"text","text":json.dumps(plan, ensure_ascii=False)}]
+            if selected:
+                ucontent.append({"type":"text","text":"Referencias visuales"})
+                for p in selected:
+                    b64 = _encode_image(p)
+                    if b64:
+                        ucontent.append({"type":"input_image","image_url":{"url":"data:image/jpeg;base64,"+b64}})
+            ucontent.append({"type":"text","text":"Primero entrega JSON 'mapping' con regiones visuales → bloques FSE (core/cover, core/columns, core/group, core/heading, core/paragraph, core/image, core/navigation, core/query). Si la imagen es diseño complejo, replica con columns/group/heading/paragraph; si es foto simple, usa image/cover. Luego entrega el JSON con archivos esperados."})
+            msgs.append({"role":"user","content":ucontent})
+            body = {
+                "model": model_name,
+                "messages": msgs,
+                "response_format": {"type": "json_object"}
+            }
+            if isinstance(temp, (int, float)):
+                body["temperature"] = float(temp)
+            if isinstance(top_p, (int, float)):
+                body["top_p"] = float(top_p)
+            req = urllib.request.Request(endpoint, data=json.dumps(body).encode('utf-8'), headers={"Authorization": "Bearer "+api_key, "Content-Type": "application/json"})
+            ctx = ssl.create_default_context()
+            with urllib.request.urlopen(req, context=ctx) as resp:
+                raw = resp.read()
+                obj = json.loads(raw.decode('utf-8'))
+                response_text = obj.get('choices', [{}])[0].get('message', {}).get('content', '') or ''
+        elif provider == 'ollama' and model_name:
+            prompt_text = (
+                prompt + "\nPROMPT_MD\n" + prompt_md + "\nHTML\n" + html + "\nCSS\n" + css + "\nINFO\n" + info_md + "\nPLAN\n" + json.dumps(plan, ensure_ascii=False) + "\nENTREGA SOLO JSON."
+            )
+            body = {"model": model_name, "prompt": prompt_text, "format": "json", "stream": False}
+            opts = {}
+            if isinstance(temp, (int, float)):
+                opts["temperature"] = float(temp)
+            if isinstance(top_p, (int, float)):
+                opts["top_p"] = float(top_p)
+            if opts:
+                body["options"] = opts
+            req = urllib.request.Request(endpoint, data=json.dumps(body).encode('utf-8'), headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req) as resp:
+                raw = resp.read()
+                obj = json.loads(raw.decode('utf-8'))
+                response_text = obj.get('response', '') or ''
+        else:
             _fallback_wp(theme_dir, html, css, plan)
-            return
+            return {"used_ai": used_ai, "provider": provider_used}
+        data = json.loads(response_text)
         os.makedirs(os.path.join(theme_dir, 'parts'), exist_ok=True)
         os.makedirs(os.path.join(theme_dir, 'templates'), exist_ok=True)
         mapping = data.pop('mapping', None)
@@ -498,5 +610,8 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             _mapping_to_fse(theme_dir, mapping)
         for name, value in data.items():
             _write_file(os.path.join(theme_dir, name), value)
+        used_ai = True
+        return {"used_ai": used_ai, "provider": provider_used}
     except Exception:
         _fallback_wp(theme_dir, html, css, plan)
+        return {"used_ai": used_ai, "provider": provider_used}

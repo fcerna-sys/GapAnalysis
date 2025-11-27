@@ -3,18 +3,28 @@ from werkzeug.utils import secure_filename
 import os
 import zipfile
 import uuid
+import json
 from analyzer import analyze_images, extract_design_dna, identify_pattern
 from ocr import extract_texts
 from ai_refine import refine_and_generate_wp
 from wp_theme.prompts.runner import ThemeBuilder
+from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
 TEMP_OUT_DIR = os.path.join(BASE_DIR, 'temp_out')
 DOC_INFO_PATH = os.path.join(BASE_DIR, 'docs', 'info.md')
+ENV_PATH = os.path.join(BASE_DIR, '.env')
 
 app = Flask(__name__)
 app.secret_key = 'img2html-secret'
+load_dotenv()
+try:
+    if not os.path.isfile(os.path.join(BASE_DIR, '.env')):
+        with open(os.path.join(BASE_DIR, '.env'), 'w', encoding='utf-8') as f:
+            f.write('')
+except Exception:
+    pass
 
 ALLOWED_EXTENSIONS = {'.zip'}
 
@@ -28,11 +38,55 @@ def basename_filter(p):
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template('index.html')
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    runtime_path = os.path.join(base_dir, 'wp_theme', 'prompts', 'runtime.json')
+    runtime = {}
+    try:
+        with open(runtime_path, 'r', encoding='utf-8') as f:
+            runtime = json.load(f)
+    except Exception:
+        runtime = {}
+    gemini_keys = ['GOOGLE_API_KEY']
+    for rm in (runtime.get('remote_models') or []):
+        if rm.get('provider') == 'google' and rm.get('enabled'):
+            for name in (rm.get('tokens') or []):
+                gemini_keys.append(name)
+    has_gemini = any(os.environ.get(k) for k in gemini_keys)
+    openai_keys = ['OPENAI_API_KEY']
+    for rm in (runtime.get('remote_models') or []):
+        if rm.get('provider') == 'openai' and rm.get('enabled'):
+            for name in (rm.get('tokens') or []):
+                openai_keys.append(name)
+    has_openai = any(os.environ.get(k) for k in openai_keys)
+    ollama_endpoint = os.environ.get('OLLAMA_ENDPOINT') or 'http://localhost:11434/api/generate'
+    cred_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') or ''
+    cred_exists = bool(cred_path and os.path.isfile(cred_path))
+    cred_valid = False
+    if cred_exists:
+        try:
+            with open(cred_path, 'r', encoding='utf-8') as f:
+                obj = json.load(f)
+            cred_valid = _is_valid_service_account_json(obj)
+        except Exception:
+            cred_valid = False
+    env = {
+        'gemini': has_gemini,
+        'openai': has_openai,
+        'ollama_endpoint': ollama_endpoint,
+        'vision_path': cred_path,
+        'vision_exists': cred_exists,
+        'vision_valid': cred_valid
+    }
+    return render_template('index.html', env=env)
 
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files.get('zipfile')
+    google_api_key = request.form.get('google_api_key') or ''
+    enable_slicing = request.form.get('enable_slicing') or ''
+    save_env = request.form.get('save_env') or ''
+    google_application_credentials = request.form.get('google_application_credentials') or ''
+    google_application_credentials_file = request.files.get('google_application_credentials_file')
     if not file or file.filename == '':
         flash('Adjunta un archivo ZIP válido')
         return redirect(url_for('index'))
@@ -59,13 +113,50 @@ def upload():
     plan = analyze_images(images)
     for s in plan['sections']:
         s['pattern'] = identify_pattern(s)
+    if google_api_key and save_env:
+        _update_env_file(ENV_PATH, 'GOOGLE_API_KEY', google_api_key)
+    if google_application_credentials:
+        try:
+            if os.path.isfile(google_application_credentials):
+                with open(google_application_credentials, 'r', encoding='utf-8') as f:
+                    obj = json.load(f)
+                if not _is_valid_service_account_json(obj):
+                    flash('El archivo de credenciales indicado no parece ser un Service Account válido')
+                    google_application_credentials = ''
+            else:
+                flash('La ruta de credenciales indicada no existe')
+                google_application_credentials = ''
+        except Exception:
+            flash('No se pudo leer el archivo de credenciales indicado')
+            google_application_credentials = ''
+        if google_application_credentials and save_env:
+            _update_env_file(ENV_PATH, 'GOOGLE_APPLICATION_CREDENTIALS', google_application_credentials)
+    if google_application_credentials_file and getattr(google_application_credentials_file, 'filename', ''):
+        try:
+            data = google_application_credentials_file.read()
+            obj = json.loads(data.decode('utf-8'))
+            if _is_valid_service_account_json(obj):
+                target_path = os.path.join(BASE_DIR, 'service-account.json')
+                with open(target_path, 'wb') as wf:
+                    wf.write(data)
+                google_application_credentials = target_path
+                if save_env:
+                    _update_env_file(ENV_PATH, 'GOOGLE_APPLICATION_CREDENTIALS', target_path)
+            else:
+                flash('El JSON subido no es un Service Account válido')
+        except Exception:
+            flash('No se pudo procesar el archivo de credenciales subido')
     request.environ['img2html_batch_dir'] = batch_dir
     request.environ['img2html_plan'] = plan
-    return render_template('plan.html', plan=plan, batch_id=batch_id)
+    return render_template('plan.html', plan=plan, batch_id=batch_id, google_api_key=google_api_key, enable_slicing=enable_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
 
 @app.route('/convert', methods=['POST'])
 def convert():
     batch_id = request.form.get('batch_id')
+    google_api_key = request.form.get('google_api_key') or ''
+    enable_slicing = request.form.get('enable_slicing') or ''
+    save_env = request.form.get('save_env') or ''
+    google_application_credentials = request.form.get('google_application_credentials') or ''
     if not batch_id:
         flash('Falta el identificador del lote')
         return redirect(url_for('index'))
@@ -87,9 +178,9 @@ def convert():
         s['pattern'] = identify_pattern(s)
     dna = extract_design_dna(images)
     try:
-        ocr_texts = extract_texts(images)
+        ocr_texts, ocr_provider = extract_texts(images)
     except Exception:
-        ocr_texts = {}
+        ocr_texts, ocr_provider = ({}, '')
     os.makedirs(TEMP_OUT_DIR, exist_ok=True)
     assets_dir = os.path.join(TEMP_OUT_DIR, 'assets')
     os.makedirs(assets_dir, exist_ok=True)
@@ -102,6 +193,18 @@ def convert():
                 with open(img, 'rb') as rf, open(dst, 'wb') as wf:
                     wf.write(rf.read())
             copied.append(name)
+            if enable_slicing:
+                try:
+                    from rembg import remove
+                    from PIL import Image
+                    im = Image.open(img).convert('RGBA')
+                    out = remove(im)
+                    base = os.path.splitext(name)[0]
+                    seg_name = f"{base}_fg.png"
+                    out.save(os.path.join(assets_dir, seg_name))
+                    copied.append(seg_name)
+                except Exception:
+                    pass
     info_md = ''
     if os.path.isfile(DOC_INFO_PATH):
         try:
@@ -198,16 +301,27 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
     wp_theme_dir = os.path.join(BASE_DIR, 'wp_theme')
     os.makedirs(wp_theme_dir, exist_ok=True)
     try:
+        if google_api_key:
+            os.environ['GOOGLE_API_KEY'] = google_api_key
+            if save_env:
+                _update_env_file(ENV_PATH, 'GOOGLE_API_KEY', google_api_key)
+        if google_application_credentials:
+            os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = google_application_credentials
+            if save_env:
+                _update_env_file(ENV_PATH, 'GOOGLE_APPLICATION_CREDENTIALS', google_application_credentials)
         builder = ThemeBuilder(output_dir=wp_theme_dir, context=dna)
         builder.bootstrap()
         builder.run_prompt('01_theme_json_full.json')
         builder.run_prompt('52_template_parts_catalog.json')
         builder.run_prompt('51_templates_catalog.json')
         builder.run_prompt('53_patterns_catalog.json')
-        refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images)
+        result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images)
+        used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
+        provider = (result.get('provider') if isinstance(result, dict) else '') or ''
     except Exception:
-        pass
-    return render_template('done.html', output_dir='temp_out', theme_dir='wp_theme')
+        used_ai = False
+        provider = ''
+    return render_template('done.html', output_dir='temp_out', theme_dir='wp_theme', used_ai=used_ai, saved_env=bool(save_env), provider=provider, ocr_provider=ocr_provider)
 
 @app.route('/temp_out/<path:filename>')
 def temp_out_files(filename):
@@ -233,3 +347,38 @@ def download_theme():
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8000))
     app.run(host='0.0.0.0', port=port, debug=True)
+def _update_env_file(path, key, value):
+    try:
+        if not value:
+            return False
+        lines = []
+        if os.path.isfile(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                lines = f.read().splitlines()
+        found = False
+        new_lines = []
+        for ln in lines:
+            if ln.strip().startswith(f"{key}="):
+                new_lines.append(f"{key}={value}")
+                found = True
+            else:
+                new_lines.append(ln)
+        if not found:
+            new_lines.append(f"{key}={value}")
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write("\n".join(new_lines))
+        return True
+    except Exception:
+        return False
+def _is_valid_service_account_json(obj):
+    try:
+        if not isinstance(obj, dict):
+            return False
+        t = obj.get('type')
+        pid = obj.get('project_id')
+        pkid = obj.get('private_key_id')
+        pk = obj.get('private_key')
+        email = obj.get('client_email')
+        return t == 'service_account' and bool(pid and pkid and pk and email)
+    except Exception:
+        return False

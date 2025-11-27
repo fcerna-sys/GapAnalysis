@@ -43,8 +43,11 @@ def _tesseract(paths: List[str]) -> Dict[str, str]:
             out[p] = ''
     return out
 
-def extract_texts(paths: List[str]) -> Dict[str, str]:
+def extract_texts(paths: List[str]):
     data = _google_vision(paths)
-    if data:
-        return data
-    return _tesseract(paths)
+    if data or os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'):
+        return data, 'vision'
+    data2 = _tesseract(paths)
+    if data2:
+        return data2, 'tesseract'
+    return {}, ''

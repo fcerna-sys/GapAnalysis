@@ -6,3 +6,4 @@ pillow
 colorgram.py
 pytest
 coverage
+python-dotenv

@@ -23,11 +23,42 @@
 </head>
 <body>
   <div class="container">
+    {% if env %}
+    <div class="card" style="margin-bottom:16px">
+      <h2 style="font-size:18px;margin:0 0 8px">Estado de entorno</h2>
+      <ul style="list-style:none;padding:0;margin:0;color:#a3a3a3">
+        <li>Gemini: {{ 'OK' if env.gemini else 'Falta clave' }}</li>
+        <li>OpenAI: {{ 'OK' if env.openai else 'Falta clave' }}</li>
+        <li>Vision JSON: {% if env.vision_path %}{{ env.vision_path }}{% else %}No configurado{% endif %} — {% if env.vision_valid %}Válido{% elif env.vision_exists %}No válido{% else %}No existe{% endif %}</li>
+        <li>Ollama endpoint: {{ env.ollama_endpoint }}</li>
+      </ul>
+    </div>
+    {% endif %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="card" style="margin-bottom:16px">
+      <ul>
+        {% for m in messages %}
+        <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% endwith %}
     <div class="card">
       <h1>Adjuntar ZIP de imágenes</h1>
-      <p>Sube un archivo .zip con todas las imágenes del diseño. La app analizará los nombres para inferir orden y secciones.</p>
+      <p>Sube un archivo .zip con todas las imágenes del diseño. La app analizará los nombres para inferir orden y secciones. Para segmentación avanzada, sube assets sueltos o habilita slicing experimental si tienes rembg instalado.</p>
       <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="zipfile" accept=".zip" />
+        <input type="text" name="google_api_key" placeholder="GOOGLE_API_KEY (opcional)" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2330;color:#fff;background:#0b0c0f" />
+        <input type="text" name="google_application_credentials" placeholder="Ruta a GOOGLE_APPLICATION_CREDENTIALS (opcional)" style="flex:1;padding:10px;border-radius:8px;border:1px solid #1f2330;color:#fff;background:#0b0c0f" />
+        <input type="file" name="google_application_credentials_file" accept=".json" />
+        <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3">
+          <input type="checkbox" name="save_env" checked /> Guardar .env
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3">
+          <input type="checkbox" name="enable_slicing" /> Slicing experimental (requiere rembg)
+        </label>
         <button type="submit">Analizar ZIP</button>
       </form>
     </div>
