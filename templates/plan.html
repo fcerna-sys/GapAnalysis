@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plan de secciones</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0b0c0f; --panel:#121318; --fg:#fff; --muted:#a3a3a3; --primary:#4f46e5 }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui}
+    .container{width:min(860px,92%);margin:0 auto;padding:32px}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .card{background:var(--panel);border:1px solid #1f2330;border-radius:12px;padding:16px}
+    h1{font-size:24px;margin:0}
+    h2{font-size:18px;margin:0 0 8px}
+    ul{list-style:none;padding:0;margin:0}
+    li{margin:4px 0;color:var(--muted)}
+    button{background:var(--primary);color:#fff;border:none;border-radius:8px;padding:10px 14px;font-weight:600;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Plan inferido: {{ plan.title }}</h1>
+      <form action="/convert" method="post">
+        <input type="hidden" name="batch_id" value="{{ batch_id }}" />
+        <button type="submit">Convertir a HTML</button>
+      </form>
+    </div>
+    <div class="grid">
+      {% for section in plan.sections %}
+      <div class="card">
+        <h2>{{ section.label }}</h2>
+        <ul>
+          {% for p in section.images %}
+          <li>{{ p|basename }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>

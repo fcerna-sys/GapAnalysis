@@ -1,0 +1,20 @@
+{
+  "name": "Template Parts FSE",
+  "model": "auto",
+  "role": "Generador de partes de plantilla",
+  "objective": "Crear header y footer con bloques FSE y semántica accesible.",
+  "requirements": [
+    "Header: site-logo, site-title, site-tagline, navigation",
+    "Footer: copyright, social-links, menú secundario",
+    "Usar layouts flex/grid coherentes y presets de color/tipografía"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["parts/header.html", "parts/footer.html"],
+    "target_dir": ".."
+  },
+  "acceptance_criteria": [
+    "Partes insertables desde template-part en templates",
+    "Accesibilidad básica (roles/aria)"
+  ]
+}

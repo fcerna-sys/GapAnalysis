@@ -1,0 +1,7 @@
+flask
+google-cloud-vision
+google-generativeai
+pytesseract
+pillow
+pytest
+coverage

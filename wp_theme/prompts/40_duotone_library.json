@@ -1,0 +1,12 @@
+{
+  "name": "Librería de duotone",
+  "model": "auto",
+  "role": "Autor de duotone",
+  "objective": "Definir presets de duotone y aplicarlos en imagen y galería.",
+  "requirements": [
+    "Agregar presets duotone",
+    "Ejemplos en cover, image y gallery",
+    "Mantener contraste adecuado"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "docs/DUOTONE.md"], "target_dir": ".."}
+}

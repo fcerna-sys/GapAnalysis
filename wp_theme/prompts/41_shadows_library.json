@@ -1,0 +1,12 @@
+{
+  "name": "Librería de sombras",
+  "model": "auto",
+  "role": "Autor de sombras",
+  "objective": "Definir presets de sombras y aplicarlos a cards y botones.",
+  "requirements": [
+    "Presets con niveles (sm, md, lg)",
+    "Aplicaciones en patterns/cards y buttons",
+    "Ajuste con prefers-reduced-motion cuando aplique"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "docs/SHADOWS.md"], "target_dir": ".."}
+}

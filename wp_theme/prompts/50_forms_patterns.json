@@ -1,0 +1,12 @@
+{
+  "name": "Patrones de formularios",
+  "model": "auto",
+  "role": "Autor de forms",
+  "objective": "Definir patrones de formulario de contacto y newsletter con estilos coherentes.",
+  "requirements": [
+    "Campos accesibles con labels",
+    "Botones con estados hover/focus",
+    "Compatibilidad con plugins de formularios"
+  ],
+  "deliverables": {"format": "json", "files": ["patterns/form-contact.html", "patterns/form-newsletter.html", "blocks.css"], "target_dir": ".."}
+}

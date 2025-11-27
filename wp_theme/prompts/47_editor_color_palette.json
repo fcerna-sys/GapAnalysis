@@ -1,0 +1,12 @@
+{
+  "name": "Paleta del editor",
+  "model": "auto",
+  "role": "Gestor de paleta",
+  "objective": "Gestionar paletas del editor y nombres coherentes en theme.json.",
+  "requirements": [
+    "Nombres y slugs consistentes",
+    "Evitar duplicados y conflictos",
+    "Compatibles con variaciones de estilo"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json"], "target_dir": ".."}
+}

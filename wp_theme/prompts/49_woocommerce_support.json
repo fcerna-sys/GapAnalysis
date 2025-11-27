@@ -1,0 +1,12 @@
+{
+  "name": "Soporte WooCommerce (opcional)",
+  "model": "auto",
+  "role": "Autor de compatibilidad",
+  "objective": "Proveer scaffolding básico para compatibilidad con WooCommerce en tema de bloques.",
+  "requirements": [
+    "Estilos mínimos de carrito/checkout",
+    "Plantillas de tienda y producto (bloques)",
+    "Nota: mejor en child theme o plugin"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/README_WOO.md"], "target_dir": ".."}
+}

@@ -1,0 +1,27 @@
+{
+  "name": "Catálogo de plantillas (merge)",
+  "model": "auto",
+  "role": "Integrador de customTemplates",
+  "objective": "Materializar templates definidas en customTemplates.json (blank, page-no-title, landing-page, full-width, sidebar-left/right, blog-grid) en archivos .html FSE válidos.",
+  "inputs": {
+    "catalog": "../customTemplates.json"
+  },
+  "requirements": [
+    "Respetar postTypes y titles del catálogo",
+    "Usar template-part header/footer cuando aplique",
+    "Construir layouts columns/group según descripción"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": [
+      "templates/blank.html",
+      "templates/page-no-title.html",
+      "templates/landing-page.html",
+      "templates/full-width.html",
+      "templates/sidebar-left.html",
+      "templates/sidebar-right.html",
+      "templates/blog-grid.html"
+    ],
+    "target_dir": ".."
+  }
+}

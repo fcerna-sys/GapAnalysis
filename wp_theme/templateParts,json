@@ -1,0 +1,58 @@
+{
+  "customTemplates": [
+    {
+      "name": "blank",
+      "postTypes": [
+        "page",
+        "post"
+      ],
+      "title": "Blank Canvas (No Header/Footer)"
+    },
+    {
+      "name": "page-no-title",
+      "postTypes": [
+        "page"
+      ],
+      "title": "Page without Title"
+    },
+    {
+      "name": "landing-page",
+      "postTypes": [
+        "page"
+      ],
+      "title": "Landing Page (Narrow)"
+    }
+  ],
+  "templateParts": [
+    {
+      "area": "header",
+      "name": "header",
+      "title": "Header Standard"
+    },
+    {
+      "area": "header",
+      "name": "header-centered",
+      "title": "Header Centered Logo"
+    },
+    {
+      "area": "footer",
+      "name": "footer",
+      "title": "Footer Standard"
+    },
+    {
+      "area": "uncategorized",
+      "name": "sidebar",
+      "title": "Sidebar"
+    },
+    {
+      "area": "uncategorized",
+      "name": "comments",
+      "title": "Comments Section"
+    }
+  ],
+  "patterns": [
+    "my-theme/hero-section",
+    "my-theme/cta-banner",
+    "my-theme/pricing-table"
+  ]
+}

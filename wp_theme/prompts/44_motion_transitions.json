@@ -1,0 +1,12 @@
+{
+  "name": "Transiciones y movimiento",
+  "model": "auto",
+  "role": "Autor de motion",
+  "objective": "Definir transiciones suaves y respetar prefers-reduced-motion.",
+  "requirements": [
+    "Transiciones en hover/focus de botones y links",
+    "Fallback sin animación cuando reduced-motion",
+    "Sin bloquear accesibilidad"
+  ],
+  "deliverables": {"format": "json", "files": ["blocks.css"], "target_dir": ".."}
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Optimización de performance",
+  "model": "auto",
+  "role": "Optimizador",
+  "objective": "Aplicar lazy-loading, assets bajo demanda y reglas de carga especulativa sin romper el editor.",
+  "requirements": [
+    "Lazy-load en imágenes y iframes",
+    "Filtro should_load_block_assets_on_demand",
+    "Reglas de speculative loading documentadas"
+  ],
+  "deliverables": {"format": "json", "files": ["functions.php"], "target_dir": ".."}
+}

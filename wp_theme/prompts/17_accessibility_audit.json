@@ -1,0 +1,12 @@
+{
+  "name": "Auditoría de Accesibilidad",
+  "model": "auto",
+  "role": "Auditor a11y",
+  "objective": "Revisar roles, aria, orden tab, contrastes y etiquetas en plantillas y patrones.",
+  "requirements": [
+    "Agregar labels a search",
+    "Contrastes AA en links y botones",
+    "Roles header/main/footer y landmarks"
+  ],
+  "deliverables": {"format": "json", "files": ["A11Y.md", "theme.json"], "target_dir": ".."}
+}

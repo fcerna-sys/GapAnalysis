@@ -1,0 +1,12 @@
+{
+  "name": "SEO básico",
+  "model": "auto",
+  "role": "Asesor SEO",
+  "objective": "Asegurar etiquetas semánticas, jerarquía de headings y enlaces accesibles.",
+  "requirements": [
+    "Estructura H1/H2/H3 correcta por plantilla",
+    "Enlaces con textos descriptivos",
+    "Open Graph y meta básicos (nota: preferible plugin)"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/SEO.md"], "target_dir": ".."}
+}

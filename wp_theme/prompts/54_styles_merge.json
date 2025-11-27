@@ -1,0 +1,20 @@
+{
+  "name": "Merge de estilos",
+  "model": "auto",
+  "role": "Fusionador de styles",
+  "objective": "Fusionar styles.json en theme.json respetando schema v3 y mantener coherencia de presets y blocks.",
+  "inputs": {
+    "styles": "../styles.json",
+    "theme": "../theme.json"
+  },
+  "requirements": [
+    "Mantener paleta y tipografías en presets",
+    "Trasladar elements y blocks sin romper editor",
+    "Validar contra schema"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["theme.json"],
+    "target_dir": ".."
+  }
+}

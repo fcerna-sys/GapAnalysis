@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conversión completada</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#0b0c0f; --panel:#121318; --fg:#fff; --muted:#a3a3a3; --primary:#22c55e }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui}
+    .container{width:min(720px,92%);margin:0 auto;padding:32px}
+    .card{background:var(--panel);border:1px solid #1f2330;border-radius:12px;padding:24px}
+    h1{margin:0 0 16px;font-size:24px}
+    a.button{display:inline-block;background:var(--primary);color:#000;border:none;border-radius:8px;padding:10px 14px;font-weight:700;text-decoration:none}
+    p{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>HTML generado</h1>
+      <p>Los archivos se guardaron en {{ output_dir }}.</p>
+      <a class="button" href="/{{ output_dir }}/index.html" target="_blank">Abrir index.html</a>
+      <p style="margin-top:16px">Tema de WordPress generado en {{ theme_dir }}.</p>
+      <a class="button" href="/{{ theme_dir }}/style.css" target="_blank">Ver style.css del tema</a>
+      <p style="margin-top:16px"><a class="button" href="/download_theme">Descargar ZIP del tema</a></p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "Escala tipográfica",
+  "model": "auto",
+  "role": "Autor de typography",
+  "objective": "Definir una escala tipográfica con tamaños fluidos y mapping en theme.json.",
+  "requirements": [
+    "Presets font-size (xs–xxl) con clamp",
+    "Mapping a headings y párrafos",
+    "Conjuntos de fuentes para stylebook"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "docs/STYLEBOOK.md"], "target_dir": ".."}
+}

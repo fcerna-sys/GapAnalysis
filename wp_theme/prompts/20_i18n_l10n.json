@@ -1,0 +1,12 @@
+{
+  "name": "Internacionalización y Localización",
+  "model": "auto",
+  "role": "I18N/L10N",
+  "objective": "Definir text domain, headers y generar plantilla POT.",
+  "requirements": [
+    "Text domain img2html",
+    "Cabecera en style.css con Text Domain",
+    "Generar img2html.pot con strings del tema"
+  ],
+  "deliverables": {"format": "json", "files": ["style.css", "languages/img2html.pot"], "target_dir": ".."}
+}

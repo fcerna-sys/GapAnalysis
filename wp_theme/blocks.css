@@ -1,0 +1,35 @@
+:root{
+  --img2-form-gap: 12px;
+}
+form img2html-form,
+.wp-block-group form{
+  display:grid;
+  gap:var(--img2-form-gap);
+}
+input[type="text"],
+input[type="email"],
+textarea{
+  width:100%;
+  padding:0.5rem 0.75rem;
+  border:1px solid var(--wp--preset--color--surface);
+  border-radius:4px;
+  background:var(--wp--preset--color--background);
+  color:var(--wp--preset--color--text);
+  box-sizing:border-box;
+}
+.wp-block-button__link{
+  box-sizing:border-box;
+}
+.wp-block-gallery{
+  margin-bottom:2rem;
+}
+.wp-lightbox-overlay .wp-lightbox-image{
+  border-radius:4px;
+}
+.wp-block-comments .wp-block-avatar img{
+  border-radius:50%;
+}
+.skip-link{position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}
+.skip-link:focus{left:1rem;top:1rem;width:auto;height:auto;padding:.5rem .75rem;background:var(--wp--preset--color--background);color:var(--wp--preset--color--text);border:1px solid var(--wp--preset--color--surface);z-index:1000}
+.site-header-sticky{position:sticky;top:0;background:var(--wp--preset--color--background);z-index:999;border-bottom:1px solid var(--wp--preset--color--surface)}
+:focus-visible{outline:2px solid var(--wp--preset--color--primary);outline-offset:2px}

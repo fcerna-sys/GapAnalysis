@@ -1,0 +1,12 @@
+{
+  "name": "Ajustes de media",
+  "model": "auto",
+  "role": "Configurador de media",
+  "objective": "Configurar galería con lightbox, resolución de imágenes y featured-image.",
+  "requirements": [
+    "Galería con lightbox desde el editor",
+    "Resolución de imágenes y featured-image",
+    "Evitar estilos inline cuando existan directivas"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/MEDIA.md", "theme.json"], "target_dir": ".."}
+}

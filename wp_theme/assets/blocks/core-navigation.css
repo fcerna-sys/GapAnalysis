@@ -1,0 +1,7 @@
+.wp-block-navigation .wp-block-navigation-item__content{
+  padding: 0.5rem 0.75rem;
+}
+.wp-block-navigation .wp-block-navigation-item__content:focus{
+  outline: 2px solid var(--wp--preset--color--primary);
+  outline-offset: 2px;
+}

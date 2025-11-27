@@ -1,0 +1,14 @@
+{
+  "title": "Dark",
+  "styles": {
+    "color": {
+      "background": "#0b0c0f",
+      "text": "#ffffff"
+    },
+    "elements": {
+      "link": {
+        "color": { "text": "#a3a3a3" }
+      }
+    }
+  }
+}
