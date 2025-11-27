@@ -71,14 +71,14 @@ def _extract_json(text):
             continue
     return None
 
-def _fallback_wp(theme_dir, refined_html, css, plan):
+def _fallback_wp(theme_dir, refined_html, css, plan, dna=None, radius_px=8):
     os.makedirs(theme_dir, exist_ok=True)
     os.makedirs(os.path.join(theme_dir, 'parts'), exist_ok=True)
     os.makedirs(os.path.join(theme_dir, 'templates'), exist_ok=True)
     style_css = """
 /*
 Theme Name: Img2HTML AI Theme
-Version: 0.1.0
+Version: 1.0.0
 Author: img2html
 Description: Tema de bloques generado y refinado con IA
 Requires at least: 6.7
@@ -251,12 +251,12 @@ Requires at least: 6.7
 <!-- wp:template-part {"slug":"footer"} /-->
 """
     _write_file(os.path.join(theme_dir, 'templates', '404.html'), templates_404)
-    blocks_css = """
-input[type=text],input[type=email],input[type=url],input[type=password],textarea,select{background:var(--wp--preset--color--surface);color:var(--wp--preset--color--text);border:1px solid var(--wp--preset--color--primary);border-radius:8px;padding:10px 12px;width:100%}
-button,input[type=submit]{background:var(--wp--preset--color--primary);color:var(--wp--preset--color--text);border:none;border-radius:8px;padding:10px 14px}
-button:hover,input[type=submit]:hover{filter:brightness(1.1)}
-.wp-block-gallery .blocks-gallery-item img{border-radius:8px}
-.wp-block-comments{background:var(--wp--preset--color--surface);padding:16px;border-radius:12px}
+    blocks_css = f"""
+input[type=text],input[type=email],input[type=url],input[type=password],textarea,select{{background:var(--wp--preset--color--surface);color:var(--wp--preset--color--text);border:1px solid var(--wp--preset--color--primary);border-radius:{radius_px}px;padding:10px 12px;width:100%}}
+button,input[type=submit]{{background:var(--wp--preset--color--primary);color:var(--wp--preset--color--text);border:none;border-radius:{radius_px}px;padding:10px 14px}}
+button:hover,input[type=submit]:hover{{filter:brightness(1.1)}}
+.wp-block-gallery .blocks-gallery-item img{{border-radius:{radius_px}px}}
+.wp-block-comments{{background:var(--wp--preset--color--surface);padding:16px;border-radius:{max(radius_px, 12)}px}}
 """
     _write_file(os.path.join(theme_dir, 'blocks.css'), blocks_css)
     functions_php = """
@@ -325,6 +325,16 @@ add_action('init','img2html_register_patterns');
                 ]}
             }
         }
+    try:
+        if isinstance(dna, dict):
+            pal = dna.get('palette') or []
+            if pal:
+                base_theme.setdefault('settings', {}).setdefault('color', {})['palette'] = [
+                    {"name": p.get('slug','').title(), "slug": p.get('slug',''), "color": p.get('color','')}
+                    for p in pal if p.get('slug') and p.get('color')
+                ]
+    except Exception:
+        pass
     _write_json(os.path.join(theme_dir, 'theme.json'), base_theme)
     styles_dir = os.path.join(theme_dir, 'styles')
     os.makedirs(styles_dir, exist_ok=True)
@@ -544,10 +554,17 @@ def _plan_to_fse(theme_dir, plan, dna=None):
                 if is_dark:
                     blocks.append('<!-- wp:heading {"textAlign":"center","level":2,"textColor":"background"} -->')
                     blocks.append(f'<h2 class="has-text-align-center has-background-color has-text-color">{label}</h2>')
+                    blocks.append('<!-- /wp:heading -->')
+                    blocks.append('<!-- wp:paragraph {"align":"center","textColor":"background"} -->')
+                    blocks.append('<p class="has-text-align-center has-background-color has-text-color"></p>')
+                    blocks.append('<!-- /wp:paragraph -->')
                 else:
                     blocks.append('<!-- wp:heading {"textAlign":"center","level":2,"textColor":"text"} -->')
                     blocks.append(f'<h2 class="has-text-align-center has-text-color">{label}</h2>')
-                blocks.append('<!-- /wp:heading -->')
+                    blocks.append('<!-- /wp:heading -->')
+                    blocks.append('<!-- wp:paragraph {"align":"center","textColor":"text"} -->')
+                    blocks.append('<p class="has-text-align-center has-text-color"></p>')
+                    blocks.append('<!-- /wp:paragraph -->')
             else:
                 group_meta = '"layout":{"type":"constrained"}'
                 if slug_to_hex.get('surface'):
@@ -559,6 +576,9 @@ def _plan_to_fse(theme_dir, plan, dna=None):
                 blocks.append('<!-- wp:heading {"level":2,"textColor":"text"} -->')
                 blocks.append(f'<h2 class="has-text-color">{label}</h2>')
                 blocks.append('<!-- /wp:heading -->')
+                blocks.append('<!-- wp:paragraph {"textColor":"text"} -->')
+                blocks.append('<p class="has-text-color"></p>')
+                blocks.append('<!-- /wp:paragraph -->')
             for row in rows:
                 cols = row.get('columns') or []
                 ratios = row.get('ratios_percent') or []
@@ -575,7 +595,10 @@ def _plan_to_fse(theme_dir, plan, dna=None):
                         pct = f"{int(round(100/n))}%"
                     blocks.append('<!-- wp:column {"width":"%s","style":{"spacing":{"padding":{"top":"12px","bottom":"12px"}}}} -->' % pct)
                     blocks.append(f'<div class="wp-block-column" style="flex-basis:{pct};padding-top:12px;padding-bottom:12px">')
-                    blocks.append('<!-- wp:group {"layout":{"type":"constrained"},"style":{"spacing":{"blockGap":"8px"}}} -->')
+                    inner_meta = '{"layout":{"type":"constrained"},"style":{"spacing":{"blockGap":"8px"}}}'
+                    if slug_to_hex.get('surface'):
+                        inner_meta = '{"layout":{"type":"constrained"},"style":{"spacing":{"blockGap":"8px"}},"backgroundColor":"surface"}'
+                    blocks.append(f'<!-- wp:group {inner_meta} -->')
                     blocks.append('<div class="wp-block-group"></div>')
                     blocks.append('<!-- /wp:group -->')
                     blocks.append('</div>')
@@ -671,6 +694,8 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             "parts/header.html, parts/footer.html, templates/index.html, templates/single.html, "
             "templates/page.html, templates/404.html. "
             "Para core/columns: NO USES anchos automáticos si el diseño es asimétrico; usa porcentajes exactos. "
+            "Si el PLAN incluye 'pattern_variant' (balanced/asymmetric), ajusta columnas y espaciados en consecuencia. "
+            "Usa 'ratios_percent' para width y flex-basis en cada columna, y aplica blockGap/padding para clonar micro-espaciados. "
         )
         strict = (
             "Rol: Maquetador Web Senior Experto en WordPress FSE. "
@@ -702,7 +727,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 {"role":"user","parts":[{"text":"INFO"},{"text":info_md}]},
                 {"role":"user","parts":[{"text":"PLAN"},{"text":json.dumps(plan, ensure_ascii=False)}]},
             ]
-            content.append({"role":"user","parts":[{"text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje)."}]})
+            content.append({"role":"user","parts":[{"text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' (flex-basis) en cada columna (porcentaje). Aplica blockGap y padding para reproducir micro-espaciados."}]})
             if selected:
                 content.append({"role":"user","parts":[{"text":"Referencias visuales"}]})
                 for p in selected:
@@ -724,7 +749,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             msgs = []
             msgs.append({"role":"system","content":"Eres un Maquetador Web Senior Experto en WordPress FSE. Debes responder SOLO con un objeto JSON válido. Prioriza REFERENCIAS VISUALES sobre HTML y OCR. Genera clonación visual estricta con micro-espaciados y tipografía inferida."})
             ucontent = [{"type":"text","text":prompt}, {"type":"text","text":"PROMPT_MD"}, {"type":"text","text":prompt_md}, {"type":"text","text":"HTML"}, {"type":"text","text":html}, {"type":"text","text":"CSS"}, {"type":"text","text":css}, {"type":"text","text":"INFO"}, {"type":"text","text":info_md}, {"type":"text","text":"PLAN"}, {"type":"text","text":json.dumps(plan, ensure_ascii=False)}]
-            ucontent.append({"type":"text","text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje)."})
+            ucontent.append({"type":"text","text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' (flex-basis) en cada columna (porcentaje). Aplica blockGap y padding para reproducir micro-espaciados."})
             if selected:
                 ucontent.append({"type":"text","text":"Referencias visuales (PRIORIDAD MÁXIMA)"})
                 for p in selected:
@@ -763,23 +788,39 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 obj = json.loads(raw.decode('utf-8'))
                 response_text = obj.get('response', '') or ''
         else:
-            _fallback_wp(theme_dir, html, css, plan)
+            radius_px = _infer_border_radius_from_images(images or [])
+            _fallback_wp(theme_dir, html, css, plan, dna, radius_px)
             return {"used_ai": used_ai, "provider": provider_used}
         data = _extract_json(response_text)
         if not isinstance(data, dict):
-            _fallback_wp(theme_dir, html, css, plan)
+            _fallback_wp(theme_dir, html, css, plan, dna)
             return {"used_ai": used_ai, "provider": provider_used}
         os.makedirs(os.path.join(theme_dir, 'parts'), exist_ok=True)
         os.makedirs(os.path.join(theme_dir, 'templates'), exist_ok=True)
         mapping = data.pop('mapping', None)
         if mapping:
             _mapping_to_fse(theme_dir, mapping)
+        radius_px = _infer_border_radius_from_images(images or [])
         if plan and isinstance(plan, dict):
-            _plan_to_fse(theme_dir, plan, dna)
+            _plan_to_fse(theme_dir, plan, dna, radius_px)
         for name, value in data.items():
             _write_file(os.path.join(theme_dir, name), value)
+        try:
+            if isinstance(dna, dict):
+                theme_path = os.path.join(theme_dir, 'theme.json')
+                theme_obj = _read_json(theme_path) or {}
+                pal = dna.get('palette') or []
+                if pal:
+                    theme_obj.setdefault('settings', {}).setdefault('color', {})['palette'] = [
+                        {"name": p.get('slug','').title(), "slug": p.get('slug',''), "color": p.get('color','')}
+                        for p in pal if p.get('slug') and p.get('color')
+                    ]
+                    _write_json(theme_path, theme_obj)
+        except Exception:
+            pass
         used_ai = True
         return {"used_ai": used_ai, "provider": provider_used}
     except Exception:
-        _fallback_wp(theme_dir, html, css, plan)
+        radius_px = _infer_border_radius_from_images(images or [])
+        _fallback_wp(theme_dir, html, css, plan, dna, radius_px)
         return {"used_ai": used_ai, "provider": provider_used}
