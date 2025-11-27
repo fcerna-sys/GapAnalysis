@@ -33,3 +33,10 @@ textarea{
 .skip-link:focus{left:1rem;top:1rem;width:auto;height:auto;padding:.5rem .75rem;background:var(--wp--preset--color--background);color:var(--wp--preset--color--text);border:1px solid var(--wp--preset--color--surface);z-index:1000}
 .site-header-sticky{position:sticky;top:0;background:var(--wp--preset--color--background);z-index:999;border-bottom:1px solid var(--wp--preset--color--surface)}
 :focus-visible{outline:2px solid var(--wp--preset--color--primary);outline-offset:2px}
+.wp-block-table.is-style-striped tbody tr:nth-child(odd){background-color:rgba(0,0,0,.04)}
+.wp-block-table.is-style-compact th,.wp-block-table.is-style-compact td{padding:.5rem}
+.wp-block-button.is-style-pill .wp-block-button__link{border-radius:9999px}
+.wp-block-button.is-style-ghost .wp-block-button__link{background-color:transparent;border:1px solid currentColor;color:currentColor}
+.wp-block-image.is-style-rounded img{border-radius:8px}
+.wp-block-group.is-style-card{border:1px solid var(--wp--preset--color--surface);padding:1rem;border-radius:8px}
+.wp-block-quote.is-style-highlight{border-left:4px solid var(--wp--preset--color--primary);padding-left:1rem}

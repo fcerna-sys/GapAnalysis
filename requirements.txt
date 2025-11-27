@@ -3,5 +3,6 @@ google-cloud-vision
 google-generativeai
 pytesseract
 pillow
+colorgram.py
 pytest
 coverage

@@ -3,9 +3,10 @@ from werkzeug.utils import secure_filename
 import os
 import zipfile
 import uuid
-from analyzer import analyze_images
+from analyzer import analyze_images, extract_design_dna, identify_pattern
 from ocr import extract_texts
 from ai_refine import refine_and_generate_wp
+from wp_theme.prompts.runner import ThemeBuilder
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, 'uploads')
@@ -56,6 +57,8 @@ def upload():
         flash('El ZIP no contiene imágenes válidas')
         return redirect(url_for('index'))
     plan = analyze_images(images)
+    for s in plan['sections']:
+        s['pattern'] = identify_pattern(s)
     request.environ['img2html_batch_dir'] = batch_dir
     request.environ['img2html_plan'] = plan
     return render_template('plan.html', plan=plan, batch_id=batch_id)
@@ -80,6 +83,9 @@ def convert():
         flash('El lote no contiene imágenes válidas')
         return redirect(url_for('index'))
     plan = analyze_images(images)
+    for s in plan['sections']:
+        s['pattern'] = identify_pattern(s)
+    dna = extract_design_dna(images)
     try:
         ocr_texts = extract_texts(images)
     except Exception:
@@ -192,7 +198,13 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
     wp_theme_dir = os.path.join(BASE_DIR, 'wp_theme')
     os.makedirs(wp_theme_dir, exist_ok=True)
     try:
-        refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir)
+        builder = ThemeBuilder(output_dir=wp_theme_dir, context=dna)
+        builder.bootstrap()
+        builder.run_prompt('01_theme_json_full.json')
+        builder.run_prompt('52_template_parts_catalog.json')
+        builder.run_prompt('51_templates_catalog.json')
+        builder.run_prompt('53_patterns_catalog.json')
+        refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images)
     except Exception:
         pass
     return render_template('done.html', output_dir='temp_out', theme_dir='wp_theme')

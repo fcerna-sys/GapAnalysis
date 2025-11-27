@@ -1,6 +1,7 @@
 import os
 import json
 from typing import Dict
+import base64
 
 def _read_file(path):
     try:
@@ -372,7 +373,76 @@ add_action('init','img2html_register_patterns');
 """
     _write_file(os.path.join(theme_dir, 'patterns', 'comments.html'), pattern_comments)
 
-def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_dir: str):
+def _encode_image(image_path):
+    try:
+        with open(image_path, 'rb') as f:
+            return base64.b64encode(f.read()).decode('utf-8')
+    except Exception:
+        return ''
+
+def _pattern_slug_for_type(t):
+    m = {
+        'hero': 'hero-section',
+        'banner': 'hero-standard',
+        'features': 'features-grid-3-col',
+        'services': 'features-two-col',
+        'gallery': 'gallery-masonry',
+        'faq': 'faq-accordion',
+        'testimonials': 'testimonials-grid',
+        'pricing': 'pricing-table-basic',
+        'contact': 'contact-simple',
+        'newsletter': 'newsletter-wide',
+        'team': 'team-members-grid',
+        'portfolio': 'portfolio-grid',
+        'cta': 'cta-banner'
+    }
+    for k, v in m.items():
+        if k in t:
+            return v
+    return ''
+
+def _mapping_to_fse(theme_dir, mapping):
+    try:
+        parts_dir = os.path.join(theme_dir, 'parts')
+        templates_dir = os.path.join(theme_dir, 'templates')
+        os.makedirs(parts_dir, exist_ok=True)
+        os.makedirs(templates_dir, exist_ok=True)
+        regions = []
+        if isinstance(mapping, dict):
+            regions = mapping.get('regions') or mapping.get('sections') or []
+        elif isinstance(mapping, list):
+            regions = mapping
+        blocks = []
+        for i, r in enumerate(regions):
+            t = ''
+            if isinstance(r, dict):
+                t = (r.get('type') or r.get('name') or r.get('label') or '').lower()
+            elif isinstance(r, str):
+                t = r.lower()
+            slug = _pattern_slug_for_type(t)
+            if slug:
+                blocks.append(f'<!-- wp:pattern {{"slug":"img2html/{slug}"}} /-->')
+            else:
+                title = ''
+                if isinstance(r, dict):
+                    title = r.get('title') or r.get('label') or 'Sección'
+                else:
+                    title = 'Sección'
+                blocks.append(f'<!-- wp:group {"layout":{"type":"constrained"}} -->\n<div class="wp-block-group">\n<!-- wp:heading {"textAlign":"center"} -->\n<h2 class="has-text-align-center">{title}</h2>\n<!-- /wp:heading -->\n</div>\n<!-- /wp:group -->')
+        content = "\n".join(blocks)
+        fp = f"""<!-- wp:template-part {{"slug":"header"}} /-->
+<!-- wp:group {{"tagName":"main","layout":{{"type":"constrained"}}}} -->
+<main id="main-content">
+{content}
+</main>
+<!-- /wp:group -->
+<!-- wp:template-part {{"slug":"footer"}} /-->
+"""
+        _write_file(os.path.join(templates_dir, 'front-page-mapped.html'), fp)
+    except Exception:
+        pass
+
+def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_dir: str, images=None):
     html = _read_file(os.path.join(temp_out_dir, 'index.html'))
     css = _read_file(os.path.join(temp_out_dir, 'styles.css'))
     try:
@@ -400,6 +470,20 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             {"role":"user","parts":[{"text":"INFO"},{"text":info_md}]},
             {"role":"user","parts":[{"text":"PLAN"},{"text":json.dumps(plan, ensure_ascii=False)}]},
         ]
+        selected = []
+        if images:
+            selected = images[:5]
+        elif plan.get('sections'):
+            for sec in plan['sections'][:3]:
+                if sec.get('images'):
+                    selected.append(sec['images'][0])
+        if selected:
+            content.append({"role":"user","parts":[{"text":"Referencias visuales"}]})
+            for p in selected:
+                b64 = _encode_image(p)
+                if b64:
+                    content.append({"role":"user","parts":[{"inline_data":{"mime_type":"image/jpeg","data": b64}}]})
+        content.append({"role":"user","parts":[{"text":"Primero entrega JSON 'mapping' con regiones visuales → bloques FSE (core/cover, core/columns, core/group, core/heading, core/paragraph, core/image, core/navigation, core/query). Si la imagen es diseño complejo, replica con columns/group/heading/paragraph; si es foto simple, usa image/cover. Luego entrega el JSON con archivos esperados."}]})
         resp = model.generate_content(content)
         text = resp.text or ''
         try:
@@ -409,6 +493,9 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             return
         os.makedirs(os.path.join(theme_dir, 'parts'), exist_ok=True)
         os.makedirs(os.path.join(theme_dir, 'templates'), exist_ok=True)
+        mapping = data.pop('mapping', None)
+        if mapping:
+            _mapping_to_fse(theme_dir, mapping)
         for name, value in data.items():
             _write_file(os.path.join(theme_dir, name), value)
     except Exception:

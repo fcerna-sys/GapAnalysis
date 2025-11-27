@@ -132,6 +132,60 @@ def run_offline_steps(overview):
         with open(target_dir / 'theme.json', 'w', encoding='utf-8') as f:
             json.dump(merged, f, ensure_ascii=False, indent=2)
 
+class ThemeBuilder:
+    def __init__(self, output_dir: str, context: dict = None):
+        self.output_dir = Path(output_dir)
+        self.context = context or {}
+        self.overview = load_json(PROMPTS_DIR / '00_overview.json') or {}
+        self.runtime = load_json(PROMPTS_DIR / 'runtime.json') or {}
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    def bootstrap(self):
+        run_offline_steps(self.overview)
+        if self.context.get('palette'):
+            tpath = self.output_dir / 'theme.json'
+            theme = load_json(tpath) or {"version":3, "settings":{}}
+            settings = theme.get('settings') or {}
+            color = settings.get('color') or {}
+            color['palette'] = [
+                {"name":"Background","slug":"background","color": self.context['palette'][0]['color']},
+                {"name":"Text","slug":"text","color": self.context['palette'][1]['color']},
+                {"name":"Primary","slug":"primary","color": self.context['palette'][2]['color']}
+            ]
+            settings['color'] = color
+            typo = settings.get('typography') or {}
+            ff = self.context.get('typography', {}).get('fontFamily')
+            if ff:
+                typo['fontFamilies'] = [{"fontFamily": ff, "slug": "system", "name": "System"}]
+            settings['typography'] = typo
+            theme['settings'] = settings
+            with open(tpath, 'w', encoding='utf-8') as f:
+                json.dump(theme, f, ensure_ascii=False, indent=2)
+
+    def run_prompt(self, name: str, context: dict = None):
+        p = (PROMPTS_DIR / name).resolve()
+        if not p.exists():
+            return False
+        data = load_json(p) or {}
+        out = self.output_dir
+        if 'styles' in data or 'settings' in data:
+            tpath = out / 'theme.json'
+            theme = load_json(tpath) or {}
+            merged = merge_theme_styles(theme, data)
+            with open(tpath, 'w', encoding='utf-8') as f:
+                json.dump(merged, f, ensure_ascii=False, indent=2)
+            return True
+        if 'customTemplates' in data:
+            build_templates_from_catalog(p, out)
+            return True
+        if 'templateParts' in data:
+            build_parts_from_catalog(p, out)
+            return True
+        if 'patterns' in data:
+            build_patterns_from_catalog(p, out)
+            return True
+        return False
+
 def main():
     overview = load_json(PROMPTS_DIR / '00_overview.json') or {}
     runtime = load_json(PROMPTS_DIR / 'runtime.json') or {}
