@@ -4,7 +4,7 @@ import os
 import zipfile
 import uuid
 import json
-from analyzer import analyze_images, extract_design_dna, identify_pattern
+from analyzer import analyze_images, extract_design_dna, identify_pattern, segment_image
 from ocr import extract_texts
 from ai_refine import refine_and_generate_wp
 from wp_theme.prompts.runner import ThemeBuilder
@@ -84,6 +84,7 @@ def upload():
     file = request.files.get('zipfile')
     google_api_key = request.form.get('google_api_key') or ''
     enable_slicing = request.form.get('enable_slicing') or ''
+    precise_slicing = request.form.get('precise_slicing') or ''
     save_env = request.form.get('save_env') or ''
     google_application_credentials = request.form.get('google_application_credentials') or ''
     google_application_credentials_file = request.files.get('google_application_credentials_file')
@@ -148,13 +149,14 @@ def upload():
             flash('No se pudo procesar el archivo de credenciales subido')
     request.environ['img2html_batch_dir'] = batch_dir
     request.environ['img2html_plan'] = plan
-    return render_template('plan.html', plan=plan, batch_id=batch_id, google_api_key=google_api_key, enable_slicing=enable_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
+    return render_template('plan.html', plan=plan, batch_id=batch_id, google_api_key=google_api_key, enable_slicing=enable_slicing, precise_slicing=precise_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
 
 @app.route('/convert', methods=['POST'])
 def convert():
     batch_id = request.form.get('batch_id')
     google_api_key = request.form.get('google_api_key') or ''
     enable_slicing = request.form.get('enable_slicing') or ''
+    precise_slicing = request.form.get('precise_slicing') or ''
     save_env = request.form.get('save_env') or ''
     google_application_credentials = request.form.get('google_application_credentials') or ''
     if not batch_id:
@@ -193,18 +195,56 @@ def convert():
                 with open(img, 'rb') as rf, open(dst, 'wb') as wf:
                     wf.write(rf.read())
             copied.append(name)
-            if enable_slicing:
-                try:
-                    from rembg import remove
-                    from PIL import Image
-                    im = Image.open(img).convert('RGBA')
-                    out = remove(im)
-                    base = os.path.splitext(name)[0]
-                    seg_name = f"{base}_fg.png"
-                    out.save(os.path.join(assets_dir, seg_name))
-                    copied.append(seg_name)
-                except Exception:
-                    pass
+        try:
+            from PIL import Image as PILImage
+            if section.get('images'):
+                p0 = section['images'][0]
+                im = PILImage.open(p0)
+                w, h = im.size
+                ratio = h / float(max(1, w))
+                if enable_slicing or ratio >= 1.5:
+                    segs = segment_image(p0, assets_dir, precise=bool(precise_slicing))
+                    if segs:
+                        layout_rows = []
+                        images_flat = []
+                        for sp in segs:
+                            copied.append(os.path.basename(sp))
+                            cols = segment_columns(sp, assets_dir, precise=bool(precise_slicing))
+                            if cols:
+                                widths = []
+                                total_w = 0
+                                for c in cols:
+                                    try:
+                                        cim = PILImage.open(c)
+                                        w2, _ = cim.size
+                                        widths.append(w2)
+                                        total_w += w2
+                                    except Exception:
+                                        widths.append(0)
+                                ratios = []
+                                ratios_percent = []
+                                if total_w > 0:
+                                    ratios = [round(w2/float(total_w), 3) for w2 in widths]
+                                    ratios_percent = [int(round(r*100)) for r in ratios]
+                                row = {
+                                    'segment': os.path.basename(sp),
+                                    'columns': [os.path.basename(c) for c in cols],
+                                    'ratios': ratios,
+                                    'ratios_percent': ratios_percent
+                                }
+                                layout_rows.append(row)
+                                for c in cols:
+                                    images_flat.append(c)
+                                    copied.append(os.path.basename(c))
+                        if images_flat:
+                            section['images'] = images_flat
+                        else:
+                            section['images'] = segs
+                        section['segments'] = [os.path.basename(s) for s in segs]
+                        if layout_rows:
+                            section['layout_rows'] = layout_rows
+        except Exception:
+            pass
     info_md = ''
     if os.path.isfile(DOC_INFO_PATH):
         try:

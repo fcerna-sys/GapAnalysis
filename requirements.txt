@@ -7,3 +7,4 @@ colorgram.py
 pytest
 coverage
 python-dotenv
+opencv-python

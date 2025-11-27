@@ -27,6 +27,34 @@ def _read_json(path):
 def _write_json(path, obj):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
+def _strip_fences(text):
+    t = text.strip()
+    if t.startswith('```'):
+        idx = t.find('\n')
+        if idx != -1:
+            t = t[idx+1:]
+    if t.endswith('```'):
+        t = t[:-3]
+    return t.strip()
+def _extract_json(text):
+    t = _strip_fences(text)
+    try:
+        return json.loads(t)
+    except Exception:
+        pass
+    start_obj = t.find('{'); end_obj = t.rfind('}')
+    start_arr = t.find('['); end_arr = t.rfind(']')
+    cands = []
+    if start_obj != -1 and end_obj != -1 and end_obj > start_obj:
+        cands.append(t[start_obj:end_obj+1])
+    if start_arr != -1 and end_arr != -1 and end_arr > start_arr:
+        cands.append(t[start_arr:end_arr+1])
+    for c in cands:
+        try:
+            return json.loads(c)
+        except Exception:
+            continue
+    return None
 
 def _fallback_wp(theme_dir, refined_html, css, plan):
     os.makedirs(theme_dir, exist_ok=True)
@@ -246,6 +274,17 @@ function img2html_register_patterns(){
     'description'=>'Sección de comentarios',
     'content'=>file_get_contents(get_theme_file_path('patterns/comments.html'))
   ]);
+  $dir = get_theme_file_path('patterns');
+  if (is_dir($dir)){
+    foreach (glob($dir . DIRECTORY_SEPARATOR . 'auto_*.html') as $file){
+      $base = basename($file, '.html');
+      register_block_pattern('img2html/' . $base,[
+        'title'=>$base,
+        'description'=>'Patrón generado automáticamente',
+        'content'=>file_get_contents($file)
+      ]);
+    }
+  }
 }
 add_action('init','img2html_register_patterns');
 ?>
@@ -426,12 +465,24 @@ def _mapping_to_fse(theme_dir, mapping):
             if slug:
                 blocks.append(f'<!-- wp:pattern {{"slug":"img2html/{slug}"}} /-->')
             else:
+                content_html = ''
                 title = ''
                 if isinstance(r, dict):
-                    title = r.get('title') or r.get('label') or 'Sección'
+                    content_html = r.get('pattern_content') or r.get('html') or ''
+                    title = r.get('title') or r.get('label') or ''
+                if content_html:
+                    blocks.append(content_html)
+                    try:
+                        patterns_dir = os.path.join(theme_dir, 'patterns')
+                        os.makedirs(patterns_dir, exist_ok=True)
+                        fname = f"auto_{i+1}.html"
+                        _write_file(os.path.join(patterns_dir, fname), content_html)
+                    except Exception:
+                        pass
                 else:
-                    title = 'Sección'
-                blocks.append(f'<!-- wp:group {"layout":{"type":"constrained"}} -->\n<div class="wp-block-group">\n<!-- wp:heading {"textAlign":"center"} -->\n<h2 class="has-text-align-center">{title}</h2>\n<!-- /wp:heading -->\n</div>\n<!-- /wp:group -->')
+                    if not title:
+                        title = 'Sección'
+                    blocks.append(f'<!-- wp:group {"layout":{"type":"constrained"}} -->\n<div class="wp-block-group">\n<!-- wp:heading {"textAlign":"center"} -->\n<h2 class="has-text-align-center">{title}</h2>\n<!-- /wp:heading -->\n</div>\n<!-- /wp:group -->')
         content = "\n".join(blocks)
         fp = f"""<!-- wp:template-part {{"slug":"header"}} /-->
 <!-- wp:group {{"tagName":"main","layout":{{"type":"constrained"}}}} -->
@@ -538,6 +589,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 {"role":"user","parts":[{"text":"INFO"},{"text":info_md}]},
                 {"role":"user","parts":[{"text":"PLAN"},{"text":json.dumps(plan, ensure_ascii=False)}]},
             ]
+            content.append({"role":"user","parts":[{"text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje)."}]})
             if selected:
                 content.append({"role":"user","parts":[{"text":"Referencias visuales"}]})
                 for p in selected:
@@ -559,6 +611,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             msgs = []
             msgs.append({"role":"system","content":"Eres un asistente que solo responde con un objeto JSON válido."})
             ucontent = [{"type":"text","text":prompt}, {"type":"text","text":"PROMPT_MD"}, {"type":"text","text":prompt_md}, {"type":"text","text":"HTML"}, {"type":"text","text":html}, {"type":"text","text":"CSS"}, {"type":"text","text":css}, {"type":"text","text":"INFO"}, {"type":"text","text":info_md}, {"type":"text","text":"PLAN"}, {"type":"text","text":json.dumps(plan, ensure_ascii=False)}]
+            ucontent.append({"type":"text","text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje)."})
             if selected:
                 ucontent.append({"type":"text","text":"Referencias visuales"})
                 for p in selected:
@@ -584,7 +637,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 response_text = obj.get('choices', [{}])[0].get('message', {}).get('content', '') or ''
         elif provider == 'ollama' and model_name:
             prompt_text = (
-                prompt + "\nPROMPT_MD\n" + prompt_md + "\nHTML\n" + html + "\nCSS\n" + css + "\nINFO\n" + info_md + "\nPLAN\n" + json.dumps(plan, ensure_ascii=False) + "\nENTREGA SOLO JSON."
+                prompt + "\nPROMPT_MD\n" + prompt_md + "\nHTML\n" + html + "\nCSS\n" + css + "\nINFO\n" + info_md + "\nPLAN\n" + json.dumps(plan, ensure_ascii=False) + "\nSi el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje).\nENTREGA SOLO JSON."
             )
             body = {"model": model_name, "prompt": prompt_text, "format": "json", "stream": False}
             opts = {}
@@ -602,7 +655,10 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
         else:
             _fallback_wp(theme_dir, html, css, plan)
             return {"used_ai": used_ai, "provider": provider_used}
-        data = json.loads(response_text)
+        data = _extract_json(response_text)
+        if not isinstance(data, dict):
+            _fallback_wp(theme_dir, html, css, plan)
+            return {"used_ai": used_ai, "provider": provider_used}
         os.makedirs(os.path.join(theme_dir, 'parts'), exist_ok=True)
         os.makedirs(os.path.join(theme_dir, 'templates'), exist_ok=True)
         mapping = data.pop('mapping', None)
