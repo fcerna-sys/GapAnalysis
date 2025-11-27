@@ -39,9 +39,9 @@ Self-closing: Bloques dinámicos o vacíos se cierran en la misma línea: <!-- w
 
 La IA debe priorizar estas implementaciones sobre métodos antiguos:
 
-Registro de Bloques: Usar wp_register_block_types_from_metadata_collection() leyendo un manifiesto PHP (blocks-manifest.php), en lugar de registrar JSONs individuales.
+Gestión de assets de bloques: Usar un manifiesto (blocks-manifest.php) y los hooks enqueue_block_editor_assets, wp_enqueue_scripts y render_block para encolar estilos/scripts de bloques según su presencia en contenido. Para registrar bloques personalizados con block.json, usar register_block_type_from_metadata() por bloque.
 
-Interactivity API: Usar directivas como data-wp-interactive y data-wp-bind para interactividad (acordeones, menús), evitando jQuery o JS vanilla disperso.
+Interactivity API: Usar directivas como data-wp-interactive, data-wp-context, data-wp-bind y data-wp-on--click para interactividad (acordeones, menús), evitando jQuery o JS vanilla disperso.
 
 Block Hooks: Inserción automática de bloques en posiciones específicas (ej: un CTA después del contenido) sin editar la plantilla, compatible con patrones sincronizados.
 
@@ -815,3 +815,112 @@ Nota Importante: Prioriza el uso de variables CSS generadas por WordPress (--wp-
 
 Instrucciones de Salida:
 Por favor, entrégame los archivos en bloques de código separados con su nombre de archivo correspondiente en la cabecera del bloque.
+
+PARTE 15: Accesibilidad (A11Y)
+
+- Estructura semántica: Usar headings en orden (h1→h2→h3), `main`, `header`, `footer`, `nav`, `article` y `section`.
+- Contraste: Asegurar contraste AA (texto sobre fondos en cover/hero). Ajustar `dimRatio` y paleta para legibilidad.
+- Alternativas de texto: Imágenes con `alt` descriptivo. Evitar texto clave en imágenes sin equivalente.
+- Focus visible: Botones y enlaces con estados `:focus` claros desde `theme.json` (`elements.link`, `elements.button`).
+- Navegación por teclado: Evitar `tabindex>0`. No ocultar controles navegables. Menús deben ser operables sin ratón.
+- Aria mínima: Usar solo cuando sea necesario; preferir etiquetas semánticas antes que roles.
+- Saltos de contenido: Considerar un link “Saltar al contenido” al inicio de `header`.
+
+PARTE 16: SEO (Buenas prácticas)
+
+- Títulos jerárquicos: Un solo `h1` por plantilla, `h2` para secciones.
+- Enlaces semánticos: Títulos de posts enlazados (`core/post-title` con `isLink:true`).
+- Breadcrumbs: Sugerido como patrón (`parts/breadcrumbs-part.html`) si el proyecto lo requiere.
+- Metadatos: Normalmente gestionados por plugins (SEO). El tema no debe generar meta arbitrario.
+- Performance: CSS y fuentes locales, imágenes optimizadas; evitan penalizaciones.
+
+PARTE 17: Internacionalización (i18n/l10n)
+
+- Textdomain: `load_theme_textdomain( 'img2html', get_template_directory() . '/languages' );` en `functions.php`.
+- Patrones traducibles: Preferir patrones en `*.php` con cabecera PHP y usar `__( 'Title', 'img2html' )` donde aplique (metadatos en PHP).
+- Plantillas: Evitar texto estático no esencial en `*.html`. Contenido debe venir de bloques (dinámicos) o patrones.
+- Archivos de idioma: Generar `.pot` con `wp i18n make-pot` y mantener traducciones.
+
+PARTE 18: Interactivity API (Detalles y ejemplo)
+
+- Directivas clave: `data-wp-interactive`, `data-wp-context`, `data-wp-bind`, `data-wp-on--click`.
+- Ejemplo de acordeón:
+
+```html
+<!-- wp:group {"layout":{"type":"constrained"}} -->
+<div class="wp-block-group" data-wp-interactive data-wp-context='{"open":false}'>
+  <!-- wp:button -->
+  <div class="wp-block-button"><a class="wp-block-button__link" data-wp-on--click="open = !open">Detalles</a></div>
+  <!-- /wp:button -->
+  <!-- wp:group -->
+  <div class="wp-block-group" data-wp-bind--hidden="!open">Contenido del acordeón</div>
+  <!-- /wp:group -->
+</div>
+<!-- /wp:group -->
+```
+
+PARTE 19: Seguridad
+
+- Escapado: `esc_html()`, `esc_attr()` para salida en PHP. No interpolar datos sin sanitizar.
+- Nonces: `wp_nonce_field()` para formularios y `check_admin_referer()` en procesadores.
+- Capacidades: Comprobar `current_user_can()` en endpoints o acciones sensibles.
+- Assets: Usar `get_theme_file_uri()` y rutas del tema; evitar enlaces externos inseguros.
+- Fuentes: Webfonts locales mediante `theme.json` (GDPR, sin llamadas externas).
+
+PARTE 20: Imágenes Responsivas
+
+- `core/image`: Usar `sizeSlug` apropiado (`large`, `full`) y `alignwide/alignfull` según diseño.
+- `srcset` y lazy-loading: WordPress los gestiona automáticamente; evitar tamaño fijo en px.
+- Duotone: Aplicar filtros definidos en `theme.json` cuando el diseño lo requiera.
+- Placeholders: En patrones, usar imágenes de ejemplo; el usuario reemplaza en el editor.
+
+PARTE 21: Contrato de Salida para la IA (JSON estricto)
+
+- Estructura esperada:
+
+```json
+{
+  "mapping": { "regions": ["hero", "features", "cta"] },
+  "files": {
+    "style.css": "/* header */",
+    "functions.php": "<?php ... ?>",
+    "theme.json": "{\n  \"version\":3, ...\n}",
+    "parts/header.html": "...",
+    "parts/footer.html": "...",
+    "templates/index.html": "...",
+    "templates/single.html": "...",
+    "templates/page.html": "...",
+    "templates/404.html": "..."
+  }
+}
+```
+
+- Reglas:
+- Entregar SOLO JSON válido; sin comentarios ni texto fuera del objeto.
+- Usar tokens de `theme.json` (paleta, tipografía, spacing) en vez de valores fijos.
+- Respetar gramática de bloques (`<!-- wp:... -->`), y JSON de atributos válido.
+
+PARTE 22: Pruebas y Validación
+
+- Activación: Instalar el tema y verificar que aparece en el Editor del sitio (Apariencia → Editor).
+- Stylebook: Validar estilos globales en el Stylebook.
+- Patrones: Confirmar que aparecen bajo la categoría del tema.
+- Plantillas: Abrir `index`, `single`, `page`, `404` en el editor y revisar composición.
+- WP-CLI: Opcional `wp i18n make-pot`, `wp theme validate` (plugins externos) para auditorías.
+
+PARTE 23: WooCommerce Avanzado
+
+- Mini-cart y navegación: Insertar `woocommerce/mini-cart` en `header` si el sitio es tienda.
+- Plantillas adicionales: `templates/page-cart.html`, `page-checkout.html`, `page-my-account.html` según necesidad.
+- Bloques de producto: Preferir bloques modernos sobre shortcodes.
+
+PARTE 24: CPT y Taxonomías
+
+- Registro: `register_post_type()` y `register_taxonomy()` en `php/cpt.php` y `php/taxonomies.php`.
+- Plantillas: Crear `archive-{post_type}.html`, `single-{post_type}.html`, `taxonomy-{taxonomy}.html` para soporte completo.
+
+PARTE 25: Navegación Avanzada
+
+- Overlay: Ajustar `overlayMenu` (`mobile`, `always`).
+- Submenús: Usar `core/navigation` con enlaces personalizados y jerarquías.
+- Accesibilidad: Estados de foco y tamaños táctiles adecuados.
