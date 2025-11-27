@@ -114,6 +114,16 @@ def upload():
     plan = analyze_images(images)
     for s in plan['sections']:
         s['pattern'] = identify_pattern(s)
+        try:
+            from analyzer import identify_pattern_variant
+            s['pattern_variant'] = identify_pattern_variant(s)
+        except Exception:
+            s['pattern_variant'] = ''
+        try:
+            from analyzer import identify_pattern_variant
+            s['pattern_variant'] = identify_pattern_variant(s)
+        except Exception:
+            s['pattern_variant'] = ''
     if google_api_key and save_env:
         _update_env_file(ENV_PATH, 'GOOGLE_API_KEY', google_api_key)
     if google_application_credentials:
@@ -178,6 +188,11 @@ def convert():
     plan = analyze_images(images)
     for s in plan['sections']:
         s['pattern'] = identify_pattern(s)
+        try:
+            from analyzer import identify_pattern_variant
+            s['pattern_variant'] = identify_pattern_variant(s)
+        except Exception:
+            s['pattern_variant'] = ''
     dna = extract_design_dna(images)
     try:
         ocr_texts, ocr_provider = extract_texts(images)
@@ -243,6 +258,12 @@ def convert():
                         section['segments'] = [os.path.basename(s) for s in segs]
                         if layout_rows:
                             section['layout_rows'] = layout_rows
+                section['pattern'] = identify_pattern(section)
+                try:
+                    from analyzer import identify_pattern_variant
+                    section['pattern_variant'] = identify_pattern_variant(section)
+                except Exception:
+                    section['pattern_variant'] = ''
         except Exception:
             pass
     info_md = ''
@@ -355,7 +376,7 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
         builder.run_prompt('52_template_parts_catalog.json')
         builder.run_prompt('51_templates_catalog.json')
         builder.run_prompt('53_patterns_catalog.json')
-        result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images)
+        result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images, dna=dna)
         used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
         provider = (result.get('provider') if isinstance(result, dict) else '') or ''
     except Exception:

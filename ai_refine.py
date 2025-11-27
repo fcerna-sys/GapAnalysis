@@ -27,6 +27,21 @@ def _read_json(path):
 def _write_json(path, obj):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(obj, f, ensure_ascii=False, indent=2)
+def _hex_to_rgb(hex_str):
+    try:
+        s = hex_str.strip().lstrip('#')
+        if len(s) == 6:
+            r = int(s[0:2], 16); g = int(s[2:4], 16); b = int(s[4:6], 16)
+            return (r, g, b)
+    except Exception:
+        pass
+    return (59,130,246)
+def _lum(rgb):
+    try:
+        r, g, b = rgb
+        return 0.2126*(r/255.0) + 0.7152*(g/255.0) + 0.0722*(b/255.0)
+    except Exception:
+        return 0.5
 def _strip_fences(text):
     t = text.strip()
     if t.startswith('```'):
@@ -496,38 +511,84 @@ def _mapping_to_fse(theme_dir, mapping):
     except Exception:
         pass
 
-def _plan_to_fse(theme_dir, plan):
+def _plan_to_fse(theme_dir, plan, dna=None):
     try:
         templates_dir = os.path.join(theme_dir, 'templates')
         os.makedirs(templates_dir, exist_ok=True)
-        rows = []
+        blocks = []
+        palette = []
+        if isinstance(dna, dict):
+            palette = dna.get('palette') or []
+        slug_to_hex = {}
+        for p in palette:
+            s = p.get('slug'); c = p.get('color')
+            if s and c:
+                slug_to_hex[s] = c
         for sec in (plan.get('sections') or []):
-            for row in (sec.get('layout_rows') or []):
+            label = sec.get('label') or 'Sección'
+            pat = (sec.get('pattern') or '').lower()
+            rows = sec.get('layout_rows') or []
+            use_cover = ('hero' in pat)
+            overlay_slug = 'primary'
+            is_dark = False
+            if slug_to_hex.get('primary'):
+                lum = _lum(_hex_to_rgb(slug_to_hex['primary']))
+                if lum < 0.25 and slug_to_hex.get('secondary'):
+                    overlay_slug = 'secondary'
+                is_dark = lum < 0.5
+            if use_cover:
+                blocks.append(f'<!-- wp:cover {{"dimRatio":20,"overlayColor":"{overlay_slug}","isDark":{str(is_dark).lower()}}} -->')
+                blocks.append('<div class="wp-block-cover">')
+                blocks.append(f'<span aria-hidden="true" class="wp-block-cover__background has-{overlay_slug}-background-color has-background-dim"></span>')
+                blocks.append('<div class="wp-block-cover__inner-container">')
+                if is_dark:
+                    blocks.append('<!-- wp:heading {"textAlign":"center","level":2,"textColor":"background"} -->')
+                    blocks.append(f'<h2 class="has-text-align-center has-background-color has-text-color">{label}</h2>')
+                else:
+                    blocks.append('<!-- wp:heading {"textAlign":"center","level":2,"textColor":"text"} -->')
+                    blocks.append(f'<h2 class="has-text-align-center has-text-color">{label}</h2>')
+                blocks.append('<!-- /wp:heading -->')
+            else:
+                group_meta = '"layout":{"type":"constrained"}'
+                if slug_to_hex.get('surface'):
+                    group_meta = group_meta + ',"backgroundColor":"surface"'
+                elif slug_to_hex.get('background'):
+                    group_meta = group_meta + ',"backgroundColor":"background"'
+                blocks.append(f'<!-- wp:group {{{group_meta}}} -->')
+                blocks.append('<div class="wp-block-group">')
+                blocks.append('<!-- wp:heading {"level":2,"textColor":"text"} -->')
+                blocks.append(f'<h2 class="has-text-color">{label}</h2>')
+                blocks.append('<!-- /wp:heading -->')
+            for row in rows:
                 cols = row.get('columns') or []
                 ratios = row.get('ratios_percent') or []
                 if not cols:
                     continue
-                rows.append((cols, ratios))
-        blocks = []
-        for cols, ratios in rows:
-            blocks.append('<!-- wp:columns {"align":"wide"} -->')
-            blocks.append('<div class="wp-block-columns alignwide">')
-            n = len(cols)
-            for i, _ in enumerate(cols):
-                pct = '0%'
-                if i < len(ratios) and isinstance(ratios[i], (int, float)):
-                    pct = f"{int(ratios[i])}%"
-                elif n > 0:
-                    pct = f"{int(round(100/n))}%"
-                blocks.append(f'<!-- wp:column {{"width":"{pct}"}} -->')
-                blocks.append(f'<div class="wp-block-column" style="flex-basis:{pct}">')
-                blocks.append('<!-- wp:group {"layout":{"type":"constrained"}} -->')
-                blocks.append('<div class="wp-block-group"></div>')
-                blocks.append('<!-- /wp:group -->')
+                blocks.append('<!-- wp:columns {"align":"wide","style":{"spacing":{"blockGap":"16px"}}} -->')
+                blocks.append('<div class="wp-block-columns alignwide">')
+                n = len(cols)
+                for i, _ in enumerate(cols):
+                    pct = '0%'
+                    if i < len(ratios) and isinstance(ratios[i], (int, float)):
+                        pct = f"{int(ratios[i])}%"
+                    elif n > 0:
+                        pct = f"{int(round(100/n))}%"
+                    blocks.append('<!-- wp:column {"width":"%s","style":{"spacing":{"padding":{"top":"12px","bottom":"12px"}}}} -->' % pct)
+                    blocks.append(f'<div class="wp-block-column" style="flex-basis:{pct};padding-top:12px;padding-bottom:12px">')
+                    blocks.append('<!-- wp:group {"layout":{"type":"constrained"},"style":{"spacing":{"blockGap":"8px"}}} -->')
+                    blocks.append('<div class="wp-block-group"></div>')
+                    blocks.append('<!-- /wp:group -->')
+                    blocks.append('</div>')
+                    blocks.append('<!-- /wp:column -->')
                 blocks.append('</div>')
-                blocks.append('<!-- /wp:column -->')
-            blocks.append('</div>')
-            blocks.append('<!-- /wp:columns -->')
+                blocks.append('<!-- /wp:columns -->')
+            if use_cover:
+                blocks.append('</div>')
+                blocks.append('</div>')
+                blocks.append('<!-- /wp:cover -->')
+            else:
+                blocks.append('</div>')
+                blocks.append('<!-- /wp:group -->')
         content = "\n".join(blocks)
         layout = f"""<!-- wp:template-part {{"slug":"header"}} /-->
 <!-- wp:group {{"tagName":"main","layout":{{"type":"constrained"}}}} -->
@@ -541,7 +602,7 @@ def _plan_to_fse(theme_dir, plan):
     except Exception:
         pass
 
-def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_dir: str, images=None):
+def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_dir: str, images=None, dna=None):
     html = _read_file(os.path.join(temp_out_dir, 'index.html'))
     css = _read_file(os.path.join(temp_out_dir, 'styles.css'))
     used_ai = False
@@ -714,7 +775,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
         if mapping:
             _mapping_to_fse(theme_dir, mapping)
         if plan and isinstance(plan, dict):
-            _plan_to_fse(theme_dir, plan)
+            _plan_to_fse(theme_dir, plan, dna)
         for name, value in data.items():
             _write_file(os.path.join(theme_dir, name), value)
         used_ai = True

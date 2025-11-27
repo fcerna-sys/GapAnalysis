@@ -99,41 +99,75 @@ def _most_saturated(colors):
             score = sat; best = rgb
     return best or (0, 120, 255)
 
+def _is_grayscale(rgb, tolerance=10):
+    r, g, b = rgb
+    return abs(r-g) < tolerance and abs(g-b) < tolerance
+
 def extract_design_dna(image_paths):
+    default_palette = [{"slug":"background","color":"#ffffff"},{"slug":"text","color":"#111111"},{"slug":"primary","color":"#3b82f6"}]
     if not image_paths:
-        return {"palette": [{"slug":"background","color":"#ffffff"},{"slug":"text","color":"#111111"},{"slug":"primary","color":"#3b82f6"}], "typography": {"fontFamily": "Inter, system-ui, sans-serif"}}
+        return {"palette": default_palette, "typography": {"fontFamily": "Inter, system-ui, sans-serif"}}
     path = image_paths[0]
     palette = []
     if colorgram:
         try:
-            colors = colorgram.extract(path, 6)
-            colors_sorted = sorted(colors, key=lambda c: _luminance((c.rgb.r, c.rgb.g, c.rgb.b)))
-            bg = colors_sorted[-1]
-            text = colors_sorted[0]
-            primary = _most_saturated(colors)
+            colors = colorgram.extract(path, 12)
+            rgb_colors = [(c.rgb.r, c.rgb.g, c.rgb.b) for c in colors]
+            by_lum = sorted(rgb_colors, key=_luminance)
+            bg_color = by_lum[-1] if by_lum else (255,255,255)
+            text_color = by_lum[0] if by_lum else (17,17,17)
+            primary_color = None
+            max_sat = -1
+            for rgb in rgb_colors:
+                if _is_grayscale(rgb, 20):
+                    continue
+                sat = max(rgb) - min(rgb)
+                if sat > max_sat:
+                    max_sat = sat
+                    primary_color = rgb
+            if not primary_color:
+                primary_color = (59,130,246)
+            secondary_color = text_color
+            if len(by_lum) > 1:
+                secondary_color = by_lum[1]
             palette = [
-                {"slug": "background", "color": _rgb_to_hex((bg.rgb.r, bg.rgb.g, bg.rgb.b))},
-                {"slug": "text", "color": _rgb_to_hex((text.rgb.r, text.rgb.g, text.rgb.b))},
-                {"slug": "primary", "color": _rgb_to_hex(primary)}
+                {"slug": "background", "color": _rgb_to_hex(bg_color)},
+                {"slug": "text", "color": _rgb_to_hex(text_color)},
+                {"slug": "primary", "color": _rgb_to_hex(primary_color)},
+                {"slug": "secondary", "color": _rgb_to_hex(secondary_color)}
             ]
         except Exception:
             palette = []
     if not palette:
         try:
             img = Image.open(path).convert('RGB')
-            small = img.resize((64, 64))
+            small = img.resize((96, 96))
             pixels = list(small.getdata())
-            pixels_sorted = sorted(pixels, key=_luminance)
-            bg = pixels_sorted[-1]
-            text = pixels_sorted[0]
-            primary = _most_saturated(pixels)
+            by_lum = sorted(pixels, key=_luminance)
+            bg_color = by_lum[-1] if by_lum else (255,255,255)
+            text_color = by_lum[0] if by_lum else (17,17,17)
+            primary_color = None
+            max_sat = -1
+            for rgb in pixels:
+                if _is_grayscale(rgb, 20):
+                    continue
+                sat = max(rgb) - min(rgb)
+                if sat > max_sat:
+                    max_sat = sat
+                    primary_color = rgb
+            if not primary_color:
+                primary_color = (59,130,246)
+            secondary_color = text_color
+            if len(by_lum) > 1:
+                secondary_color = by_lum[1]
             palette = [
-                {"slug": "background", "color": _rgb_to_hex(bg)},
-                {"slug": "text", "color": _rgb_to_hex(text)},
-                {"slug": "primary", "color": _rgb_to_hex(primary)}
+                {"slug": "background", "color": _rgb_to_hex(bg_color)},
+                {"slug": "text", "color": _rgb_to_hex(text_color)},
+                {"slug": "primary", "color": _rgb_to_hex(primary_color)},
+                {"slug": "secondary", "color": _rgb_to_hex(secondary_color)}
             ]
         except Exception:
-            palette = [{"slug":"background","color":"#ffffff"},{"slug":"text","color":"#111111"},{"slug":"primary","color":"#3b82f6"}]
+            palette = default_palette
     return {"palette": palette, "typography": {"fontFamily": "Inter, system-ui, sans-serif"}}
 
 PATTERN_MAP = {
@@ -149,17 +183,45 @@ PATTERN_MAP = {
     'newsletter': 'newsletter-wide',
     'team': 'team-members-grid',
     'portfolio': 'portfolio-grid',
-    'cta': 'cta-banner'
+    'cta': 'cta-banner',
+    'hero-split': 'hero-split-screen'
 }
 
 def identify_pattern(section):
     label = section.get('label', '')
     slug = section.get('slug', '')
     text = (label + ' ' + slug).lower()
+    rows = section.get('layout_rows') or []
+    if rows:
+        r0 = rows[0]
+        cols = r0.get('columns') or []
+        rp = r0.get('ratios_percent') or []
+        if len(cols) == 2:
+            if len(rp) >= 2 and isinstance(rp[0], (int, float)) and isinstance(rp[1], (int, float)):
+                diff = abs(int(rp[0]) - int(rp[1]))
+                if diff <= 10:
+                    return 'hero-split-screen-balanced'
+                else:
+                    return 'hero-split-screen-asymmetric'
+            return PATTERN_MAP.get('hero-split')
+        if len(cols) >= 3:
+            return 'features-grid-3-col'
     for key, pat in PATTERN_MAP.items():
         if key in text:
             return pat
     return 'features-with-media'
+
+def identify_pattern_variant(section):
+    rows = section.get('layout_rows') or []
+    if not rows:
+        return ''
+    r0 = rows[0]
+    rp = r0.get('ratios_percent') or []
+    cols = r0.get('columns') or []
+    if len(cols) == 2 and len(rp) >= 2 and isinstance(rp[0], (int, float)) and isinstance(rp[1], (int, float)):
+        diff = abs(int(rp[0]) - int(rp[1]))
+        return 'balanced' if diff <= 10 else 'asymmetric'
+    return ''
 
 def _row_energy(img):
     w, h = img.size
