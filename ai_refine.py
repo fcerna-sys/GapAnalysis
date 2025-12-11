@@ -5,6 +5,10 @@ import base64
 import urllib.request
 import urllib.error
 import ssl
+try:
+    import requests
+except ImportError:
+    requests = None
 
 def _read_file(path):
     try:
@@ -52,24 +56,138 @@ def _strip_fences(text):
         t = t[:-3]
     return t.strip()
 def _extract_json(text):
+    """Extrae y valida JSON del texto, con múltiples estrategias de recuperación."""
+    if not text or not isinstance(text, str):
+        return None
+    
     t = _strip_fences(text)
+    # Intentar parseo directo primero
     try:
-        return json.loads(t)
+        data = json.loads(t)
+        if isinstance(data, dict):
+            return data
     except Exception:
         pass
-    start_obj = t.find('{'); end_obj = t.rfind('}')
-    start_arr = t.find('['); end_arr = t.rfind(']')
+    
+    # Buscar objeto JSON más grande
+    start_obj = t.find('{')
+    end_obj = t.rfind('}')
+    start_arr = t.find('[')
+    end_arr = t.rfind(']')
     cands = []
+    
     if start_obj != -1 and end_obj != -1 and end_obj > start_obj:
         cands.append(t[start_obj:end_obj+1])
     if start_arr != -1 and end_arr != -1 and end_arr > start_arr:
         cands.append(t[start_arr:end_arr+1])
+    
+    # Intentar parsear cada candidato
     for c in cands:
         try:
-            return json.loads(c)
+            data = json.loads(c)
+            if isinstance(data, dict):
+                return data
         except Exception:
             continue
+    
+    # Último intento: buscar múltiples objetos JSON anidados
+    import re
+    json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
+    matches = re.findall(json_pattern, t, re.DOTALL)
+    for match in matches:
+        try:
+            data = json.loads(match)
+            if isinstance(data, dict) and len(data) > 0:
+                return data
+        except Exception:
+            continue
+    
     return None
+
+def _validate_json_structure(data, required_keys=None):
+    """Valida que el JSON tenga la estructura esperada para un tema WordPress."""
+    if not isinstance(data, dict):
+        return False
+    
+    # Validar que tenga al menos algunos archivos esperados
+    expected_files = ['style.css', 'functions.php', 'theme.json']
+    has_any_file = any(key in data for key in expected_files)
+    
+    if required_keys:
+        for key in required_keys:
+            if key not in data:
+                return False
+    
+    return has_any_file or 'mapping' in data
+
+def _create_qwen2vl_prompt(prompt_base, prompt_md, wp_kb, html, css, info_md, plan, selected_images_count):
+    """Crea un prompt optimizado específicamente para Qwen2-VL que aprovecha sus capacidades de visión."""
+    qwen_prompt = (
+        "Eres Qwen2-VL, un modelo de visión avanzado. Tu tarea es analizar las imágenes proporcionadas y generar un tema WordPress FSE completo.\n\n"
+        "INSTRUCCIONES ESPECÍFICAS PARA VISIÓN:\n"
+        "1. ANALIZA CADA IMAGEN DETALLADAMENTE:\n"
+        "   - Identifica componentes UI: botones, cards, navegación, formularios, imágenes\n"
+        "   - Detecta colores exactos (hex) de elementos clave: fondos, textos, botones, bordes\n"
+        "   - Mide espaciados relativos: márgenes, paddings, gaps entre elementos\n"
+        "   - Identifica tipografía: tamaño relativo, peso (bold/regular), familia (serif/sans-serif)\n"
+        "   - Detecta layouts: número de columnas, proporciones, alineaciones\n\n"
+        "2. PRIORIDAD VISUAL ABSOLUTA:\n"
+        "   - Si el OCR dice 'Texto A' pero la imagen muestra 'Texto B', usa 'Texto B'\n"
+        "   - Si el HTML/CSS no coincide con la imagen, ignóralo y replica la imagen\n"
+        "   - Los colores deben ser EXACTOS según lo que ves, no según el CSS base\n\n"
+        "3. ESTRUCTURA DEL TEMA:\n"
+        "   - Genera theme.json con paleta de colores extraída de las imágenes\n"
+        "   - Crea templates (index.html, page.html, single.html, 404.html)\n"
+        "   - Crea template parts (header.html, footer.html)\n"
+        "   - Genera style.css y functions.php\n\n"
+        "4. FORMATO DE RESPUESTA:\n"
+        "   - DEBES responder SOLO con un objeto JSON válido\n"
+        "   - El JSON debe incluir un campo 'mapping' con la estructura visual detectada\n"
+        "   - Cada archivo debe ser una clave en el JSON con su contenido como valor\n\n"
+    )
+    
+    # Agregar contexto adicional
+    qwen_prompt += f"\nCONTEXTO DEL DISEÑO:\n"
+    qwen_prompt += f"HTML base (puede estar desactualizado):\n{html[:1000]}...\n\n"
+    qwen_prompt += f"CSS base (puede estar desactualizado):\n{css[:1000]}...\n\n"
+    qwen_prompt += f"PLAN de secciones detectadas:\n{json.dumps(plan, ensure_ascii=False, indent=2)}\n\n"
+    
+    if info_md:
+        qwen_prompt += f"Información adicional:\n{info_md[:500]}...\n\n"
+    
+    qwen_prompt += (
+        "IMÁGENES PROPORCIONADAS:\n"
+        f"Se te han proporcionado {selected_images_count} imagen(es) de referencia.\n"
+        "Analiza CADA imagen en detalle y extrae:\n"
+        "- Colores exactos (hex codes)\n"
+        "- Tipografías y tamaños\n"
+        "- Espaciados y márgenes\n"
+        "- Componentes UI y su estructura\n"
+        "- Layouts y columnas\n\n"
+    )
+    
+    qwen_prompt += (
+        "EJEMPLO DE ESTRUCTURA JSON ESPERADA:\n"
+        "{\n"
+        '  "mapping": {"regions": [...]},\n'
+        '  "style.css": "/* CSS del tema */",\n'
+        '  "functions.php": "<?php ... ?>",\n'
+        '  "theme.json": "{...}",\n'
+        '  "parts/header.html": "<!-- wp:... -->",\n'
+        '  "parts/footer.html": "<!-- wp:... -->",\n'
+        '  "templates/index.html": "<!-- wp:... -->"\n'
+        "}\n\n"
+    )
+    
+    qwen_prompt += (
+        "RECUERDA:\n"
+        "- Usa las IMÁGENES como fuente de verdad, no el HTML/CSS base\n"
+        "- Replica fielmente colores, espaciados y tipografías que ves\n"
+        "- Genera código WordPress FSE válido y semántico\n"
+        "- Responde SOLO con JSON válido, sin texto adicional\n"
+    )
+    
+    return qwen_prompt
 
 def _fallback_wp(theme_dir, refined_html, css, plan, dna=None, radius_px=8):
     os.makedirs(theme_dir, exist_ok=True)
@@ -440,12 +558,67 @@ add_action('init','img2html_register_patterns');
 """
     _write_file(os.path.join(theme_dir, 'patterns', 'comments.html'), pattern_comments)
 
-def _encode_image(image_path):
+def _optimize_image_for_ai(image_path, max_width=2048, max_height=2048, quality=85):
+    """
+    Optimiza una imagen antes de enviarla a la IA:
+    - Redimensiona si es muy grande
+    - Comprime a JPEG para reducir tamaño
+    - Mantiene calidad suficiente para análisis visual
+    """
     try:
-        with open(image_path, 'rb') as f:
-            return base64.b64encode(f.read()).decode('utf-8')
+        from PIL import Image
+        import io
+        
+        # Abrir imagen
+        img = Image.open(image_path)
+        original_format = img.format
+        
+        # Convertir a RGB si es necesario (para JPEG)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Obtener dimensiones originales
+        width, height = img.size
+        
+        # Redimensionar si es necesario (manteniendo aspect ratio)
+        if width > max_width or height > max_height:
+            ratio = min(max_width / width, max_height / height)
+            new_width = int(width * ratio)
+            new_height = int(height * ratio)
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Comprimir a JPEG en memoria
+        output = io.BytesIO()
+        img.save(output, format='JPEG', quality=quality, optimize=True)
+        output.seek(0)
+        
+        # Convertir a base64
+        return base64.b64encode(output.read()).decode('utf-8')
     except Exception:
+        # Fallback: usar método original
+        try:
+            with open(image_path, 'rb') as f:
+                return base64.b64encode(f.read()).decode('utf-8')
+        except Exception:
+            return ''
+
+def _encode_image(image_path, optimize=True):
+    """
+    Codifica una imagen a base64, con opción de optimización.
+    Si optimize=True, redimensiona y comprime la imagen antes de codificar.
+    Valida que el archivo existe antes de procesar.
+    """
+    if not image_path or not os.path.isfile(image_path):
         return ''
+    
+    if optimize:
+        return _optimize_image_for_ai(image_path)
+    else:
+        try:
+            with open(image_path, 'rb') as f:
+                return base64.b64encode(f.read()).decode('utf-8')
+        except Exception:
+            return ''
 
 def _pattern_slug_for_type(t):
     m = {
@@ -649,15 +822,23 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 break
         chosen_remote_google = None
         chosen_remote_openai = None
+        chosen_remote_lmstudio = None
         for rm in (runtime.get('remote_models') or []):
             if rm.get('enabled') and rm.get('provider') == 'google':
                 chosen_remote_google = rm
             if rm.get('enabled') and rm.get('provider') == 'openai':
                 chosen_remote_openai = rm
+            if rm.get('enabled') and rm.get('provider') == 'lmstudio':
+                chosen_remote_lmstudio = rm
         if 'prefer_local' in strategy and chosen_local:
             provider = 'ollama'
             model_name = chosen_local.get('id') or chosen_local.get('name') or 'llama3.1:8b'
             endpoint = os.environ.get('OLLAMA_ENDPOINT') or 'http://localhost:11434/api/generate'
+        elif chosen_remote_lmstudio:
+            provider = 'lmstudio'
+            model_name = chosen_remote_lmstudio.get('name') or os.environ.get('LM_STUDIO_MODEL', 'qwen2-vl-7b-instruct')
+            endpoint = chosen_remote_lmstudio.get('endpoint') or os.environ.get('LM_STUDIO_ENDPOINT', 'http://localhost:1234/v1/chat/completions')
+            api_key = ''  # LM Studio generalmente no requiere API key
         elif chosen_remote_google:
             provider = 'google'
             model_name = chosen_remote_google.get('name') or 'gemini-1.5-pro-latest'
@@ -733,7 +914,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             if selected:
                 content.append({"role":"user","parts":[{"text":"Referencias visuales"}]})
                 for p in selected:
-                    b64 = _encode_image(p)
+                    b64 = _encode_image(p, optimize=True)
                     if b64:
                         content.append({"role":"user","parts":[{"inline_data":{"mime_type":"image/jpeg","data": b64}}]})
             content.append({"role":"user","parts":[{"text":"Primero entrega JSON 'mapping' con regiones visuales → bloques FSE (core/cover, core/columns, core/group, core/heading, core/paragraph, core/image, core/navigation, core/query). Si la imagen es diseño complejo, replica con columns/group/heading/paragraph; si es foto simple, usa image/cover. Luego entrega el JSON con archivos esperados."}]})
@@ -755,7 +936,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             if selected:
                 ucontent.append({"type":"text","text":"Referencias visuales (PRIORIDAD MÁXIMA)"})
                 for p in selected:
-                    b64 = _encode_image(p)
+                    b64 = _encode_image(p, optimize=True)
                     if b64:
                         ucontent.append({"type":"input_image","image_url":{"url":"data:image/jpeg;base64,"+b64}})
             ucontent.append({"type":"text","text":"Primero entrega JSON 'mapping' con regiones visuales → bloques FSE (core/cover, core/columns, core/group, core/heading, core/paragraph, core/image, core/navigation, core/query). Si la imagen es diseño complejo, replica con columns/group/heading/paragraph; si es foto simple, usa image/cover. Luego entrega el JSON con archivos esperados."})
@@ -789,14 +970,163 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 raw = resp.read()
                 obj = json.loads(raw.decode('utf-8'))
                 response_text = obj.get('response', '') or ''
+        elif provider == 'lmstudio' and endpoint:
+            # LM Studio usa formato compatible con OpenAI, optimizado para Qwen2-VL
+            if requests is None:
+                radius_px = _infer_border_radius_from_images(images or [])
+                _fallback_wp(theme_dir, html, css, plan, dna, radius_px)
+                return {"used_ai": used_ai, "provider": provider_used}
+            
+            # Crear prompt optimizado para Qwen2-VL
+            qwen_prompt = _create_qwen2vl_prompt(prompt, prompt_md, wp_kb, html, css, info_md, plan, len(selected))
+            
+            msgs = []
+            msgs.append({
+                "role": "system",
+                "content": "Eres Qwen2-VL, un modelo de visión avanzado especializado en análisis visual y generación de código WordPress FSE. Debes responder SOLO con un objeto JSON válido. Prioriza ANÁLISIS VISUAL sobre cualquier otro contexto."
+            })
+            
+            ucontent = [
+                {"type": "text", "text": qwen_prompt},
+                {"type": "text", "text": "WORDPRESS_KB"},
+                {"type": "text", "text": wp_kb}
+            ]
+            
+            # Agregar imágenes con instrucciones específicas
+            if selected:
+                ucontent.append({
+                    "type": "text",
+                    "text": "IMÁGENES DE REFERENCIA (ANALIZA CADA UNA EN DETALLE):\n"
+                    "Para cada imagen, identifica:\n"
+                    "1. Colores exactos (extrae códigos hex)\n"
+                    "2. Tipografías y tamaños relativos\n"
+                    "3. Espaciados y márgenes\n"
+                    "4. Componentes UI (botones, cards, navegación)\n"
+                    "5. Estructura de layout (columnas, filas, proporciones)\n"
+                })
+                for idx, p in enumerate(selected, 1):
+                    b64 = _encode_image(p, optimize=True)
+                    if b64:
+                        img_ext = os.path.splitext(p)[1].lower()
+                        mime_type = 'image/jpeg'
+                        if img_ext == '.png':
+                            mime_type = 'image/png'
+                        elif img_ext == '.webp':
+                            mime_type = 'image/webp'
+                        elif img_ext == '.gif':
+                            mime_type = 'image/gif'
+                        ucontent.append({
+                            "type": "text",
+                            "text": f"Imagen {idx}: {os.path.basename(p)}"
+                        })
+                        ucontent.append({
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{mime_type};base64,{b64}"}
+                        })
+            
+            ucontent.append({
+                "type": "text",
+                "text": "INSTRUCCIÓN FINAL: Genera el JSON completo con todos los archivos del tema WordPress basándote en el análisis visual de las imágenes. El campo 'mapping' debe describir la estructura visual detectada."
+            })
+            
+            msgs.append({"role": "user", "content": ucontent})
+            
+            body = {
+                "model": model_name,
+                "messages": msgs,
+                "response_format": {"type": "json_object"},
+                "temperature": 0.1,
+                "max_tokens": 8192  # Aumentado para respuestas más completas
+            }
+            if isinstance(top_p, (int, float)):
+                body["top_p"] = float(top_p)
+            
+            # Intentar con Qwen2-VL, con fallback si falla
+            try:
+                response = requests.post(endpoint, json=body, timeout=180)
+                if response.status_code == 200:
+                    obj = response.json()
+                    response_text = obj.get('choices', [{}])[0].get('message', {}).get('content', '') or ''
+                else:
+                    # Si falla, intentar sin response_format (algunas versiones de LM Studio no lo soportan)
+                    body_alt = body.copy()
+                    body_alt.pop('response_format', None)
+                    body_alt['messages'][-1]['content'].append({
+                        "type": "text",
+                        "text": "\n\nIMPORTANTE: Responde SOLO con JSON válido, sin texto adicional antes o después."
+                    })
+                    try:
+                        response_alt = requests.post(endpoint, json=body_alt, timeout=180)
+                        if response_alt.status_code == 200:
+                            obj_alt = response_alt.json()
+                            response_text = obj_alt.get('choices', [{}])[0].get('message', {}).get('content', '') or ''
+                        else:
+                            response_text = ''
+                    except Exception:
+                        response_text = ''
+            except requests.exceptions.Timeout:
+                response_text = ''
+            except requests.exceptions.ConnectionError:
+                response_text = ''
+            except Exception as e:
+                response_text = ''
         else:
             radius_px = _infer_border_radius_from_images(images or [])
             _fallback_wp(theme_dir, html, css, plan, dna, radius_px)
             return {"used_ai": used_ai, "provider": provider_used}
-        data = _extract_json(response_text)
-        if not isinstance(data, dict):
-            _fallback_wp(theme_dir, html, css, plan, dna)
-            return {"used_ai": used_ai, "provider": provider_used}
+        
+        # Validar y extraer JSON con mejor manejo de errores
+        data = None
+        if response_text:
+            data = _extract_json(response_text)
+            if data and not _validate_json_structure(data):
+                # Si el JSON no tiene estructura válida, intentar limpiarlo
+                data = None
+        
+        # Si no se pudo extraer JSON válido, intentar fallback
+        if not data or not isinstance(data, dict):
+            # Si es LM Studio y falló, intentar con otro proveedor si está disponible
+            if provider == 'lmstudio':
+                # Intentar fallback a Google si está disponible
+                if os.environ.get('GOOGLE_API_KEY'):
+                    try:
+                        provider = 'google'
+                        model_name = 'gemini-1.5-pro-latest'
+                        api_key = os.environ.get('GOOGLE_API_KEY')
+                        import google.generativeai as genai
+                        gcfg = {"response_mime_type": "application/json", "temperature": 0.1}
+                        config = genai.GenerationConfig(**gcfg)
+                        genai.configure(api_key=api_key)
+                        model = genai.GenerativeModel(model_name, generation_config=config)
+                        content = [
+                            {"role":"user","parts":[{"text":prompt}]},
+                            {"role":"user","parts":[{"text":"SISTEMA"},{"text":strict}]},
+                            {"role":"user","parts":[{"text":"PROMPT_MD"},{"text":prompt_md}]},
+                            {"role":"user","parts":[{"text":"WORDPRESS_KB"},{"text":wp_kb}]},
+                            {"role":"user","parts":[{"text":"HTML"},{"text":html}]},
+                            {"role":"user","parts":[{"text":"CSS"},{"text":css}]},
+                            {"role":"user","parts":[{"text":"INFO"},{"text":info_md}]},
+                            {"role":"user","parts":[{"text":"PLAN"},{"text":json.dumps(plan, ensure_ascii=False)}]},
+                        ]
+                        if selected:
+                            content.append({"role":"user","parts":[{"text":"Referencias visuales"}]})
+                            for p in selected:
+                                b64 = _encode_image(p, optimize=True)
+                                if b64:
+                                    content.append({"role":"user","parts":[{"inline_data":{"mime_type":"image/jpeg","data": b64}}]})
+                        resp = model.generate_content(content)
+                        response_text = getattr(resp, 'text', '') or ''
+                        if response_text:
+                            data = _extract_json(response_text)
+                            provider_used = 'google (fallback)'
+                    except Exception:
+                        pass
+            
+            # Si aún no hay datos válidos, usar fallback
+            if not data or not isinstance(data, dict):
+                radius_px = _infer_border_radius_from_images(images or [])
+                _fallback_wp(theme_dir, html, css, plan, dna, radius_px)
+                return {"used_ai": used_ai, "provider": provider_used}
         os.makedirs(os.path.join(theme_dir, 'parts'), exist_ok=True)
         os.makedirs(os.path.join(theme_dir, 'templates'), exist_ok=True)
         mapping = data.pop('mapping', None)
@@ -807,6 +1137,16 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             _plan_to_fse(theme_dir, plan, dna, radius_px)
         for name, value in data.items():
             _write_file(os.path.join(theme_dir, name), value)
+        
+        # Mejoras adicionales: asegurar estructura completa del tema
+        try:
+            from theme_builder import ensure_theme_structure, update_theme_json_colors, enhance_theme_with_plan
+            ensure_theme_structure(theme_dir)
+            update_theme_json_colors(theme_dir, dna)
+            if plan and isinstance(plan, dict):
+                enhance_theme_with_plan(theme_dir, plan, dna)
+        except Exception:
+            pass
         try:
             if isinstance(dna, dict):
                 theme_path = os.path.join(theme_dir, 'theme.json')

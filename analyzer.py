@@ -1,6 +1,9 @@
 import os
 import re
 import unicodedata
+import base64
+import json
+from typing import Dict, List, Optional
 from PIL import Image
 try:
     import cv2
@@ -470,3 +473,199 @@ def segment_image(path, out_dir, min_height=180, precise=False):
         return segments
     except Exception:
         return []
+
+def analyze_image_with_qwen2vl(image_path: str, use_cache: bool = True) -> Optional[Dict]:
+    """
+    Usa Qwen2-VL para análisis visual profundo de una imagen.
+    Detecta componentes UI, tipografías, layouts, colores y espaciados.
+    Usa cache para evitar analizar la misma imagen múltiples veces.
+    """
+    # Verificar cache
+    if use_cache:
+        try:
+            # Crear hash del archivo para usar como clave de cache
+            with open(image_path, 'rb') as f:
+                file_hash = hashlib.md5(f.read()).hexdigest()
+            cache_key = f"{image_path}:{file_hash}"
+            if cache_key in _vision_analysis_cache:
+                return _vision_analysis_cache[cache_key]
+        except Exception:
+            pass
+    
+    try:
+        import requests
+    except ImportError:
+        return None
+    
+    lm_studio_endpoint = os.environ.get('LM_STUDIO_ENDPOINT', 'http://localhost:1234/v1/chat/completions')
+    model_name = os.environ.get('LM_STUDIO_MODEL', 'qwen2-vl-7b-instruct')
+    
+    # Leer y optimizar imagen
+    try:
+        img = Image.open(image_path).convert('RGB')
+        # Redimensionar si es muy grande (máx 1024px para análisis rápido)
+        max_size = 1024
+        if max(img.size) > max_size:
+            ratio = max_size / max(img.size)
+            new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+        
+        # Convertir a base64
+        import io
+        output = io.BytesIO()
+        img.save(output, format='JPEG', quality=85, optimize=True)
+        output.seek(0)
+        image_base64 = base64.b64encode(output.read()).decode('utf-8')
+    except Exception:
+        return None
+    
+    prompt = """Analiza esta imagen de diseño web en detalle y responde SOLO con un JSON válido con la siguiente estructura:
+
+{
+  "components": ["lista de componentes UI detectados: botones, cards, navegación, formularios, etc."],
+  "layout": {
+    "type": "tipo de layout: grid, flex, single-column, multi-column, etc.",
+    "columns": número_de_columnas_si_aplica,
+    "structure": "descripción de la estructura"
+  },
+  "typography": {
+    "primary_font": "tipo de fuente detectada: sans-serif, serif, etc.",
+    "headings_size": "tamaño relativo de headings: large, medium, small",
+    "body_size": "tamaño relativo de texto: large, medium, small"
+  },
+  "colors": {
+    "primary": "#hex_code o null",
+    "secondary": "#hex_code o null",
+    "background": "#hex_code o null",
+    "text": "#hex_code o null",
+    "accent": "#hex_code o null"
+  },
+  "spacing": {
+    "margins": "descripción: tight, normal, spacious",
+    "padding": "descripción: tight, normal, spacious",
+    "gaps": "descripción: tight, normal, spacious"
+  },
+  "sections": ["lista de secciones detectadas: header, hero, features, etc."]
+}
+
+IMPORTANTE: Responde SOLO con el JSON, sin texto adicional."""
+    
+    payload = {
+        "model": model_name,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/jpeg;base64,{image_base64}"
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": prompt
+                    }
+                ]
+            }
+        ],
+        "max_tokens": 1024,
+        "temperature": 0.1,
+        "response_format": {"type": "json_object"}
+    }
+    
+    try:
+        response = requests.post(lm_studio_endpoint, json=payload, timeout=30)
+        if response.status_code == 200:
+            result = response.json()
+            content = result.get('choices', [{}])[0].get('message', {}).get('content', '')
+            if content:
+                try:
+                    return json.loads(content)
+                except Exception:
+                    # Intentar extraer JSON del texto
+                    start = content.find('{')
+                    end = content.rfind('}') + 1
+                    if start != -1 and end > start:
+                        result = json.loads(content[start:end])
+                        # Guardar en cache
+                        if use_cache:
+                            try:
+                                with open(image_path, 'rb') as f:
+                                    file_hash = hashlib.md5(f.read()).hexdigest()
+                                cache_key = f"{image_path}:{file_hash}"
+                                _vision_analysis_cache[cache_key] = result
+                            except Exception:
+                                pass
+                        return result
+    except Exception:
+        pass
+    
+    # Guardar None en cache para evitar reintentos
+    if use_cache:
+        try:
+            with open(image_path, 'rb') as f:
+                file_hash = hashlib.md5(f.read()).hexdigest()
+            cache_key = f"{image_path}:{file_hash}"
+            _vision_analysis_cache[cache_key] = None
+        except Exception:
+            pass
+    
+    return None
+
+def enhance_section_with_vision(section: Dict, use_qwen2vl: bool = True) -> Dict:
+    """
+    Enriquece una sección con análisis visual usando Qwen2-VL si está disponible.
+    """
+    if not use_qwen2vl:
+        return section
+    
+    # Verificar si LM Studio está disponible
+    lm_studio_endpoint = os.environ.get('LM_STUDIO_ENDPOINT', 'http://localhost:1234/v1/chat/completions')
+    if not lm_studio_endpoint:
+        return section
+    
+    # Analizar la primera imagen de la sección
+    images = section.get('images', [])
+    if not images:
+        return section
+    
+    image_path = images[0]
+    analysis = analyze_image_with_qwen2vl(image_path)
+    
+    if analysis:
+        # Mejorar la sección con información del análisis visual
+        if 'components' in analysis:
+            section['detected_components'] = analysis['components']
+        
+        if 'layout' in analysis:
+            layout_info = analysis['layout']
+            if 'type' in layout_info:
+                section['layout_type'] = layout_info['type']
+            if 'columns' in layout_info:
+                section['detected_columns'] = layout_info['columns']
+        
+        if 'typography' in analysis:
+            section['typography_hints'] = analysis['typography']
+        
+        if 'colors' in analysis:
+            # Mejorar paleta de colores con colores detectados
+            detected_colors = analysis['colors']
+            if 'palette' not in section:
+                section['palette'] = []
+            for key, value in detected_colors.items():
+                if value and value != 'null':
+                    section['palette'].append({
+                        'slug': key,
+                        'color': value,
+                        'source': 'qwen2vl'
+                    })
+        
+        if 'spacing' in analysis:
+            section['spacing_hints'] = analysis['spacing']
+        
+        if 'sections' in analysis:
+            section['detected_sections'] = analysis['sections']
+    
+    return section
+

@@ -8,3 +8,4 @@ pytest
 coverage
 python-dotenv
 opencv-python-headless
+requests

@@ -38,6 +38,13 @@
       "endpoint": "https://api.mistral.ai/v1/chat/completions",
       "tokens": ["MISTRAL_TOKEN_1"],
       "enabled": false
+    },
+    {
+      "name": "qwen2-vl-7b-instruct",
+      "provider": "lmstudio",
+      "endpoint": "http://localhost:1234/v1/chat/completions",
+      "tokens": [],
+      "enabled": true
     }
   ]
 }

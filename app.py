@@ -85,6 +85,10 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files.get('zipfile')
+    theme_name = request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme'
+    theme_slug = request.form.get('theme_slug', '').strip() or ''
+    theme_description = request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes'
+    css_framework = request.form.get('css_framework', 'tailwind')  # tailwind, bootstrap, none
     google_api_key = request.form.get('google_api_key') or ''
     enable_slicing = request.form.get('enable_slicing') or ''
     precise_slicing = request.form.get('precise_slicing') or ''
@@ -162,7 +166,12 @@ def upload():
             flash('No se pudo procesar el archivo de credenciales subido')
     request.environ['img2html_batch_dir'] = batch_dir
     request.environ['img2html_plan'] = plan
-    return render_template('plan.html', plan=plan, batch_id=batch_id, google_api_key=google_api_key, enable_slicing=enable_slicing, precise_slicing=precise_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
+    request.environ['img2html_theme_name'] = theme_name
+    request.environ['img2html_theme_slug'] = theme_slug
+    request.environ['img2html_theme_description'] = theme_description
+    request.environ['img2html_css_framework'] = css_framework
+    request.environ['img2html_css_framework'] = css_framework
+    return render_template('plan.html', plan=plan, batch_id=batch_id, theme_name=theme_name, theme_slug=theme_slug, theme_description=theme_description, css_framework=css_framework, google_api_key=google_api_key, enable_slicing=enable_slicing, precise_slicing=precise_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
 
 def _set_progress(batch_id, percent, message):
     try:
@@ -189,6 +198,10 @@ def conversion_result(batch_id):
 
 def _do_convert_async(ctx):
     batch_id = ctx.get('batch_id')
+    theme_name = ctx.get('theme_name', 'Img2HTML AI Theme')
+    theme_slug = ctx.get('theme_slug', '')
+    theme_description = ctx.get('theme_description', 'Tema de bloques generado y refinado con IA desde imágenes')
+    css_framework = ctx.get('css_framework', 'tailwind')
     google_api_key = ctx.get('google_api_key') or ''
     enable_slicing = ctx.get('enable_slicing') or ''
     precise_slicing = ctx.get('precise_slicing') or ''
@@ -208,6 +221,21 @@ def _do_convert_async(ctx):
         for s in plan['sections']:
             s['pattern'] = identify_pattern(s)
         _set_progress(batch_id, 20, 'Detectando patrones y secciones')
+        
+        # Análisis visual profundo con Qwen2-VL (opcional)
+        try:
+            from analyzer import enhance_section_with_vision
+            use_vision = os.environ.get('USE_VISION_ANALYSIS', 'true').lower() == 'true'
+            if use_vision:
+                _set_progress(batch_id, 22, 'Análisis visual profundo')
+                for s in plan['sections']:
+                    try:
+                        s = enhance_section_with_vision(s, use_qwen2vl=True)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        
         dna = extract_design_dna(images)
         _set_progress(batch_id, 30, 'Extrayendo paleta DNA')
         try:
@@ -382,6 +410,23 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
             builder.run_prompt('52_template_parts_catalog.json')
             builder.run_prompt('51_templates_catalog.json')
             builder.run_prompt('53_patterns_catalog.json')
+            
+            # Construcción mejorada del tema
+            try:
+                from theme_builder import build_complete_theme, generate_theme_screenshot
+                from blocks_builder import setup_css_framework, create_custom_blocks
+                build_complete_theme(wp_theme_dir, plan, dna, images, theme_name, theme_description, theme_slug, css_framework)
+                # Configurar framework CSS
+                setup_css_framework(wp_theme_dir, css_framework)
+                # Crear bloques personalizados (con prefijo BEM desde theme_slug)
+                create_custom_blocks(wp_theme_dir, css_framework, plan, theme_slug)
+                # Generar screenshot SVG
+                generate_theme_screenshot(wp_theme_dir, plan, dna, theme_name, theme_description)
+            except Exception as e:
+                print(f"Error en construcción del tema: {e}")
+                import traceback
+                traceback.print_exc()
+            
             result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images, dna=dna)
             used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
             provider = (result.get('provider') if isinstance(result, dict) else '') or ''
@@ -403,6 +448,10 @@ def start_convert():
     batch_id = request.form.get('batch_id')
     ctx = {
         'batch_id': batch_id,
+        'theme_name': request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme',
+        'theme_slug': request.form.get('theme_slug', '').strip() or '',
+        'theme_description': request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes',
+        'css_framework': request.form.get('css_framework', 'tailwind'),
         'google_api_key': request.form.get('google_api_key') or '',
         'enable_slicing': request.form.get('enable_slicing') or '',
         'precise_slicing': request.form.get('precise_slicing') or '',
@@ -422,6 +471,10 @@ def progress_ui():
 @app.route('/convert', methods=['POST'])
 def convert():
     batch_id = request.form.get('batch_id')
+    theme_name = request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme'
+    theme_slug = request.form.get('theme_slug', '').strip() or ''
+    theme_description = request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes'
+    css_framework = request.form.get('css_framework', 'tailwind')
     google_api_key = request.form.get('google_api_key') or ''
     enable_slicing = request.form.get('enable_slicing') or ''
     precise_slicing = request.form.get('precise_slicing') or ''
@@ -634,6 +687,29 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
         builder.run_prompt('52_template_parts_catalog.json')
         builder.run_prompt('51_templates_catalog.json')
         builder.run_prompt('53_patterns_catalog.json')
+        
+        # Obtener nombre y descripción del tema
+        theme_name = request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme'
+        theme_slug = request.form.get('theme_slug', '').strip() or ''
+        theme_description = request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes'
+        css_framework = request.form.get('css_framework', 'tailwind')
+        
+        # Construcción mejorada del tema
+        try:
+            from theme_builder import build_complete_theme, generate_theme_screenshot
+            from blocks_builder import setup_css_framework, create_custom_blocks
+            build_complete_theme(wp_theme_dir, plan, dna, images, theme_name, theme_description, theme_slug, css_framework)
+            # Configurar framework CSS
+            setup_css_framework(wp_theme_dir, css_framework)
+            # Crear bloques personalizados
+            create_custom_blocks(wp_theme_dir, css_framework, plan)
+            # Generar screenshot SVG
+            generate_theme_screenshot(wp_theme_dir, plan, dna, theme_name, theme_description)
+        except Exception as e:
+            print(f"Error en construcción del tema: {e}")
+            import traceback
+            traceback.print_exc()
+        
         result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images, dna=dna)
         used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
         provider = (result.get('provider') if isinstance(result, dict) else '') or ''
@@ -675,6 +751,43 @@ def download_static():
                 arc = os.path.relpath(full, out_dir)
                 zf.write(full, arc)
     return send_from_directory(BASE_DIR, 'static_site.zip', as_attachment=True)
+
+@app.route('/install_theme', methods=['POST'])
+def install_theme():
+    """Instala el tema generado en WordPress."""
+    try:
+        from theme_builder import install_theme_to_wordpress
+        wordpress_dir = request.form.get('wordpress_dir', '')
+        theme_slug = request.form.get('theme_slug', '')
+        
+        if not wordpress_dir:
+            # Intentar detectar automáticamente
+            possible_paths = [
+                os.path.join(BASE_DIR, 'wordpress'),
+                os.path.join(BASE_DIR, '..', 'wordpress'),
+                os.path.join(os.path.dirname(BASE_DIR), 'wordpress'),
+            ]
+            for path in possible_paths:
+                if os.path.isdir(path) and os.path.isdir(os.path.join(path, 'wp-content')):
+                    wordpress_dir = path
+                    break
+        
+        if not wordpress_dir or not os.path.isdir(wordpress_dir):
+            flash('No se encontró la instalación de WordPress. Especifica la ruta manualmente.')
+            return redirect(url_for('index'))
+        
+        theme_dir = os.path.join(BASE_DIR, 'wp_theme')
+        success = install_theme_to_wordpress(theme_dir, wordpress_dir, theme_slug)
+        
+        if success:
+            flash('Tema instalado exitosamente en WordPress')
+        else:
+            flash('Error al instalar el tema')
+        
+        return redirect(url_for('index'))
+    except Exception as e:
+        flash(f'Error: {str(e)}')
+        return redirect(url_for('index'))
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8001))

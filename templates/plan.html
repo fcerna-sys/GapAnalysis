@@ -39,6 +39,10 @@
       <h1>Plan inferido: {{ plan.title }}</h1>
       <form action="/start_convert" method="post">
         <input type="hidden" name="batch_id" value="{{ batch_id }}" />
+        <input type="hidden" name="theme_name" value="{{ theme_name or 'Img2HTML AI Theme' }}" />
+        <input type="hidden" name="theme_slug" value="{{ theme_slug or '' }}" />
+        <input type="hidden" name="theme_description" value="{{ theme_description or 'Tema de bloques generado y refinado con IA desde imágenes' }}" />
+        <input type="hidden" name="css_framework" value="{{ css_framework or 'tailwind' }}" />
         <input type="hidden" name="google_api_key" value="{{ google_api_key }}" />
         <input type="hidden" name="enable_slicing" value="{{ enable_slicing }}" />
         <input type="hidden" name="precise_slicing" value="{{ precise_slicing }}" />
