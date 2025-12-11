@@ -1,101 +1,93 @@
-# Agregar función para generar editor JS de Hero con controles avanzados
-def _generate_hero_editor_js(bem_prefix: str = 'img2html') -> str:
-    """Genera index.js para Hero con controles avanzados incluyendo media upload."""
-    from gutenberg_integration import generate_editor_js_with_controls
-    
-    custom_controls = f"""
-        <PanelBody title={{__('Hero Settings', '{bem_prefix}')}} initialOpen={{true}}>
-            <TextControl
-                label={{__('Title', '{bem_prefix}')}}
-                value={{attributes.title}}
-                onChange={{(value) => setAttributes({{ title: value }})}}
-            />
-            <TextControl
-                label={{__('Subtitle', '{bem_prefix}')}}
-                value={{attributes.subtitle}}
-                onChange={{(value) => setAttributes({{ subtitle: value }})}}
-            />
-            <ToggleControl
-                label={{__('Show Button', '{bem_prefix}')}}
-                checked={{attributes.showButton}}
-                onChange={{(value) => setAttributes({{ showButton: value }})}}
-            />
-            {{attributes.showButton && (
-                <>
-                    <TextControl
-                        label={{__('Button Text', '{bem_prefix}')}}
-                        value={{attributes.buttonText}}
-                        onChange={{(value) => setAttributes({{ buttonText: value }})}}
-                    />
-                    <TextControl
-                        label={{__('Button URL', '{bem_prefix}')}}
-                        value={{attributes.buttonUrl}}
-                        onChange={{(value) => setAttributes({{ buttonUrl: value }})}}
-                    />
-                </>
-            )}}
-            <ToggleControl
-                label={{__('Show Overlay', '{bem_prefix}')}}
-                checked={{attributes.showOverlay}}
-                onChange={{(value) => setAttributes({{ showOverlay: value }})}}
-            />
-            <SelectControl
-                label={{__('Height', '{bem_prefix}')}}
-                value={{attributes.height}}
-                options={[
-                    {{ label: __('Auto', '{bem_prefix}'), value: 'auto' }},
-                    {{ label: __('60vh', '{bem_prefix}'), value: '60vh' }},
-                    {{ label: __('70vh', '{bem_prefix}'), value: '70vh' }},
-                    {{ label: __('100vh', '{bem_prefix}'), value: '100vh' }},
-                ]}
-                onChange={{(value) => setAttributes({{ height: value }})}}
-            />
-            <SelectControl
-                label={{__('Text Align', '{bem_prefix}')}}
-                value={{attributes.align}}
-                options={[
-                    {{ label: __('Left', '{bem_prefix}'), value: 'left' }},
-                    {{ label: __('Center', '{bem_prefix}'), value: 'center' }},
-                    {{ label: __('Right', '{bem_prefix}'), value: 'right' }},
-                ]}
-                onChange={{(value) => setAttributes({{ align: value }})}}
-            />
-        </PanelBody>
-    """
-    
-    base_attributes = {
-        "title": {"type": "string"},
-        "subtitle": {"type": "string"},
-        "buttonText": {"type": "string"},
-        "buttonUrl": {"type": "string"},
-        "showButton": {"type": "boolean"},
-        "showOverlay": {"type": "boolean"},
-        "height": {"type": "string"},
-        "align": {"type": "string"},
-        "imageUrl": {"type": "string"},
-        "imageId": {"type": "number"},
-        "imageWebp": {"type": "string"},
-        "imageThumb": {"type": "string"}
-    }
-    
-    return generate_editor_js_with_controls(
-        block_name="hero",
-        attributes=base_attributes,
-        bem_prefix=bem_prefix,
-        custom_controls=custom_controls,
-        include_media_upload=True
-    )
-
-def _generate_hero_editor_css() -> str:
-    """Genera CSS para el editor de Hero."""
-    return """
-.wp-block-img2html-hero-editor {
-    min-height: 300px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f0f0f0;
-    border: 2px dashed #ccc;
-    padding: 2rem;
-}
 """
+Módulo para crear bloques personalizados de Gutenberg
+REFACTORIZADO: Ahora usa estructura modular en blocks_builder/
+
+Este archivo mantiene compatibilidad hacia atrás importando desde blocks_builder/
+NOTA: Si hay errores de importación, las funciones están en blocks_builder_backup.py
+"""
+# Importar todo desde el módulo modular
+try:
+    from blocks_builder import (
+    get_bem_prefix,
+    setup_css_framework,
+    generate_bem_css,
+    create_custom_blocks,
+    create_atom_button,
+    create_atom_heading,
+    create_atom_input,
+    create_atom_icon,
+    create_atom_badge,
+    create_atom_link,
+    create_molecule_card,
+    create_molecule_form_field,
+    create_molecule_nav_item,
+    create_molecule_testimonial,
+    create_molecule_pricing_item,
+    create_slider_block,
+    create_hero_block,
+    create_section_block,
+    create_cards_block,
+    create_gallery_block,
+    create_text_image_block,
+    create_sidebar_block,
+    create_search_block,
+    create_pagination_block,
+    create_header_block,
+    create_footer_block,
+    create_form_block,
+    create_menu_block,
+    register_blocks_in_functions,
+    register_atomic_blocks_in_functions,
+    )
+except ImportError:
+    # Fallback: importar desde el backup si el módulo modular no está completo
+    import sys
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("blocks_builder_backup", "blocks_builder_backup.py")
+    if spec and spec.loader:
+        backup_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(backup_module)
+        # Re-exportar funciones principales
+        get_bem_prefix = backup_module.get_bem_prefix
+        setup_css_framework = backup_module.setup_css_framework
+        create_custom_blocks = backup_module.create_custom_blocks
+        # Otras funciones según necesidad
+        create_slider_block = getattr(backup_module, 'create_slider_block', None)
+        create_hero_block = getattr(backup_module, 'create_hero_block', None)
+        # ... agregar más según necesidad
+    else:
+        raise ImportError("No se pudo cargar blocks_builder_backup.py")
+
+# Mantener compatibilidad hacia atrás
+__all__ = [
+    'get_bem_prefix',
+    'setup_css_framework',
+    'generate_bem_css',
+    'create_custom_blocks',
+    'create_atom_button',
+    'create_atom_heading',
+    'create_atom_input',
+    'create_atom_icon',
+    'create_atom_badge',
+    'create_atom_link',
+    'create_molecule_card',
+    'create_molecule_form_field',
+    'create_molecule_nav_item',
+    'create_molecule_testimonial',
+    'create_molecule_pricing_item',
+    'create_slider_block',
+    'create_hero_block',
+    'create_section_block',
+    'create_cards_block',
+    'create_gallery_block',
+    'create_text_image_block',
+    'create_sidebar_block',
+    'create_search_block',
+    'create_pagination_block',
+    'create_header_block',
+    'create_footer_block',
+    'create_form_block',
+    'create_menu_block',
+    'register_blocks_in_functions',
+    'register_atomic_blocks_in_functions',
+]

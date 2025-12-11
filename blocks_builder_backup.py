@@ -401,7 +401,7 @@ $height_class = $height === 'auto' ? 'h-auto' : ($height === '100vh' ? 'h-screen
 </div>
 
 <script>
-(function() {
+(function() {{
     const slider = document.querySelector('.img2html-slider');
     if (!slider) return;
     
@@ -416,41 +416,41 @@ $height_class = $height === 'auto' ? 'h-auto' : ($height === '100vh' ? 'h-screen
     let currentSlide = 0;
     let autoplayInterval;
     
-    function showSlide(index) {
-        slides.forEach((slide, i) => {
+    function showSlide(index) {{
+        slides.forEach((slide, i) => {{
             slide.classList.toggle('active', i === index);
-        });
-        dots.forEach((dot, i) => {
+        }});
+        dots.forEach((dot, i) => {{
             dot.classList.toggle('active', i === index);
-        });
+        }});
         currentSlide = index;
-    }
+    }}
     
-    function nextSlide() {
+    function nextSlide() {{
         const next = (currentSlide + 1) % slides.length;
         showSlide(next);
-    }
+    }}
     
-    function prevSlide() {
+    function prevSlide() {{
         const prev = (currentSlide - 1 + slides.length) % slides.length;
         showSlide(prev);
-    }
+    }}
     
     if (prevBtn) prevBtn.addEventListener('click', prevSlide);
     if (nextBtn) nextBtn.addEventListener('click', nextSlide);
     
-    dots.forEach((dot, index) => {
+    dots.forEach((dot, index) => {{
         dot.addEventListener('click', () => showSlide(index));
-    });
+    }});
     
-    if (autoplay && slides.length > 1) {
+    if (autoplay && slides.length > 1) {{
         autoplayInterval = setInterval(nextSlide, speed);
         slider.addEventListener('mouseenter', () => clearInterval(autoplayInterval));
-        slider.addEventListener('mouseleave', () => {
+        slider.addEventListener('mouseleave', () => {{
             autoplayInterval = setInterval(nextSlide, speed);
-        });
-    }
-})();
+        }});
+    }}
+}})();
 </script>
 """
     elif css_framework == 'bootstrap':
@@ -1811,23 +1811,23 @@ $endpoint = $attributes['endpoint'] ?? '/wp-json/img2html/v1/contact';
   <div class="form-error text-sm text-red-600 hidden"><?php echo esc_html($errorMessage); ?></div>
 </form>
 <script>
-(function(){
+(function(){{
   const form = document.currentScript.previousElementSibling;
   if(!form) return;
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async (e) => {{
     e.preventDefault();
     const fd = new FormData(form);
     const endpoint = form.dataset.endpoint || '/wp-json/img2html/v1/contact';
-    try {
-      await fetch(endpoint, { method: 'POST', body: fd });
+    try {{
+      await fetch(endpoint, {{ method: 'POST', body: fd }});
       form.querySelector('.form-feedback').classList.remove('hidden');
       form.querySelector('.form-error').classList.add('hidden');
       form.reset();
-    } catch(err) {
+    }} catch(err) {{
       form.querySelector('.form-error').classList.remove('hidden');
-    }
-  });
-})();
+    }}
+  }});
+}})();
 </script>
 """
     else:
@@ -1860,23 +1860,23 @@ $endpoint = $attributes['endpoint'] ?? '/wp-json/img2html/v1/contact';
   <div class="form-error small text-danger d-none"><?php echo esc_html($errorMessage); ?></div>
 </form>
 <script>
-(function(){
+(function(){{
   const form = document.currentScript.previousElementSibling;
   if(!form) return;
-  form.addEventListener('submit', async (e) => {
+  form.addEventListener('submit', async (e) => {{
     e.preventDefault();
     const fd = new FormData(form);
     const endpoint = form.dataset.endpoint || '/wp-json/img2html/v1/contact';
-    try {
-      await fetch(endpoint, { method: 'POST', body: fd });
+    try {{
+      await fetch(endpoint, {{ method: 'POST', body: fd }});
       form.querySelector('.form-feedback').classList.remove('d-none');
       form.querySelector('.form-error').classList.add('d-none');
       form.reset();
-    } catch(err) {
+    }} catch(err) {{
       form.querySelector('.form-error').classList.remove('d-none');
-    }
-  });
-})();
+    }}
+  }});
+}})();
 </script>
 """
 
@@ -1938,32 +1938,32 @@ $bgClass = $transparent ? 'bg-transparent' : 'bg-white shadow';
   </div>
 </nav>
 <script>
-(function(){
+(function(){{
   const nav = document.currentScript.previousElementSibling;
   if(!nav) return;
   const toggle = nav.querySelector('.menu-toggle');
   const panel = nav.querySelector('.mobile-panel');
   const closeBtn = nav.querySelector('.menu-close');
   const desktopNav = nav.querySelector('.wp-block-navigation');
-  if(toggle && panel){
+  if(toggle && panel){{
     toggle.addEventListener('click', () => panel.classList.remove('hidden'));
-  }
-  if(closeBtn && panel){
+  }}
+  if(closeBtn && panel){{
     closeBtn.addEventListener('click', () => panel.classList.add('hidden'));
-  }
+  }}
 
-  // Dropdown desktop (hover) para items con submenú
-  if (desktopNav) {
-    desktopNav.querySelectorAll('li.has-child').forEach((item) => {
+  /* Dropdown desktop (hover) para items con submenú */
+  if (desktopNav) {{
+    desktopNav.querySelectorAll('li.has-child').forEach((item) => {{
       item.classList.add('relative');
       const submenu = item.querySelector('ul');
       if (!submenu) return;
       submenu.classList.add('absolute','hidden','bg-white','shadow','rounded','mt-2','min-w-[200px]','z-50','p-2');
       item.addEventListener('mouseenter', () => submenu.classList.remove('hidden'));
       item.addEventListener('mouseleave', () => submenu.classList.add('hidden'));
-    });
-  }
-})();
+    }});
+  }}
+}})();
 </script>
 """
     else:
@@ -1998,21 +1998,21 @@ $bgClass = $transparent ? 'bg-transparent' : 'bg-white shadow-sm';
   </div>
 </nav>
 <script>
-(function(){
-  // Dropdown hover para desktop en Bootstrap
+(function(){{
+  /* Dropdown hover para desktop en Bootstrap */
   const nav = document.currentScript.previousElementSibling;
   if(!nav) return;
   const dropdowns = nav.querySelectorAll('.menu-item-has-children, .has-child');
-  dropdowns.forEach((item) => {
+  dropdowns.forEach((item) => {{
     const submenu = item.querySelector('ul');
     if(!submenu) return;
     item.classList.add('position-relative');
     submenu.classList.add('dropdown-menu','show');
     submenu.style.display = 'none';
-    item.addEventListener('mouseenter', () => { submenu.style.display = 'block'; });
-    item.addEventListener('mouseleave', () => { submenu.style.display = 'none'; });
-  });
-})();
+    item.addEventListener('mouseenter', () => {{ submenu.style.display = 'block'; }});
+    item.addEventListener('mouseleave', () => {{ submenu.style.display = 'none'; }});
+  }});
+}})();
 </script>
 """
 
@@ -2026,15 +2026,15 @@ $gap = intval($attributes['gap'] ?? 12);
 $lightbox = !empty($attributes['lightbox']);
 $ratios = ($attributes['layoutRows'][0]['ratios_percent'] ?? []) ?: [];
 $grid_style = '';
-if ($ratios) {
+if ($ratios) {{
   $parts = [];
-  foreach ($ratios as $r) {
-    if ($r) { $parts[] = "minmax(0, {$r}%)"; }
-  }
-  if (!empty($parts)) {
+  foreach ($ratios as $r) {{
+    if ($r) {{ $parts[] = "minmax(0, {{$r}}%)"; }}
+  }}
+  if (!empty($parts)) {{
     $grid_style = 'style="grid-template-columns:' . implode(' ', $parts) . ';"';
-  }
-}
+  }}
+}}
 if (!$images) return;
 ?>
 <div class="{base}">
@@ -2071,13 +2071,13 @@ if (!$images) return;
       $webp = $img['webp'] ?? ''; 
       $thumb = $img['thumb'] ?? '';
       $w = 12 / max(1,$cols);
-      if (!empty($ratios)) {
+      if (!empty($ratios)) {{
         $idx = array_search($img, $images, true);
-        if ($idx !== false && isset($ratios[$idx])) {
+        if ($idx !== false && isset($ratios[$idx])) {{
           $calc = intval(round(($ratios[$idx]/100.0)*12));
-          if ($calc > 0) { $w = max(1, min(12, $calc)); }
-        }
-      }
+          if ($calc > 0) {{ $w = max(1, min(12, $calc)); }}
+        }}
+      }}
     ?>
       <div class="col-<?php echo intval($w); ?>">
         <a href="<?php echo esc_url($src); ?>" <?php if(!$lightbox): ?>target="_blank"<?php endif; ?> class="d-block mb-3">
@@ -2170,12 +2170,12 @@ $col_class = $cols === 1 ? 'col-12' : ($cols === 3 ? 'col-md-4' : 'col-md-6');
       <?php endif; ?>
       <?php 
         $col_classes = [];
-        if ($ratios) {
-          foreach ($ratios as $r) {
+        if ($ratios) {{
+          foreach ($ratios as $r) {{
             $width = max(1, min(12, intval(round(($r/100.0)*12))));
             $col_classes[] = 'col-md-' . $width;
-          }
-        }
+          }}
+        }}
         $col_class_left = !empty($col_classes) ? $col_classes[0] : $col_class;
       ?>
       <div class="<?php echo esc_attr($col_class_left); ?>">
@@ -2194,24 +2194,24 @@ def _render_cards(css_framework: str, bem_prefix: str = 'img2html') -> str:
         return f"""<?php
 $cards = $attributes['cards'] ?? [];
 $cols = max(1, min(4, intval($attributes['columns'] ?? 3)));
-if (isset($attributes['layoutRows']) && is_array($attributes['layoutRows']) && !empty($attributes['layoutRows'])) {
-  // si el plan trajo layout, usar el primer rows para columnas
+if (isset($attributes['layoutRows']) && is_array($attributes['layoutRows']) && !empty($attributes['layoutRows'])) {{
+  /* si el plan trajo layout, usar el primer rows para columnas */
   $first = $attributes['layoutRows'][0];
-  if (isset($first['columns']) && is_array($first['columns'])) {
+  if (isset($first['columns']) && is_array($first['columns'])) {{
     $cols = max(1, min(4, count($first['columns'])));
-  }
-}
+  }}
+}}
 $ratios = ($attributes['layoutRows'][0]['ratios_percent'] ?? []) ?: [];
 $grid_style = '';
-if ($ratios) {
+if ($ratios) {{
   $parts = [];
-  foreach ($ratios as $r) {
-    if ($r) { $parts[] = "minmax(0, {$r}%)"; }
-  }
-  if (!empty($parts)) {
+  foreach ($ratios as $r) {{
+    if ($r) {{ $parts[] = "minmax(0, {{$r}}%)"; }}
+  }}
+  if (!empty($parts)) {{
     $grid_style = 'style="grid-template-columns:' . implode(' ', $parts) . ';"';
-  }
-}
+  }}
+}}
 $gap = intval($attributes['gap'] ?? 16);
 if (!$cards) return;
 ?>
@@ -2246,12 +2246,12 @@ if (!$cards) return;
         return f"""<?php
 $cards = $attributes['cards'] ?? [];
 $cols = max(1, min(4, intval($attributes['columns'] ?? 3)));
-if (isset($attributes['layoutRows']) && is_array($attributes['layoutRows']) && !empty($attributes['layoutRows'])) {
+if (isset($attributes['layoutRows']) && is_array($attributes['layoutRows']) && !empty($attributes['layoutRows'])) {{
   $first = $attributes['layoutRows'][0];
-  if (isset($first['columns']) && is_array($first['columns'])) {
+  if (isset($first['columns']) && is_array($first['columns'])) {{
     $cols = max(1, min(4, count($first['columns'])));
-  }
-}
+  }}
+}}
 $ratios = ($attributes['layoutRows'][0]['ratios_percent'] ?? []) ?: [];
 $gap = intval($attributes['gap'] ?? 16);
 if (!$cards) return;
@@ -2268,13 +2268,13 @@ if (!$cards) return;
         $btn = $card['buttonText'] ?? '';
         $url = $card['buttonUrl'] ?? '#';
         $w = 12 / max(1,$cols);
-        if (!empty($ratios)) {
+        if (!empty($ratios)) {{
           $idx = array_search($card, $cards, true);
-          if ($idx !== false && isset($ratios[$idx])) {
+          if ($idx !== false && isset($ratios[$idx])) {{
             $calc = intval(round(($ratios[$idx]/100.0)*12));
-            if ($calc > 0) { $w = max(1, min(12, $calc)); }
-          }
-        }
+            if ($calc > 0) {{ $w = max(1, min(12, $calc)); }}
+          }}
+        }}
       ?>
         <div class="col-<?php echo intval($w); ?>">
           <div class="card h-100 shadow-sm">
