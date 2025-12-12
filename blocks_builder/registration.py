@@ -80,7 +80,7 @@ function {bem_prefix}_register_atomic_blocks() {{
     $base_path = get_template_directory() . '/blocks';
     
     // Átomos: Componentes básicos reutilizables
-    $atoms = ['button', 'heading', 'input', 'icon', 'badge', 'link'];
+    $atoms = ['button', 'heading', 'input', 'icon', 'badge', 'link', 'image'];
     foreach ($atoms as $atom) {{
         $block_path = $base_path . '/atoms/' . $atom;
         if (file_exists($block_path . '/block.json')) {{
@@ -99,7 +99,7 @@ function {bem_prefix}_register_atomic_blocks() {{
     
     // Organismos: Componentes complejos que usan moléculas y átomos
     $organisms = ['slider', 'hero', 'section', 'cards', 'gallery', 'text-image', 
-                  'sidebar', 'search-extended', 'pagination', 'header', 'footer', 'form', 'menu'];
+                  'sidebar', 'search-extended', 'pagination', 'header', 'footer', 'form', 'menu', 'cta'];
     foreach ($organisms as $organism) {{
         $block_path = $base_path . '/organisms/' . $organism;
         if (file_exists($block_path . '/block.json')) {{

@@ -41,6 +41,7 @@ def create_slider_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     """
     Crea el bloque Slider completo con todas las funcionalidades.
     Usa prefijo BEM para clases CSS.
+    NOTA: Esta función crea en blocks_dir directamente. Use create_organism_slider para estructura atómica.
     """
     slider_dir = os.path.join(blocks_dir, 'slider')
     os.makedirs(slider_dir, exist_ok=True)
@@ -531,6 +532,288 @@ def create_menu_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* menu styles */")
 
+# ========================================
+# FUNCIONES WRAPPER PARA ESTRUCTURA ATÓMICA
+# Estas funciones crean organismos en organisms_dir (blocks/organisms/)
+# ========================================
+
+def create_organism_slider(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear slider en estructura atómica."""
+    create_slider_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_hero(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear hero en estructura atómica."""
+    create_hero_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_section(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear section en estructura atómica."""
+    create_section_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_cards_grid(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear cards grid en estructura atómica."""
+    create_cards_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_gallery(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear gallery en estructura atómica."""
+    create_gallery_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_text_image(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear text-image en estructura atómica."""
+    create_text_image_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_sidebar(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear sidebar en estructura atómica."""
+    create_sidebar_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_search(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear search en estructura atómica."""
+    create_search_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_pagination(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear pagination en estructura atómica."""
+    create_pagination_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_header(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear header en estructura atómica."""
+    create_header_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_footer(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear footer en estructura atómica."""
+    create_footer_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_form(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear form en estructura atómica."""
+    create_form_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_menu(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Wrapper para crear menu en estructura atómica."""
+    create_menu_block(organisms_dir, css_framework, bem_prefix)
+
+def create_organism_cta(organisms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """
+    Crea el organismo CTA (Call to Action) completo.
+    Combina heading, paragraph, button atoms.
+    """
+    cta_dir = os.path.join(organisms_dir, 'cta')
+    os.makedirs(cta_dir, exist_ok=True)
+    
+    block_json = {
+        "$schema": "https://schemas.wp.org/trunk/block.json",
+        "apiVersion": 3,
+        "name": f"{bem_prefix}/organism-cta",
+        "version": "1.0.0",
+        "title": "CTA (Call to Action)",
+        "category": f"{bem_prefix}-organisms",
+        "icon": "megaphone",
+        "description": "Bloque CTA completo con título, descripción y botones",
+        "textdomain": bem_prefix,
+        "editorScript": "file:./index.js",
+        "style": "file:./style.css",
+        "render": "file:./render.php",
+        "attributes": {
+            "title": {"type": "string", "default": "¿Listo para comenzar?"},
+            "description": {"type": "string", "default": "Únete a nosotros hoy mismo"},
+            "primaryButtonText": {"type": "string", "default": "Comenzar"},
+            "primaryButtonUrl": {"type": "string", "default": "#"},
+            "secondaryButtonText": {"type": "string", "default": ""},
+            "secondaryButtonUrl": {"type": "string", "default": "#"},
+            "showSecondaryButton": {"type": "boolean", "default": False},
+            "backgroundStyle": {"type": "string", "default": "primary"},
+            "alignment": {"type": "string", "default": "center"}
+        },
+        "supports": {
+            "align": ["wide", "full"],
+            "html": False,
+            "color": {
+                "background": True,
+                "text": True,
+                "gradients": True
+            },
+            "spacing": {
+                "padding": True,
+                "margin": True
+            }
+        }
+    }
+    
+    with open(os.path.join(cta_dir, 'block.json'), 'w', encoding='utf-8') as f:
+        json.dump(block_json, f, indent=2, ensure_ascii=False)
+    
+    # Render PHP
+    render_php = f"""<?php
+$title = $attributes['title'] ?? '¿Listo para comenzar?';
+$description = $attributes['description'] ?? 'Únete a nosotros hoy mismo';
+$primary_text = $attributes['primaryButtonText'] ?? 'Comenzar';
+$primary_url = $attributes['primaryButtonUrl'] ?? '#';
+$secondary_text = $attributes['secondaryButtonText'] ?? '';
+$secondary_url = $attributes['secondaryButtonUrl'] ?? '#';
+$show_secondary = $attributes['showSecondaryButton'] ?? false;
+$bg_style = $attributes['backgroundStyle'] ?? 'primary';
+$alignment = $attributes['alignment'] ?? 'center';
+
+$align_class = $alignment === 'left' ? '{bem_prefix}-organism-cta--align-left' : 
+               ($alignment === 'right' ? '{bem_prefix}-organism-cta--align-right' : '{bem_prefix}-organism-cta--align-center');
+?>
+<div class="{bem_prefix}-organism-cta {bem_prefix}-organism-cta--<?php echo esc_attr($bg_style); ?> <?php echo esc_attr($align_class); ?>">
+    <div class="{bem_prefix}-organism-cta__content">
+        <?php if ($title): ?>
+            <h2 class="{bem_prefix}-organism-cta__title"><?php echo esc_html($title); ?></h2>
+        <?php endif; ?>
+        
+        <?php if ($description): ?>
+            <p class="{bem_prefix}-organism-cta__description"><?php echo esc_html($description); ?></p>
+        <?php endif; ?>
+        
+        <div class="{bem_prefix}-organism-cta__actions">
+            <a href="<?php echo esc_url($primary_url); ?>" class="{bem_prefix}-organism-cta__button {bem_prefix}-organism-cta__button--primary">
+                <?php echo esc_html($primary_text); ?>
+            </a>
+            <?php if ($show_secondary && $secondary_text): ?>
+                <a href="<?php echo esc_url($secondary_url); ?>" class="{bem_prefix}-organism-cta__button {bem_prefix}-organism-cta__button--secondary">
+                    <?php echo esc_html($secondary_text); ?>
+                </a>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+"""
+    
+    with open(os.path.join(cta_dir, 'render.php'), 'w', encoding='utf-8') as f:
+        f.write(render_php)
+    
+    # Editor JS
+    editor_js = f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps, RichText }} from '@wordpress/block-editor';
+import {{ PanelBody, TextControl, ToggleControl, SelectControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
+
+registerBlockType('{bem_prefix}/organism-cta', {{
+    edit: ({{ attributes, setAttributes }}) => {{
+        const {{
+            title,
+            description,
+            primaryButtonText,
+            primaryButtonUrl,
+            secondaryButtonText,
+            secondaryButtonUrl,
+            showSecondaryButton,
+            backgroundStyle,
+            alignment
+        }} = attributes;
+        
+        const blockProps = useBlockProps({{
+            className: '{bem_prefix}-organism-cta-editor'
+        }});
+        
+        return (
+            <div {{...blockProps}}>
+                <InspectorControls>
+                    <PanelBody title={{__('Configuración CTA', 'img2html')}} initialOpen={{true}}>
+                        <TextControl
+                            label={{__('Título', 'img2html')}}
+                            value={{title}}
+                            onChange={{(value) => setAttributes({{ title: value }})}}
+                        />
+                        <TextControl
+                            label={{__('Descripción', 'img2html')}}
+                            value={{description}}
+                            onChange={{(value) => setAttributes({{ description: value }})}}
+                        />
+                        <TextControl
+                            label={{__('Texto botón principal', 'img2html')}}
+                            value={{primaryButtonText}}
+                            onChange={{(value) => setAttributes({{ primaryButtonText: value }})}}
+                        />
+                        <TextControl
+                            label={{__('URL botón principal', 'img2html')}}
+                            value={{primaryButtonUrl}}
+                            onChange={{(value) => setAttributes({{ primaryButtonUrl: value }})}}
+                        />
+                        <ToggleControl
+                            label={{__('Mostrar botón secundario', 'img2html')}}
+                            checked={{showSecondaryButton}}
+                            onChange={{(value) => setAttributes({{ showSecondaryButton: value }})}}
+                        />
+                        {{showSecondaryButton && (
+                            <>
+                                <TextControl
+                                    label={{__('Texto botón secundario', 'img2html')}}
+                                    value={{secondaryButtonText}}
+                                    onChange={{(value) => setAttributes({{ secondaryButtonText: value }})}}
+                                />
+                                <TextControl
+                                    label={{__('URL botón secundario', 'img2html')}}
+                                    value={{secondaryButtonUrl}}
+                                    onChange={{(value) => setAttributes({{ secondaryButtonUrl: value }})}}
+                                />
+                            </>
+                        )}}
+                        <SelectControl
+                            label={{__('Estilo de fondo', 'img2html')}}
+                            value={{backgroundStyle}}
+                            options={{[
+                                {{ label: __('Primario', 'img2html'), value: 'primary' }},
+                                {{ label: __('Secundario', 'img2html'), value: 'secondary' }},
+                                {{ label: __('Oscuro', 'img2html'), value: 'dark' }},
+                                {{ label: __('Claro', 'img2html'), value: 'light' }}
+                            ]}}
+                            onChange={{(value) => setAttributes({{ backgroundStyle: value }})}}
+                        />
+                        <SelectControl
+                            label={{__('Alineación', 'img2html')}}
+                            value={{alignment}}
+                            options={{[
+                                {{ label: __('Izquierda', 'img2html'), value: 'left' }},
+                                {{ label: __('Centro', 'img2html'), value: 'center' }},
+                                {{ label: __('Derecha', 'img2html'), value: 'right' }}
+                            ]}}
+                            onChange={{(value) => setAttributes({{ alignment: value }})}}
+                        />
+                    </PanelBody>
+                </InspectorControls>
+                <div className="{bem_prefix}-organism-cta-editor__preview">
+                    <h2>{{title}}</h2>
+                    <p>{{description}}</p>
+                    <div>
+                        <button>{{primaryButtonText}}</button>
+                        {{showSecondaryButton && <button>{{secondaryButtonText}}</button>}}
+                    </div>
+                </div>
+            </div>
+        );
+    }},
+    save: () => null
+}});
+"""
+    
+    with open(os.path.join(cta_dir, 'index.js'), 'w', encoding='utf-8') as f:
+        f.write(editor_js)
+    
+    # Style CSS con BEM
+    from .helpers import generate_bem_css
+    style_css = generate_bem_css(
+        block_name='organism-cta',
+        bem_prefix=bem_prefix,
+        css_framework=css_framework,
+        elements=[
+            ('content', '    max-width: 800px; margin: 0 auto; padding: 2rem;'),
+            ('title', '    font-size: 2rem; font-weight: bold; margin-bottom: 1rem;'),
+            ('description', '    font-size: 1.125rem; margin-bottom: 2rem;'),
+            ('actions', '    display: flex; gap: 1rem; justify-content: center;'),
+            ('button', '    padding: 0.75rem 2rem; border-radius: 4px; text-decoration: none; display: inline-block;')
+        ],
+        modifiers={
+            'cta': ['primary', 'secondary', 'dark', 'light', 'align-left', 'align-center', 'align-right'],
+            'button': ['primary', 'secondary']
+        },
+        base_styles='''    padding: 3rem 1rem;
+    text-align: center;
+    border-radius: 8px;'''
+    )
+    
+    with open(os.path.join(cta_dir, 'style.css'), 'w', encoding='utf-8') as f:
+        f.write(style_css)
+
 __all__ = [
     'create_slider_block',
     'create_hero_block',
@@ -545,4 +828,18 @@ __all__ = [
     'create_footer_block',
     'create_form_block',
     'create_menu_block',
+    'create_organism_slider',
+    'create_organism_hero',
+    'create_organism_section',
+    'create_organism_cards_grid',
+    'create_organism_gallery',
+    'create_organism_text_image',
+    'create_organism_sidebar',
+    'create_organism_search',
+    'create_organism_pagination',
+    'create_organism_header',
+    'create_organism_footer',
+    'create_organism_form',
+    'create_organism_menu',
+    'create_organism_cta',
 ]

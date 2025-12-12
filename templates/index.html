@@ -64,13 +64,97 @@
     {% endif %}
     {% endwith %}
     <div class="card" id="upload">
-      <h2>Adjuntar ZIP de imágenes</h2>
-      <p>Sube un archivo .zip con todas las imágenes del diseño. La app analizará los nombres para inferir orden y secciones. Para segmentación avanzada, sube assets sueltos o habilita slicing experimental si tienes rembg instalado.</p>
-      <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="text" name="theme_name" placeholder="Nombre del tema (ej: Mi Tema Personalizado)" value="Img2HTML AI Theme" style="width:100%;margin-bottom:12px" />
-        <input type="text" name="theme_slug" placeholder="Slug del tema (ej: mi-tema-personalizado)" value="" style="width:100%;margin-bottom:12px" />
-        <textarea name="theme_description" placeholder="Descripción del tema (ej: Tema moderno generado desde imágenes)" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;min-height:80px;margin-bottom:12px;font-family:inherit;resize:vertical">Tema de bloques generado y refinado con IA desde imágenes</textarea>
-        <div style="margin-bottom:16px">
+      <h2>Configuración del Tema</h2>
+      <p>Configura los datos básicos del tema y sube el ZIP con las imágenes del diseño.</p>
+      <form action="/upload" method="post" enctype="multipart/form-data" id="theme-form">
+        <!-- Información del Tema -->
+        <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #1f2330">
+          <h3 style="font-size:16px;margin:0 0 16px;color:#fff;font-weight:600">Información del Tema</h3>
+          
+          <!-- Nombre del Tema (Obligatorio) -->
+          <div style="margin-bottom:16px">
+            <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">Nombre del Tema <span style="color:#ef4444">*</span></label>
+            <input type="text" name="theme_name" placeholder="Ej: Mi Tema Personalizado" value="Img2HTML AI Theme" required style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Este será el nombre visible del tema en WordPress</p>
+          </div>
+          
+          <!-- Slug del Tema (Auto-generado) -->
+          <div style="margin-bottom:16px">
+            <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">Slug del Tema (Auto-generado)</label>
+            <input type="text" name="theme_slug" placeholder="Se genera automáticamente desde el nombre" value="" id="theme-slug-input" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Identificador único del tema. Se genera automáticamente si está vacío</p>
+          </div>
+          
+          <!-- Descripción del Tema -->
+          <div style="margin-bottom:16px">
+            <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">Descripción del Tema</label>
+            <textarea name="theme_description" placeholder="Ej: Tema moderno generado desde imágenes con diseño responsivo" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;min-height:80px;font-family:inherit;resize:vertical">Tema de bloques generado y refinado con IA desde imágenes</textarea>
+            <p style="font-size:12px;color:#6b7280;margin:4px 0 0">Descripción breve que aparecerá en el administrador de WordPress</p>
+          </div>
+          
+          <!-- Foto del Tema (Screenshot) -->
+          <div style="margin-bottom:16px">
+            <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">Foto del Tema (Screenshot) <span style="color:#22c55e">Opcional</span></label>
+            <div style="padding:12px;background:#0b0c0f;border-radius:8px;border:1px solid #1f2330;margin-bottom:8px">
+              <p style="font-size:13px;color:#a3a3a3;margin:0 0 8px;line-height:1.5">
+                <strong style="color:#fff">📸 Si no subes una foto:</strong> Se generará automáticamente un SVG basado en el diseño analizado.
+              </p>
+              <p style="font-size:12px;color:#6b7280;margin:0;line-height:1.5">
+                <strong>Recomendado:</strong> 1200x900px (PNG, JPG, WebP o SVG). Esta imagen aparecerá como portada del tema en WordPress.
+              </p>
+            </div>
+            <input type="file" name="theme_screenshot" accept="image/png,image/jpeg,image/jpg,image/webp,image/svg+xml" id="screenshot-input" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;cursor:pointer" />
+            <div id="screenshot-preview" style="display:none;margin-top:12px;padding:16px;background:#0b0c0f;border-radius:12px;border:1px solid #1f2330;text-align:center">
+              <p style="font-size:12px;color:#a3a3a3;margin:0 0 12px">Vista previa:</p>
+              <img id="preview-img" src="" alt="Preview del screenshot" style="max-width:100%;max-height:200px;border-radius:8px;display:block;margin:0 auto;box-shadow:0 4px 12px rgba(0,0,0,0.3)" />
+              <button type="button" onclick="clearScreenshot()" style="margin-top:12px;padding:8px 16px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600">🗑️ Eliminar Foto</button>
+            </div>
+          </div>
+          
+          <!-- Versión, Autor y URL -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div>
+              <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600;font-size:13px">Versión</label>
+              <input type="text" name="theme_version" placeholder="1.0.0" value="1.0.0" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600;font-size:13px">Autor</label>
+              <input type="text" name="theme_author" placeholder="Tu nombre o empresa" value="" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            </div>
+          </div>
+          
+          <!-- URL del Tema y Text Domain -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div>
+              <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600;font-size:13px">URL del Tema</label>
+              <input type="url" name="theme_uri" placeholder="https://ejemplo.com/tema" value="" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600;font-size:13px">Text Domain</label>
+              <input type="text" name="theme_textdomain" placeholder="Auto-generado desde slug" value="" id="theme-textdomain-input" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            </div>
+          </div>
+          
+          <!-- Tags y Licencia -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div>
+              <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600;font-size:13px">Tags (separados por comas)</label>
+              <input type="text" name="theme_tags" placeholder="blog, business, portfolio" value="" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            </div>
+            <div>
+              <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600;font-size:13px">Licencia</label>
+              <select name="theme_license" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit;cursor:pointer">
+                <option value="GPLv2 or later">GPLv2 or later</option>
+                <option value="GPLv3 or later">GPLv3 or later</option>
+                <option value="MIT">MIT</option>
+                <option value="Proprietary">Proprietary</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Framework CSS -->
+        <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #1f2330">
           <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">Framework CSS (obligatorio):</label>
           <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3;margin-bottom:8px">
             <input type="radio" name="css_framework" value="tailwind" checked />
@@ -85,22 +169,148 @@
             Ninguno (CSS propio)
           </label>
         </div>
-        <input type="file" name="zipfile" accept=".zip" />
-        <input type="text" name="google_api_key" placeholder="GOOGLE_API_KEY (opcional)" />
-        <input type="text" name="google_application_credentials" placeholder="Ruta a GOOGLE_APPLICATION_CREDENTIALS (opcional)" />
-        <input type="file" name="google_application_credentials_file" accept=".json" />
-        <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3">
-          <input type="checkbox" name="save_env" checked /> Guardar .env
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3">
-          <input type="checkbox" name="enable_slicing" /> Slicing experimental (requiere rembg)
-        </label>
-        <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3">
-          <input type="checkbox" name="precise_slicing" /> Slicing preciso (OpenCV)
-        </label>
-        <button type="submit">Analizar ZIP</button>
+        
+        <!-- Archivos -->
+        <div style="margin-bottom:24px">
+          <h3 style="font-size:16px;margin:0 0 16px;color:#fff;font-weight:600">Archivos</h3>
+          <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">ZIP de imágenes (obligatorio):</label>
+          <input type="file" name="zipfile" accept=".zip" required style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;margin-bottom:16px" />
+        </div>
+        
+        <!-- Configuración Avanzada -->
+        <details style="margin-bottom:24px">
+          <summary style="cursor:pointer;color:#a3a3a3;font-weight:600;padding:12px;background:#0b0c0f;border-radius:8px;border:1px solid #1f2330">Configuración Avanzada (Opcional)</summary>
+          <div style="padding:16px;background:#0b0c0f;border-radius:8px;margin-top:8px;border:1px solid #1f2330">
+            <div style="margin-bottom:12px">
+              <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">Google Vision API:</label>
+              <input type="text" name="google_api_key" placeholder="GOOGLE_API_KEY (opcional)" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;margin-bottom:8px;font-family:inherit" />
+              <input type="text" name="google_application_credentials" placeholder="Ruta a GOOGLE_APPLICATION_CREDENTIALS (opcional)" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;margin-bottom:8px;font-family:inherit" />
+              <input type="file" name="google_application_credentials_file" accept=".json" style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;font-family:inherit" />
+            </div>
+            <div style="margin-top:16px">
+              <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3;margin-bottom:8px">
+                <input type="checkbox" name="save_env" checked /> Guardar credenciales en .env
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3;margin-bottom:8px">
+                <input type="checkbox" name="enable_slicing" /> Slicing experimental (requiere rembg)
+              </label>
+              <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3;margin-bottom:8px">
+                <input type="checkbox" name="precise_slicing" /> Slicing preciso (OpenCV)
+              </label>
+            </div>
+          </div>
+        </details>
+        
+        <button type="submit" style="width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:16px">Analizar ZIP y Generar Tema</button>
       </form>
     </div>
   </div>
+  
+  <script>
+    // Función para limpiar screenshot
+    function clearScreenshot() {
+      document.getElementById('screenshot-input').value = '';
+      document.getElementById('screenshot-preview').style.display = 'none';
+      document.getElementById('preview-img').src = '';
+    }
+    
+    // Preview de screenshot
+    document.getElementById('screenshot-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (file) {
+        // Validar tamaño (máx 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('La imagen es demasiado grande. Máximo 5MB.');
+          this.value = '';
+          return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById('screenshot-preview');
+          const img = document.getElementById('preview-img');
+          img.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        clearScreenshot();
+      }
+    });
+    
+    // Auto-generar slug y textdomain desde nombre
+    const themeNameInput = document.querySelector('input[name="theme_name"]');
+    const slugInput = document.getElementById('theme-slug-input');
+    const textdomainInput = document.getElementById('theme-textdomain-input');
+    
+    function generateSlug(text) {
+      return text
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+    
+    themeNameInput.addEventListener('input', function(e) {
+      if (!slugInput.value || slugInput.dataset.autoGenerated === 'true') {
+        const slug = generateSlug(e.target.value);
+        slugInput.value = slug;
+        slugInput.dataset.autoGenerated = 'true';
+        
+        // Auto-generar textdomain también
+        if (!textdomainInput.value || textdomainInput.dataset.autoGenerated === 'true') {
+          textdomainInput.value = slug;
+          textdomainInput.dataset.autoGenerated = 'true';
+        }
+      }
+    });
+    
+    // Permitir edición manual del slug
+    slugInput.addEventListener('input', function(e) {
+      if (e.target.value) {
+        e.target.dataset.autoGenerated = 'false';
+        // Actualizar textdomain si también está auto-generado
+        if (textdomainInput.dataset.autoGenerated === 'true') {
+          textdomainInput.value = e.target.value;
+        }
+      }
+    });
+    
+    // Auto-generar textdomain desde slug
+    slugInput.addEventListener('input', function(e) {
+      if (!textdomainInput.value || textdomainInput.dataset.autoGenerated === 'true') {
+        textdomainInput.value = e.target.value;
+        textdomainInput.dataset.autoGenerated = 'true';
+      }
+    });
+    
+    // Permitir edición manual del textdomain
+    textdomainInput.addEventListener('input', function(e) {
+      if (e.target.value) {
+        e.target.dataset.autoGenerated = 'false';
+      }
+    });
+    
+    // Validación del formulario
+    document.getElementById('theme-form').addEventListener('submit', function(e) {
+      const themeName = themeNameInput.value.trim();
+      if (!themeName) {
+        e.preventDefault();
+        alert('Por favor, ingresa un nombre para el tema.');
+        themeNameInput.focus();
+        return false;
+      }
+      
+      // Validar slug si fue ingresado manualmente
+      const slug = slugInput.value.trim();
+      if (slug && !/^[a-z0-9-]+$/.test(slug)) {
+        e.preventDefault();
+        alert('El slug solo puede contener letras minúsculas, números y guiones.');
+        slugInput.focus();
+        return false;
+      }
+    });
+  </script>
 </body>
 </html>

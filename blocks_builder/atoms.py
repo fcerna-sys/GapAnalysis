@@ -1,6 +1,6 @@
 """
 Módulo para crear componentes atómicos (átomos).
-Componentes básicos reutilizables: button, heading, input, icon, badge, link.
+Componentes básicos reutilizables: button, heading, input, icon, badge, link, image.
 """
 import os
 import json
@@ -364,6 +364,179 @@ $target = $attributes['target'] ?? '_self';
         f.write(css)
 
 
+def create_atom_image(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
+    """Crea el átomo Image - imagen reutilizable."""
+    image_dir = os.path.join(atoms_dir, 'image')
+    os.makedirs(image_dir, exist_ok=True)
+    
+    block_json = {
+        "$schema": "https://schemas.wp.org/trunk/block.json",
+        "apiVersion": 3,
+        "name": f"{bem_prefix}/atom-image",
+        "version": "1.0.0",
+        "title": "Imagen (Átomo)",
+        "category": "img2html-atoms",
+        "icon": "format-image",
+        "description": "Imagen básica reutilizable",
+        "textdomain": bem_prefix,
+        "editorScript": "file:./index.js",
+        "style": "file:./style.css",
+        "render": "file:./render.php",
+        "attributes": {
+            "imageUrl": {"type": "string", "default": ""},
+            "imageId": {"type": "number", "default": 0},
+            "alt": {"type": "string", "default": ""},
+            "width": {"type": "string", "default": ""},
+            "height": {"type": "string", "default": ""},
+            "objectFit": {"type": "string", "default": "cover"},
+            "rounded": {"type": "boolean", "default": False}
+        },
+        "supports": {
+            "align": True,
+            "html": False,
+            "spacing": {
+                "margin": True,
+                "padding": True
+            },
+            "dimensions": {
+                "aspectRatio": True,
+                "minHeight": True
+            }
+        }
+    }
+    
+    with open(os.path.join(image_dir, 'block.json'), 'w', encoding='utf-8') as f:
+        json.dump(block_json, f, indent=2)
+    
+    render_php = f"""<?php
+$image_url = $attributes['imageUrl'] ?? '';
+$image_id = $attributes['imageId'] ?? 0;
+$alt = $attributes['alt'] ?? '';
+$width = $attributes['width'] ?? '';
+$height = $attributes['height'] ?? '';
+$object_fit = $attributes['objectFit'] ?? 'cover';
+$rounded = $attributes['rounded'] ?? false;
+
+if (!$image_url && $image_id) {{
+    $image_url = wp_get_attachment_image_url($image_id, 'full');
+    if (!$alt) {{
+        $alt = get_post_meta($image_id, '_wp_attachment_image_alt', true);
+    }}
+}}
+
+if (!$image_url) {{
+    return;
+}}
+
+$rounded_class = $rounded ? '{bem_prefix}-atom-image--rounded' : '';
+$style_attr = '';
+if ($width) $style_attr .= 'width: ' . esc_attr($width) . '; ';
+if ($height) $style_attr .= 'height: ' . esc_attr($height) . '; ';
+if ($object_fit) $style_attr .= 'object-fit: ' . esc_attr($object_fit) . '; ';
+?>
+<img src="<?php echo esc_url($image_url); ?>" 
+     alt="<?php echo esc_attr($alt); ?>"
+     class="{bem_prefix}-atom-image <?php echo esc_attr($rounded_class); ?>"
+     <?php if ($style_attr): ?>style="<?php echo esc_attr($style_attr); ?>"<?php endif; ?>
+     loading="lazy" />
+"""
+    
+    with open(os.path.join(image_dir, 'render.php'), 'w', encoding='utf-8') as f:
+        f.write(render_php)
+    
+    editor_js = f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps, MediaUpload, MediaUploadCheck }} from '@wordpress/block-editor';
+import {{ PanelBody, TextControl, ToggleControl, SelectControl, Button }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
+
+registerBlockType('{bem_prefix}/atom-image', {{
+    edit: ({{ attributes, setAttributes }}) => {{
+        const {{ imageUrl, imageId, alt, width, height, objectFit, rounded }} = attributes;
+        const blockProps = useBlockProps();
+        
+        const onSelectImage = (media) => {{
+            setAttributes({{ 
+                imageUrl: media.url, 
+                imageId: media.id,
+                alt: media.alt || alt
+            }});
+        }};
+        
+        return (
+            <div {{...blockProps}}>
+                <InspectorControls>
+                    <PanelBody title={{__('Configuración de Imagen', 'img2html')}}>
+                        <MediaUploadCheck>
+                            <MediaUpload
+                                onSelect={{onSelectImage}}
+                                allowedTypes={{"image"}}
+                                value={{imageId}}
+                                render={{({ open }) => (
+                                    <Button onClick={{open}} isSecondary>
+                                        {{imageUrl ? __('Cambiar imagen', 'img2html') : __('Seleccionar imagen', 'img2html')}}
+                                    </Button>
+                                )}}
+                            />
+                        </MediaUploadCheck>
+                        <TextControl
+                            label={{__('Texto alternativo', 'img2html')}}
+                            value={{alt}}
+                            onChange={{(value) => setAttributes({{ alt: value }})}}
+                        />
+                        <TextControl
+                            label={{__('Ancho', 'img2html')}}
+                            value={{width}}
+                            onChange={{(value) => setAttributes({{ width: value }})}}
+                        />
+                        <TextControl
+                            label={{__('Alto', 'img2html')}}
+                            value={{height}}
+                            onChange={{(value) => setAttributes({{ height: value }})}}
+                        />
+                        <SelectControl
+                            label={{__('Ajuste de objeto', 'img2html')}}
+                            value={{objectFit}}
+                            options={{[
+                                {{ label: __('Cubrir', 'img2html'), value: 'cover' }},
+                                {{ label: __('Contener', 'img2html'), value: 'contain' }},
+                                {{ label: __('Rellenar', 'img2html'), value: 'fill' }},
+                                {{ label: __('Ninguno', 'img2html'), value: 'none' }}
+                            ]}}
+                            onChange={{(value) => setAttributes({{ objectFit: value }})}}
+                        />
+                        <ToggleControl
+                            label={{__('Redondeado', 'img2html')}}
+                            checked={{rounded}}
+                            onChange={{(value) => setAttributes({{ rounded: value }})}}
+                        />
+                    </PanelBody>
+                </InspectorControls>
+                <div className="{bem_prefix}-atom-image-editor">
+                    {{imageUrl ? (
+                        <img src={{imageUrl}} alt={{alt}} style={{{{ maxWidth: '100%', height: 'auto' }}}} />
+                    ) : (
+                        <p>{{__('Selecciona una imagen', 'img2html')}}</p>
+                    )}}
+                </div>
+            </div>
+        );
+    }},
+    save: () => null
+}});
+"""
+    
+    with open(os.path.join(image_dir, 'index.js'), 'w', encoding='utf-8') as f:
+        f.write(editor_js)
+    
+    css = generate_bem_css('atom-image', bem_prefix, css_framework,
+                          [],
+                          {'image': ['rounded']},
+                          '    max-width: 100%;\n    height: auto;\n    display: block;')
+    
+    with open(os.path.join(image_dir, 'style.css'), 'w', encoding='utf-8') as f:
+        f.write(css)
+
+
 __all__ = [
     'create_atom_button',
     'create_atom_heading',
@@ -371,4 +544,5 @@ __all__ = [
     'create_atom_icon',
     'create_atom_badge',
     'create_atom_link',
+    'create_atom_image',
 ]

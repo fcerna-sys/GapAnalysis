@@ -9,7 +9,8 @@ from .atoms import (
     create_atom_input,
     create_atom_icon,
     create_atom_badge,
-    create_atom_link
+    create_atom_link,
+    create_atom_image
 )
 from .molecules import (
     create_molecule_card,
@@ -50,6 +51,10 @@ from .registration import (
     register_blocks_in_functions,
     register_atomic_blocks_in_functions
 )
+from .assets import (
+    setup_conditional_assets,
+    minimize_global_css
+)
 
 # Función principal que orquesta todo
 def create_custom_blocks(theme_dir: str, css_framework: str, plan: dict, theme_slug: str = None):
@@ -85,6 +90,7 @@ def create_custom_blocks(theme_dir: str, css_framework: str, plan: dict, theme_s
     create_atom_icon(atoms_dir, css_framework, bem_prefix)
     create_atom_badge(atoms_dir, css_framework, bem_prefix)
     create_atom_link(atoms_dir, css_framework, bem_prefix)
+    create_atom_image(atoms_dir, css_framework, bem_prefix)
     
     # ========================================
     # MOLÉCULAS: Combinaciones de átomos
@@ -111,9 +117,16 @@ def create_custom_blocks(theme_dir: str, css_framework: str, plan: dict, theme_s
     create_organism_footer(organisms_dir, css_framework, bem_prefix)
     create_organism_form(organisms_dir, css_framework, bem_prefix)
     create_organism_menu(organisms_dir, css_framework, bem_prefix)
+    create_organism_cta(organisms_dir, css_framework, bem_prefix)
     
     # Registrar bloques en functions.php con estructura atómica
     register_atomic_blocks_in_functions(theme_dir, blocks_dir, bem_prefix)
+    
+    # Configurar carga condicional de assets
+    setup_conditional_assets(theme_dir, bem_prefix)
+    
+    # Minimizar CSS global
+    minimize_global_css(theme_dir, bem_prefix)
 
 
 # Exportar funciones principales para compatibilidad hacia atrás
@@ -128,6 +141,7 @@ __all__ = [
     'create_atom_icon',
     'create_atom_badge',
     'create_atom_link',
+    'create_atom_image',
     'create_molecule_card',
     'create_molecule_form_field',
     'create_molecule_nav_item',
@@ -146,7 +160,10 @@ __all__ = [
     'create_footer_block',
     'create_form_block',
     'create_menu_block',
+    'create_organism_cta',
     'register_blocks_in_functions',
     'register_atomic_blocks_in_functions',
+    'setup_conditional_assets',
+    'minimize_global_css',
 ]
 

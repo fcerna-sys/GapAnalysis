@@ -17,9 +17,20 @@ except ImportError:
     def create_custom_blocks(theme_dir: str, css_framework: str, plan: Dict):
         pass
 
-def generate_style_css(theme_dir: str, dna: Optional[Dict] = None, theme_name: str = "Img2HTML AI Theme", theme_description: str = "Tema de bloques generado y refinado con IA desde imágenes") -> str:
+def generate_style_css(
+    theme_dir: str, 
+    dna: Optional[Dict] = None, 
+    theme_name: str = "Img2HTML AI Theme", 
+    theme_description: str = "Tema de bloques generado y refinado con IA desde imágenes",
+    theme_version: str = "1.0.0",
+    theme_author: str = "",
+    theme_uri: str = "",
+    theme_textdomain: str = "",
+    theme_tags: str = "",
+    theme_license: str = "GPLv2 or later"
+) -> str:
     """
-    Genera un style.css completo para el tema WordPress.
+    Genera un style.css completo para el tema WordPress con todos los metadatos.
     """
     palette = []
     if isinstance(dna, dict):
@@ -43,19 +54,56 @@ def generate_style_css(theme_dir: str, dna: Optional[Dict] = None, theme_name: s
         elif slug == 'secondary':
             secondary_color = color
     
-    style_css = f"""/*
-Theme Name: {theme_name}
-Version: 1.0.0
-Author: img2html
-Description: {theme_description}
-Requires at least: 6.7
-Tested up to: 6.7
-Requires PHP: 8.0
-License: GNU General Public License v2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Text Domain: img2html
-Tags: full-site-editing, block-theme, custom-colors, custom-menu, editor-style, featured-images, threaded-comments, translation-ready
-*/
+    # Generar textdomain desde slug si no se proporciona
+    if not theme_textdomain:
+        import re
+        theme_textdomain = re.sub(r'[^a-z0-9-]', '', theme_name.lower().replace(' ', '-'))
+        if not theme_textdomain:
+            theme_textdomain = 'img2html'
+    
+    # Tags por defecto si no se proporcionan
+    default_tags = "full-site-editing, block-theme, custom-colors, custom-menu, editor-style, featured-images, threaded-comments, translation-ready"
+    if theme_tags:
+        tags = theme_tags
+    else:
+        tags = default_tags
+    
+    # Autor por defecto
+    author = theme_author if theme_author else "img2html"
+    
+    # License URI
+    license_uri = ""
+    if theme_license == "GPLv2 or later":
+        license_uri = "http://www.gnu.org/licenses/gpl-2.0.html"
+    elif theme_license == "GPLv3 or later":
+        license_uri = "http://www.gnu.org/licenses/gpl-3.0.html"
+    elif theme_license == "MIT":
+        license_uri = "https://opensource.org/licenses/MIT"
+    
+    # Construir header del style.css
+    header_lines = [
+        f"Theme Name: {theme_name}",
+        f"Version: {theme_version}",
+        f"Author: {author}",
+        f"Description: {theme_description}",
+        "Requires at least: 6.7",
+        "Tested up to: 6.7",
+        "Requires PHP: 8.0",
+        f"License: {theme_license}",
+    ]
+    
+    if license_uri:
+        header_lines.append(f"License URI: {license_uri}")
+    
+    if theme_uri:
+        header_lines.append(f"Theme URI: {theme_uri}")
+    
+    header_lines.append(f"Text Domain: {theme_textdomain}")
+    header_lines.append(f"Tags: {tags}")
+    
+    header = "/*\n" + "\n".join(header_lines) + "\n*/\n"
+    
+    style_css = f"""{header}
 
 :root {{
     --wp--preset--color--background: {bg_color};
@@ -842,15 +890,58 @@ def apply_typography_and_spacing(theme_dir: str, dna: Optional[Dict] = None, des
         print(f"Error aplicando tipografías/espaciados: {e}")
 
 
+def _hex_to_rgb(hex_str: str) -> tuple:
+    """Convierte color hex a RGB."""
+    try:
+        hex_str = hex_str.strip().lstrip('#')
+        if len(hex_str) == 6:
+            return (int(hex_str[0:2], 16), int(hex_str[2:4], 16), int(hex_str[4:6], 16))
+    except Exception:
+        pass
+    return (59, 130, 246)  # Default blue
+
+def _rgb_to_hex(rgb: tuple) -> str:
+    """Convierte RGB a hex."""
+    r, g, b = rgb
+    return f'#{r:02x}{g:02x}{b:02x}'
+
+def _lighten_color(hex_str: str, factor: float = 0.2) -> str:
+    """Aclara un color."""
+    rgb = _hex_to_rgb(hex_str)
+    r, g, b = rgb
+    r = min(255, int(r + (255 - r) * factor))
+    g = min(255, int(g + (255 - g) * factor))
+    b = min(255, int(b + (255 - b) * factor))
+    return _rgb_to_hex((r, g, b))
+
+def _darken_color(hex_str: str, factor: float = 0.2) -> str:
+    """Oscurece un color."""
+    rgb = _hex_to_rgb(hex_str)
+    r, g, b = rgb
+    r = max(0, int(r * (1 - factor)))
+    g = max(0, int(g * (1 - factor)))
+    b = max(0, int(b * (1 - factor)))
+    return _rgb_to_hex((r, g, b))
+
+def _get_color_variations(base_color: str) -> Dict[str, str]:
+    """Genera variaciones de un color (light, dark, accent)."""
+    return {
+        'base': base_color,
+        'light': _lighten_color(base_color, 0.3),
+        'lighter': _lighten_color(base_color, 0.5),
+        'dark': _darken_color(base_color, 0.2),
+        'darker': _darken_color(base_color, 0.4),
+    }
+
 def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, plan: Optional[Dict] = None, theme_slug: Optional[str] = None):
     """
-    Genera un theme.json avanzado y completo con:
-    - Spacing system avanzado
-    - Presets tipográficos por roles
-    - Paleta extendida (semantic colors)
-    - Layout global
-    - Custom templates
-    - Block-level settings
+    Genera un theme.json avanzado y completamente dinámico basado en el DNA y plan:
+    - Paleta generada de la imagen con variaciones (primario/oscuro/acento/etc.)
+    - Escalas tipográficas inteligentes
+    - Presets de espaciado
+    - Estilos de bloques core (core/heading, core/paragraph, etc.)
+    - Layout global (anchos, contenedores)
+    - Controles del editor habilitados/deshabilitados para mejor UX
     """
     try:
         theme_json_path = os.path.join(theme_dir, 'theme.json')
@@ -972,34 +1063,109 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
             ])
         
         # ========================================
-        # 3. PALETA EXTENDIDA (SEMANTIC COLORS)
+        # 3. PALETA EXTENDIDA DINÁMICA (CON VARIACIONES)
         # ========================================
         color_settings = settings.setdefault('color', {})
         
-        # Paleta base desde DNA
+        # Paleta base desde DNA con variaciones automáticas
         palette = []
+        primary_color = None
+        secondary_color = None
+        background_color = None
+        text_color = None
+        
         if isinstance(dna, dict):
             dna_palette = dna.get('palette', [])
             for p in dna_palette:
                 slug = p.get('slug', '')
                 color = p.get('color', '')
                 if slug and color:
+                    # Agregar color base
                     palette.append({
                         "name": slug.title(),
                         "slug": slug,
                         "color": color
                     })
+                    
+                    # Guardar referencias para variaciones
+                    if slug == 'primary':
+                        primary_color = color
+                    elif slug == 'secondary':
+                        secondary_color = color
+                    elif slug == 'background':
+                        background_color = color
+                    elif slug == 'text':
+                        text_color = color
         
-        # Colores semánticos adicionales
+        # Generar variaciones automáticas de colores principales
+        if primary_color:
+            primary_vars = _get_color_variations(primary_color)
+            palette.extend([
+                {"name": "Primary Light", "slug": "primary-light", "color": primary_vars['light']},
+                {"name": "Primary Lighter", "slug": "primary-lighter", "color": primary_vars['lighter']},
+                {"name": "Primary Dark", "slug": "primary-dark", "color": primary_vars['dark']},
+                {"name": "Primary Darker", "slug": "primary-darker", "color": primary_vars['darker']},
+            ])
+        
+        if secondary_color:
+            secondary_vars = _get_color_variations(secondary_color)
+            palette.extend([
+                {"name": "Secondary Light", "slug": "secondary-light", "color": secondary_vars['light']},
+                {"name": "Secondary Dark", "slug": "secondary-dark", "color": secondary_vars['dark']},
+            ])
+        
+        # Colores semánticos inteligentes basados en la paleta
+        semantic_colors = []
+        
+        # Success: verde o variación del primary si es verde
+        if primary_color and primary_color.startswith('#') and _hex_to_rgb(primary_color)[1] > _hex_to_rgb(primary_color)[0]:
+            # Si el primary es más verde que rojo, usar variación
+            success_color = _lighten_color(primary_color, 0.1) if primary_color else "#10b981"
+        else:
+            success_color = "#10b981"
+        
+        # Error: rojo o variación si el primary es rojizo
+        if primary_color and primary_color.startswith('#') and _hex_to_rgb(primary_color)[0] > _hex_to_rgb(primary_color)[1]:
+            error_color = _darken_color(primary_color, 0.2) if primary_color else "#ef4444"
+        else:
+            error_color = "#ef4444"
+        
         semantic_colors = [
-            {"name": "Success", "slug": "success", "color": "#10b981"},
+            {"name": "Success", "slug": "success", "color": success_color},
             {"name": "Warning", "slug": "warning", "color": "#f59e0b"},
-            {"name": "Error", "slug": "error", "color": "#ef4444"},
-            {"name": "Info", "slug": "info", "color": "#3b82f6"},
-            {"name": "Muted", "slug": "muted", "color": "#6b7280"},
-            {"name": "Border", "slug": "border", "color": "#e5e7eb"},
-            {"name": "Surface", "slug": "surface", "color": "#f9fafb"},
+            {"name": "Error", "slug": "error", "color": error_color},
+            {"name": "Info", "slug": "info", "color": primary_color or "#3b82f6"},
         ]
+        
+        # Colores de UI basados en background y text
+        if background_color and text_color:
+            # Border: versión más clara del text o más oscura del background
+            border_rgb = _hex_to_rgb(background_color)
+            text_rgb = _hex_to_rgb(text_color)
+            # Promedio con ligera oscuridad
+            border_color = _rgb_to_hex((
+                max(0, min(255, (border_rgb[0] + text_rgb[0]) // 2 - 20)),
+                max(0, min(255, (border_rgb[1] + text_rgb[1]) // 2 - 20)),
+                max(0, min(255, (border_rgb[2] + text_rgb[2]) // 2 - 20))
+            ))
+            
+            # Surface: versión ligeramente más oscura del background
+            surface_color = _darken_color(background_color, 0.02) if background_color != "#ffffff" else "#f9fafb"
+            
+            # Muted: versión más clara del text
+            muted_color = _lighten_color(text_color, 0.4) if text_color != "#111111" else "#6b7280"
+            
+            semantic_colors.extend([
+                {"name": "Muted", "slug": "muted", "color": muted_color},
+                {"name": "Border", "slug": "border", "color": border_color},
+                {"name": "Surface", "slug": "surface", "color": surface_color},
+            ])
+        else:
+            semantic_colors.extend([
+                {"name": "Muted", "slug": "muted", "color": "#6b7280"},
+                {"name": "Border", "slug": "border", "color": "#e5e7eb"},
+                {"name": "Surface", "slug": "surface", "color": "#f9fafb"},
+            ])
         
         # Agregar colores semánticos si no existen
         existing_slugs = {p.get('slug') for p in palette}
@@ -1010,21 +1176,45 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
         if palette:
             color_settings['palette'] = palette
         
-        # Gradientes
+        # Gradientes dinámicos basados en la paleta
         gradients = color_settings.setdefault('gradients', [])
         if not gradients:
-            gradients.extend([
-                {
+            gradient_list = []
+            
+            if primary_color and secondary_color:
+                gradient_list.append({
                     "name": "Primary to Secondary",
                     "slug": "primary-to-secondary",
-                    "gradient": "linear-gradient(135deg, var(--wp--preset--color--primary) 0%, var(--wp--preset--color--secondary) 100%)"
-                },
-                {
-                    "name": "Dark to Light",
-                    "slug": "dark-to-light",
-                    "gradient": "linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)"
-                }
-            ])
+                    "gradient": f"linear-gradient(135deg, {primary_color} 0%, {secondary_color} 100%)"
+                })
+                gradient_list.append({
+                    "name": "Primary Light to Dark",
+                    "slug": "primary-light-dark",
+                    "gradient": f"linear-gradient(180deg, {_lighten_color(primary_color, 0.3)} 0%, {_darken_color(primary_color, 0.2)} 100%)"
+                })
+            
+            if text_color and background_color:
+                gradient_list.append({
+                    "name": "Text to Background",
+                    "slug": "text-to-background",
+                    "gradient": f"linear-gradient(180deg, {text_color} 0%, {background_color} 100%)"
+                })
+            
+            # Gradiente oscuro universal
+            gradient_list.append({
+                "name": "Dark Overlay",
+                "slug": "dark-overlay",
+                "gradient": "linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%)"
+            })
+            
+            # Gradiente claro universal
+            gradient_list.append({
+                "name": "Light Overlay",
+                "slug": "light-overlay",
+                "gradient": "linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)"
+            })
+            
+            gradients.extend(gradient_list)
         
         # ========================================
         # 4. LAYOUT GLOBAL
@@ -1090,44 +1280,48 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
             }
         })
         
-        # core/heading
+        # core/heading - Limitado para mejor UX
         blocks.setdefault('core/heading', {
             "typography": {
                 "fontSize": True,
                 "fontFamily": True,
                 "fontWeight": True,
-                "fontStyle": True,
+                "fontStyle": False,  # Deshabilitado para simplificar
                 "lineHeight": True,
-                "textTransform": True,
-                "letterSpacing": True
+                "textTransform": False,  # Deshabilitado para simplificar
+                "letterSpacing": False  # Deshabilitado para simplificar
             },
             "color": {
                 "text": True,
-                "background": True
+                "background": False,  # Deshabilitado para simplificar
+                "link": True
             },
             "spacing": {
                 "margin": True,
-                "padding": True
+                "padding": False  # Deshabilitado para simplificar
+            },
+            "dimensions": {
+                "minHeight": False
             }
         })
         
-        # core/paragraph
+        # core/paragraph - Limitado para mejor UX
         blocks.setdefault('core/paragraph', {
             "typography": {
                 "fontSize": True,
                 "fontFamily": True,
                 "fontWeight": True,
                 "lineHeight": True,
-                "dropCap": True
+                "dropCap": False  # Deshabilitado para simplificar
             },
             "color": {
                 "text": True,
-                "background": True,
+                "background": False,  # Deshabilitado para simplificar
                 "link": True
             },
             "spacing": {
                 "margin": True,
-                "padding": True
+                "padding": False  # Deshabilitado para simplificar
             }
         })
         
@@ -1202,10 +1396,108 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
             }
         })
         
+        # core/list
+        blocks.setdefault('core/list', {
+            "typography": {
+                "fontSize": True,
+                "fontFamily": True,
+                "fontWeight": True,
+                "lineHeight": True
+            },
+            "color": {
+                "text": True,
+                "link": True
+            },
+            "spacing": {
+                "margin": True,
+                "padding": True
+            }
+        })
+        
+        # core/quote
+        blocks.setdefault('core/quote', {
+            "typography": {
+                "fontSize": True,
+                "fontFamily": True,
+                "fontStyle": True,
+                "lineHeight": True
+            },
+            "color": {
+                "text": True,
+                "background": True
+            },
+            "border": {
+                "color": True,
+                "style": True,
+                "width": True
+            },
+            "spacing": {
+                "margin": True,
+                "padding": True
+            }
+        })
+        
+        # core/pullquote
+        blocks.setdefault('core/pullquote', {
+            "typography": {
+                "fontSize": True,
+                "fontFamily": True,
+                "fontStyle": True,
+                "lineHeight": True
+            },
+            "color": {
+                "text": True,
+                "background": True
+            },
+            "border": {
+                "color": True,
+                "style": True,
+                "width": True
+            }
+        })
+        
+        # core/separator
+        blocks.setdefault('core/separator', {
+            "color": {
+                "text": True
+            },
+            "spacing": {
+                "margin": True
+            }
+        })
+        
+        # core/spacer
+        blocks.setdefault('core/spacer', {
+            "spacing": {
+                "height": True
+            }
+        })
+        
+        # core/table
+        blocks.setdefault('core/table', {
+            "typography": {
+                "fontSize": True,
+                "fontFamily": True
+            },
+            "color": {
+                "text": True,
+                "background": True
+            },
+            "border": {
+                "color": True,
+                "style": True,
+                "width": True
+            },
+            "spacing": {
+                "margin": True,
+                "padding": True
+            }
+        })
+        
         # ========================================
         # 7. STYLES GLOBALES Y POR BLOQUE
         # ========================================
-        # Estilos globales
+        # Estilos globales dinámicos basados en DNA
         styles.setdefault('typography', {})
         if 'fontFamily' not in styles['typography']:
             styles['typography']['fontFamily'] = 'var(--wp--preset--font-family--primary)'
@@ -1213,6 +1505,12 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
             styles['typography']['fontSize'] = 'var(--wp--preset--font-size--base)'
         if 'lineHeight' not in styles['typography']:
             styles['typography']['lineHeight'] = 'var(--wp--preset--line-height--normal)'
+        
+        # Colores globales desde DNA
+        if background_color:
+            styles.setdefault('color', {})['background'] = background_color
+        if text_color:
+            styles.setdefault('color', {})['text'] = text_color
         
         # Estilos por bloque
         block_styles = styles.setdefault('blocks', {})
@@ -1665,15 +1963,16 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
         os.makedirs(patterns_dir, exist_ok=True)
         
         # Patrones sincronizados (Synced Patterns) - se actualizan globalmente
+        # Usar bloques personalizados del tema cuando estén disponibles
         synced_patterns = {
-            'header-global.php': {
-                'title': 'Header Global',
-                'description': 'Header sincronizado que se actualiza en todas las páginas',
-                'categories': ['header'],
-                'content': f"""<!-- wp:group {{"tagName":"header","layout":{{"type":"flex","flexWrap":"nowrap","justifyContent":"space-between"}},"style":{{"spacing":{{"padding":{{"top":"1rem","bottom":"1rem"}}}}}}}} -->
-<header class="wp-block-group" style="padding-top:1rem;padding-bottom:1rem">
+            f'{bem_prefix}-header-global.php': {
+                'title': f'Header Global ({bem_prefix})',
+                'description': 'Header sincronizado que se actualiza en todas las páginas. Usa el bloque personalizado del tema.',
+                'categories': [f'{bem_prefix}-header', 'header'],
+                'content': f"""<!-- wp:{bem_prefix}/organism-header {{"sticky":true,"transparent":false,"showButton":true,"buttonText":"Contáctanos"}} -->
+<div class="wp-block-{bem_prefix}-organism-header {bem_prefix}-organism-header--sticky">
 <!-- wp:site-logo {{"width":48}} /-->
-<!-- wp:navigation {{"layout":{{"type":"flex","orientation":"horizontal","justifyContent":"center"}},"style":{{"spacing":{{"blockGap":"2rem"}}}}}} /-->
+<!-- wp:{bem_prefix}/organism-menu {{"menuStyle":"horizontal"}} /-->
 <!-- wp:buttons {{"layout":{{"type":"flex","justifyContent":"right"}}}} -->
 <div class="wp-block-buttons">
 <!-- wp:button {{"backgroundColor":"primary","textColor":"background"}} -->
@@ -1681,16 +1980,17 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
 <!-- /wp:button -->
 </div>
 <!-- /wp:buttons -->
-</header>
-<!-- /wp:group -->""",
-                'syncStatus': 'synced'
+</div>
+<!-- /wp:{bem_prefix}/organism-header -->""",
+                'syncStatus': 'synced',
+                'keywords': ['header', 'navigation', 'menu', 'global']
             },
-            'footer-global.php': {
-                'title': 'Footer Global',
-                'description': 'Footer sincronizado que se actualiza en todas las páginas',
-                'categories': ['footer'],
-                'content': f"""<!-- wp:group {{"tagName":"footer","style":{{"spacing":{{"padding":{{"top":"3rem","bottom":"3rem"}},"margin":{{"top":"4rem"}}}},"color":{{"background":"#1a1a1a","text":"#ffffff"}}}},"layout":{{"type":"constrained"}}}} -->
-<footer class="wp-block-group has-text-color has-background" style="background-color:#1a1a1a;color:#ffffff;margin-top:4rem;padding-top:3rem;padding-bottom:3rem">
+            f'{bem_prefix}-footer-global.php': {
+                'title': f'Footer Global ({bem_prefix})',
+                'description': 'Footer sincronizado que se actualiza en todas las páginas. Usa el bloque personalizado del tema.',
+                'categories': [f'{bem_prefix}-footer', 'footer'],
+                'content': f"""<!-- wp:{bem_prefix}/organism-footer {{"columns":3,"showSocial":true,"darkBackground":true}} -->
+<footer class="wp-block-{bem_prefix}-organism-footer {bem_prefix}-organism-footer--dark">
 <!-- wp:columns {{"align":"wide"}} -->
 <div class="wp-block-columns alignwide">
 <!-- wp:column -->
@@ -1723,121 +2023,60 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
 <!-- /wp:group -->""",
                 'syncStatus': 'synced'
             },
-            'cta-primary.php': {
-                'title': 'CTA Principal',
-                'description': 'Call to Action reutilizable con fondo oscuro',
-                'categories': ['call-to-action'],
-                'content': f"""<!-- wp:group {{"align":"wide","style":{{"spacing":{{"padding":{{"top":"3rem","bottom":"3rem","left":"2rem","right":"2rem"}}}},"color":{{"background":"var(--wp--preset--color--primary)"}},"border":{{"radius":"12px"}}}},"layout":{{"type":"constrained"}}}} -->
-<div class="wp-block-group alignwide has-background" style="border-radius:12px;background-color:var(--wp--preset--color--primary);padding-top:3rem;padding-right:2rem;padding-bottom:3rem;padding-left:2rem">
-<!-- wp:heading {{"textAlign":"center","level":2,"style":{{"color":{{"text":"#ffffff"}}}}}} -->
-<h2 class="has-text-align-center has-text-color" style="color:#ffffff">¿Listo para empezar?</h2>
-<!-- /wp:heading -->
-<!-- wp:paragraph {{"align":"center","style":{{"color":{{"text":"#ffffff"}}}}}} -->
-<p class="has-text-align-center has-text-color" style="color:#ffffff">Únete a nosotros hoy mismo</p>
-<!-- /wp:paragraph -->
-<!-- wp:buttons {{"layout":{{"type":"flex","justifyContent":"center"}}}} -->
-<div class="wp-block-buttons">
-<!-- wp:button {{"backgroundColor":"background","textColor":"primary","className":"is-style-fill"}} -->
-<div class="wp-block-button is-style-fill"><a class="wp-block-button__link has-background-color has-primary-color has-text-color has-background wp-element-button">Comenzar ahora</a></div>
-<!-- /wp:button -->
+            f'{bem_prefix}-cta-primary.php': {
+                'title': f'CTA Principal ({bem_prefix})',
+                'description': 'Call to Action reutilizable usando el bloque CTA personalizado del tema',
+                'categories': [f'{bem_prefix}-call-to-action', 'call-to-action'],
+                'content': f"""<!-- wp:{bem_prefix}/organism-cta {{"title":"¿Listo para empezar?","description":"Únete a nosotros hoy mismo","primaryButtonText":"Comenzar ahora","secondaryButtonText":"Saber más","showSecondaryButton":true,"backgroundStyle":"primary","alignment":"center"}} -->
+<div class="wp-block-{bem_prefix}-organism-cta {bem_prefix}-organism-cta--primary {bem_prefix}-organism-cta--align-center">
+<div class="{bem_prefix}-organism-cta__content">
+<h2 class="{bem_prefix}-organism-cta__title">¿Listo para empezar?</h2>
+<p class="{bem_prefix}-organism-cta__description">Únete a nosotros hoy mismo</p>
+<div class="{bem_prefix}-organism-cta__actions">
+<a href="#" class="{bem_prefix}-organism-cta__button {bem_prefix}-organism-cta__button--primary">Comenzar ahora</a>
+<a href="#" class="{bem_prefix}-organism-cta__button {bem_prefix}-organism-cta__button--secondary">Saber más</a>
 </div>
-<!-- /wp:buttons -->
 </div>
-<!-- /wp:group -->""",
+</div>
+<!-- /wp:{bem_prefix}/organism-cta -->""",
                 'syncStatus': 'unsynced'
             },
-            'hero-section.php': {
-                'title': 'Sección Hero',
-                'description': 'Hero section reutilizable con imagen de fondo',
-                'categories': ['hero'],
-                'content': f"""<!-- wp:cover {{"url":"","dimRatio":40,"overlayColor":"primary","minHeight":500,"minHeightUnit":"px","isUserOverlayColor":true}} -->
-<div class="wp-block-cover" style="min-height:500px"><span aria-hidden="true" class="wp-block-cover__background has-primary-background-color has-background-dim"></span><div class="wp-block-cover__inner-container">
-<!-- wp:heading {{"textAlign":"center","level":1,"style":{{"typography":{{"fontSize":"3rem"}}}}}} -->
-<h1 class="has-text-align-center" style="font-size:3rem">Título Principal</h1>
-<!-- /wp:heading -->
-<!-- wp:paragraph {{"align":"center","style":{{"typography":{{"fontSize":"1.25rem"}}}}}} -->
-<p class="has-text-align-center" style="font-size:1.25rem">Subtítulo descriptivo que captura la atención</p>
-<!-- /wp:paragraph -->
-<!-- wp:buttons {{"layout":{{"type":"flex","justifyContent":"center"}}}} -->
-<div class="wp-block-buttons">
-<!-- wp:button {{"backgroundColor":"primary","textColor":"background","className":"is-style-fill"}} -->
-<div class="wp-block-button is-style-fill"><a class="wp-block-button__link has-primary-background-color has-background-color has-text-color wp-element-button">Llamada a la acción</a></div>
-<!-- /wp:button -->
+            f'{bem_prefix}-hero-section.php': {
+                'title': f'Hero Section ({bem_prefix})',
+                'description': 'Hero section reutilizable usando el bloque Hero personalizado del tema',
+                'categories': [f'{bem_prefix}-hero', 'hero'],
+                'content': f"""<!-- wp:{bem_prefix}/organism-hero {{"title":"Título Principal","subtitle":"Subtítulo descriptivo que captura la atención","buttonText":"Llamada a la acción","buttonUrl":"#","fullHeight":true,"showOverlay":true,"overlayOpacity":40}} -->
+<div class="wp-block-{bem_prefix}-organism-hero {bem_prefix}-organism-hero--full-height">
+<div class="{bem_prefix}-organism-hero__overlay" style="opacity:0.4"></div>
+<div class="{bem_prefix}-organism-hero__content">
+<h1 class="{bem_prefix}-organism-hero__title">Título Principal</h1>
+<p class="{bem_prefix}-organism-hero__subtitle">Subtítulo descriptivo que captura la atención</p>
+<a href="#" class="{bem_prefix}-organism-hero__button">Llamada a la acción</a>
 </div>
-<!-- /wp:buttons -->
-</div></div>
-<!-- /wp:cover -->""",
+</div>
+<!-- /wp:{bem_prefix}/organism-hero -->""",
                 'syncStatus': 'unsynced'
             },
-            'cards-grid.php': {
-                'title': 'Grid de Tarjetas',
-                'description': 'Grid reutilizable de tarjetas con 3 columnas',
-                'categories': ['cards'],
-                'content': f"""<!-- wp:group {{"align":"wide","layout":{{"type":"constrained"}}}} -->
-<div class="wp-block-group alignwide">
-<!-- wp:heading {{"textAlign":"center","level":2}} -->
-<h2 class="has-text-align-center">Nuestros Servicios</h2>
-<!-- /wp:heading -->
-<!-- wp:columns {{"align":"wide"}} -->
-<div class="wp-block-columns alignwide">
-<!-- wp:column -->
-<div class="wp-block-column">
-<!-- wp:image {{"sizeSlug":"large"}} -->
-<figure class="wp-block-image size-large"><img alt=""/></figure>
-<!-- /wp:image -->
-<!-- wp:heading {{"level":3}} -->
-<h3>Servicio 1</h3>
-<!-- /wp:heading -->
-<!-- wp:paragraph -->
-<p>Descripción breve del servicio.</p>
-<!-- /wp:paragraph -->
-<!-- wp:button -->
-<div class="wp-block-button"><a class="wp-block-button__link wp-element-button">Saber más</a></div>
-<!-- /wp:button -->
+            f'{bem_prefix}-cards-grid.php': {
+                'title': f'Grid de Tarjetas ({bem_prefix})',
+                'description': 'Grid reutilizable de tarjetas usando el bloque Cards personalizado del tema',
+                'categories': [f'{bem_prefix}-cards', 'cards'],
+                'content': f"""<!-- wp:{bem_prefix}/organism-cards-grid {{"title":"Nuestros Servicios","columns":3,"showButton":true,"buttonText":"Saber más"}} -->
+<div class="wp-block-{bem_prefix}-organism-cards-grid">
+<h2 class="{bem_prefix}-organism-cards-grid__title">Nuestros Servicios</h2>
+<div class="{bem_prefix}-organism-cards-grid__container {bem_prefix}-organism-cards-grid__container--3-cols">
+<!-- wp:{bem_prefix}/molecule-card {{"title":"Servicio 1","text":"Descripción breve del servicio.","buttonText":"Saber más"}} /-->
+<!-- wp:{bem_prefix}/molecule-card {{"title":"Servicio 2","text":"Descripción breve del servicio.","buttonText":"Saber más"}} /-->
+<!-- wp:{bem_prefix}/molecule-card {{"title":"Servicio 3","text":"Descripción breve del servicio.","buttonText":"Saber más"}} /-->
 </div>
-<!-- /wp:column -->
-<!-- wp:column -->
-<div class="wp-block-column">
-<!-- wp:image {{"sizeSlug":"large"}} -->
-<figure class="wp-block-image size-large"><img alt=""/></figure>
-<!-- /wp:image -->
-<!-- wp:heading {{"level":3}} -->
-<h3>Servicio 2</h3>
-<!-- /wp:heading -->
-<!-- wp:paragraph -->
-<p>Descripción breve del servicio.</p>
-<!-- /wp:paragraph -->
-<!-- wp:button -->
-<div class="wp-block-button"><a class="wp-block-button__link wp-element-button">Saber más</a></div>
-<!-- /wp:button -->
 </div>
-<!-- /wp:column -->
-<!-- wp:column -->
-<div class="wp-block-column">
-<!-- wp:image {{"sizeSlug":"large"}} -->
-<figure class="wp-block-image size-large"><img alt=""/></figure>
-<!-- /wp:image -->
-<!-- wp:heading {{"level":3}} -->
-<h3>Servicio 3</h3>
-<!-- /wp:heading -->
-<!-- wp:paragraph -->
-<p>Descripción breve del servicio.</p>
-<!-- /wp:paragraph -->
-<!-- wp:button -->
-<div class="wp-block-button"><a class="wp-block-button__link wp-element-button">Saber más</a></div>
-<!-- /wp:button -->
-</div>
-<!-- /wp:column -->
-</div>
-<!-- /wp:columns -->
-</div>
-<!-- /wp:group -->""",
+<!-- /wp:{bem_prefix}/organism-cards-grid -->""",
                 'syncStatus': 'unsynced'
             },
-            'testimonials-section.php': {
-                'title': 'Sección de Testimonios',
-                'description': 'Testimonios en formato de citas',
-                'categories': ['testimonials'],
+            f'{bem_prefix}-testimonials-section.php': {
+                'title': f'Sección de Testimonios ({bem_prefix})',
+                'description': 'Testimonios usando el bloque Testimonial personalizado del tema',
+                'categories': [f'{bem_prefix}-testimonials', 'testimonials'],
                 'content': f"""<!-- wp:group {{"align":"wide","layout":{{"type":"constrained"}}}} -->
 <div class="wp-block-group alignwide">
 <!-- wp:heading {{"textAlign":"center","level":2}} -->
@@ -1847,22 +2086,12 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
 <div class="wp-block-columns alignwide">
 <!-- wp:column -->
 <div class="wp-block-column">
-<!-- wp:quote {{"style":{{"spacing":{{"padding":{{"top":"1.5rem","right":"1.5rem","bottom":"1.5rem","left":"1.5rem"}}}}}}}} -->
-<blockquote class="wp-block-quote" style="padding-top:1.5rem;padding-right:1.5rem;padding-bottom:1.5rem;padding-left:1.5rem">
-<p>Excelente servicio y atención al cliente. Muy recomendado.</p>
-<cite>Cliente Satisfecho</cite>
-</blockquote>
-<!-- /wp:quote -->
+<!-- wp:{bem_prefix}/molecule-testimonial {{"quote":"Excelente servicio y atención al cliente. Muy recomendado.","author":"Cliente Satisfecho"}} /-->
 </div>
 <!-- /wp:column -->
 <!-- wp:column -->
 <div class="wp-block-column">
-<!-- wp:quote {{"style":{{"spacing":{{"padding":{{"top":"1.5rem","right":"1.5rem","bottom":"1.5rem","left":"1.5rem"}}}}}}}} -->
-<blockquote class="wp-block-quote" style="padding-top:1.5rem;padding-right:1.5rem;padding-bottom:1.5rem;padding-left:1.5rem">
-<p>Profesionalismo y calidad en cada proyecto.</p>
-<cite>Otro Cliente</cite>
-</blockquote>
-<!-- /wp:quote -->
+<!-- wp:{bem_prefix}/molecule-testimonial {{"quote":"Profesionalismo y calidad en cada proyecto.","author":"Otro Cliente"}} /-->
 </div>
 <!-- /wp:column -->
 </div>
@@ -1879,17 +2108,23 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
             slug = os.path.splitext(filename)[0]
             pattern_path = os.path.join(patterns_dir, filename)
             
-            # Crear archivo PHP con metadata
+            # Crear archivo PHP con metadata completa
+            keywords_str = ', '.join(pattern_data.get('keywords', pattern_data.get('categories', [])))
+            categories_str = ', '.join(pattern_data['categories'])
+            block_types_str = ', '.join(pattern_data.get('blockTypes', ['core/post-content']))
+            inserter_str = 'yes' if pattern_data.get('inserter', True) else 'no'
+            viewport_width = pattern_data.get('viewportWidth', 1200)
+            
             php_content = f"""<?php
 /**
  * Title: {pattern_data['title']}
  * Slug: {bem_prefix}/{slug}
  * Description: {pattern_data['description']}
- * Categories: {', '.join(pattern_data['categories'])}
- * Keywords: {', '.join(pattern_data.get('keywords', pattern_data['categories']))}
- * Viewport Width: 1200
- * Block Types: core/post-content
- * Inserter: yes
+ * Categories: {categories_str}
+ * Keywords: {keywords_str}
+ * Viewport Width: {viewport_width}
+ * Block Types: {block_types_str}
+ * Inserter: {inserter_str}
  * Sync Status: {pattern_data.get('syncStatus', 'unsynced')}
  */
 ?>
@@ -1909,7 +2144,8 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
                 'filename': filename,
                 'blockTypes': pattern_data.get('blockTypes', ['core/post-content']),
                 'inserter': pattern_data.get('inserter', True),
-                'viewportWidth': pattern_data.get('viewportWidth', 1200)
+                'viewportWidth': pattern_data.get('viewportWidth', 1200),
+                'keywords': pattern_data.get('keywords', pattern_data.get('categories', []))
             })
         
         # Guardar patterns_meta.json
@@ -1944,6 +2180,7 @@ function {sync_function_name}() {{
     register_block_pattern_category('{bem_prefix}-hero', array('label' => 'Hero'));
     register_block_pattern_category('{bem_prefix}-cards', array('label' => 'Cards'));
     register_block_pattern_category('{bem_prefix}-testimonials', array('label' => 'Testimonials'));
+    register_block_pattern_category('{bem_prefix}-sections', array('label' => 'Sections'));
     
     $pattern_files = glob($patterns_dir . '/*.php');
     foreach ($pattern_files as $file) {{
@@ -2031,10 +2268,14 @@ def generate_theme_documentation(theme_dir: str, theme_name: str, theme_descript
         # 3. Catálogo de componentes
         generate_components_catalog(theme_dir, bem_prefix)
         
-        # 4. Documentación de bloques
-        generate_blocks_documentation(theme_dir, bem_prefix)
+        # 4. Documentación completa de bloques (nueva versión mejorada)
+        from blocks_builder.documentation import generate_comprehensive_block_docs, generate_patterns_documentation
+        generate_comprehensive_block_docs(theme_dir, bem_prefix)
         
-        # 5. Preview de patrones
+        # 5. Documentación de patterns
+        generate_patterns_documentation(theme_dir, bem_prefix)
+        
+        # 6. Preview de patrones (legacy, mantener compatibilidad)
         generate_patterns_preview(theme_dir, bem_prefix)
         
         print(f"✓ Documentación del tema generada en {docs_dir}/")

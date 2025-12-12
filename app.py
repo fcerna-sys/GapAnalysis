@@ -88,6 +88,13 @@ def upload():
     theme_name = request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme'
     theme_slug = request.form.get('theme_slug', '').strip() or ''
     theme_description = request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes'
+    theme_version = request.form.get('theme_version', '').strip() or '1.0.0'
+    theme_author = request.form.get('theme_author', '').strip() or ''
+    theme_uri = request.form.get('theme_uri', '').strip() or ''
+    theme_textdomain = request.form.get('theme_textdomain', '').strip() or ''
+    theme_tags = request.form.get('theme_tags', '').strip() or ''
+    theme_license = request.form.get('theme_license', '').strip() or 'GPLv2 or later'
+    theme_screenshot_file = request.files.get('theme_screenshot')
     css_framework = request.form.get('css_framework', 'tailwind')  # tailwind, bootstrap, none
     google_api_key = request.form.get('google_api_key') or ''
     enable_slicing = request.form.get('enable_slicing') or ''
@@ -164,14 +171,33 @@ def upload():
                 flash('El JSON subido no es un Service Account válido')
         except Exception:
             flash('No se pudo procesar el archivo de credenciales subido')
+    # Guardar screenshot si se subió
+    screenshot_path = None
+    if theme_screenshot_file and theme_screenshot_file.filename:
+        try:
+            from werkzeug.utils import secure_filename
+            screenshot_ext = os.path.splitext(theme_screenshot_file.filename)[1].lower()
+            if screenshot_ext in {'.png', '.jpg', '.jpeg', '.webp', '.svg'}:
+                screenshot_filename = f'screenshot{screenshot_ext}'
+                screenshot_path = os.path.join(batch_dir, screenshot_filename)
+                theme_screenshot_file.save(screenshot_path)
+        except Exception as e:
+            print(f"Error al guardar screenshot: {e}")
+    
     request.environ['img2html_batch_dir'] = batch_dir
     request.environ['img2html_plan'] = plan
     request.environ['img2html_theme_name'] = theme_name
     request.environ['img2html_theme_slug'] = theme_slug
     request.environ['img2html_theme_description'] = theme_description
+    request.environ['img2html_theme_version'] = theme_version
+    request.environ['img2html_theme_author'] = theme_author
+    request.environ['img2html_theme_uri'] = theme_uri
+    request.environ['img2html_theme_textdomain'] = theme_textdomain
+    request.environ['img2html_theme_tags'] = theme_tags
+    request.environ['img2html_theme_license'] = theme_license
+    request.environ['img2html_theme_screenshot'] = screenshot_path
     request.environ['img2html_css_framework'] = css_framework
-    request.environ['img2html_css_framework'] = css_framework
-    return render_template('plan.html', plan=plan, batch_id=batch_id, theme_name=theme_name, theme_slug=theme_slug, theme_description=theme_description, css_framework=css_framework, google_api_key=google_api_key, enable_slicing=enable_slicing, precise_slicing=precise_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
+    return render_template('plan.html', plan=plan, batch_id=batch_id, theme_name=theme_name, theme_slug=theme_slug, theme_description=theme_description, theme_version=theme_version, theme_author=theme_author, theme_uri=theme_uri, theme_textdomain=theme_textdomain, theme_tags=theme_tags, theme_license=theme_license, css_framework=css_framework, google_api_key=google_api_key, enable_slicing=enable_slicing, precise_slicing=precise_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
 
 def _set_progress(batch_id, percent, message):
     try:
@@ -201,6 +227,12 @@ def _do_convert_async(ctx):
     theme_name = ctx.get('theme_name', 'Img2HTML AI Theme')
     theme_slug = ctx.get('theme_slug', '')
     theme_description = ctx.get('theme_description', 'Tema de bloques generado y refinado con IA desde imágenes')
+    theme_version = ctx.get('theme_version', '1.0.0')
+    theme_author = ctx.get('theme_author', '')
+    theme_uri = ctx.get('theme_uri', '')
+    theme_textdomain = ctx.get('theme_textdomain', '')
+    theme_tags = ctx.get('theme_tags', '')
+    theme_license = ctx.get('theme_license', 'GPLv2 or later')
     css_framework = ctx.get('css_framework', 'tailwind')
     google_api_key = ctx.get('google_api_key') or ''
     enable_slicing = ctx.get('enable_slicing') or ''
@@ -415,7 +447,22 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
             try:
                 from theme_builder import build_complete_theme, generate_theme_screenshot
                 from blocks_builder import setup_css_framework, create_custom_blocks
-                build_complete_theme(wp_theme_dir, plan, dna, images, theme_name, theme_description, theme_slug, css_framework)
+                build_complete_theme(
+                wp_theme_dir, 
+                plan, 
+                dna, 
+                images, 
+                theme_name, 
+                theme_description, 
+                theme_slug, 
+                css_framework,
+                theme_version=ctx.get('theme_version', '1.0.0'),
+                theme_author=ctx.get('theme_author', ''),
+                theme_uri=ctx.get('theme_uri', ''),
+                theme_textdomain=ctx.get('theme_textdomain', ''),
+                theme_tags=ctx.get('theme_tags', ''),
+                theme_license=ctx.get('theme_license', 'GPLv2 or later')
+            )
                 # Configurar framework CSS
                 setup_css_framework(wp_theme_dir, css_framework)
                 # Crear bloques personalizados (con prefijo BEM desde theme_slug)
@@ -451,6 +498,12 @@ def start_convert():
         'theme_name': request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme',
         'theme_slug': request.form.get('theme_slug', '').strip() or '',
         'theme_description': request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes',
+        'theme_version': request.form.get('theme_version', '').strip() or '1.0.0',
+        'theme_author': request.form.get('theme_author', '').strip() or '',
+        'theme_uri': request.form.get('theme_uri', '').strip() or '',
+        'theme_textdomain': request.form.get('theme_textdomain', '').strip() or '',
+        'theme_tags': request.form.get('theme_tags', '').strip() or '',
+        'theme_license': request.form.get('theme_license', '').strip() or 'GPLv2 or later',
         'css_framework': request.form.get('css_framework', 'tailwind'),
         'google_api_key': request.form.get('google_api_key') or '',
         'enable_slicing': request.form.get('enable_slicing') or '',
@@ -688,17 +741,53 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
         builder.run_prompt('51_templates_catalog.json')
         builder.run_prompt('53_patterns_catalog.json')
         
-        # Obtener nombre y descripción del tema
+        # Obtener todos los datos del tema
         theme_name = request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme'
         theme_slug = request.form.get('theme_slug', '').strip() or ''
         theme_description = request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes'
+        theme_version = request.form.get('theme_version', '').strip() or '1.0.0'
+        theme_author = request.form.get('theme_author', '').strip() or ''
+        theme_uri = request.form.get('theme_uri', '').strip() or ''
+        theme_textdomain = request.form.get('theme_textdomain', '').strip() or ''
+        theme_tags = request.form.get('theme_tags', '').strip() or ''
+        theme_license = request.form.get('theme_license', '').strip() or 'GPLv2 or later'
         css_framework = request.form.get('css_framework', 'tailwind')
         
         # Construcción mejorada del tema
         try:
             from theme_builder import build_complete_theme, generate_theme_screenshot
             from blocks_builder import setup_css_framework, create_custom_blocks
-            build_complete_theme(wp_theme_dir, plan, dna, images, theme_name, theme_description, theme_slug, css_framework)
+            build_complete_theme(
+                wp_theme_dir,
+                plan,
+                dna,
+                images,
+                theme_name,
+                theme_description,
+                theme_slug,
+                css_framework,
+                theme_version=theme_version,
+                theme_author=theme_author,
+                theme_uri=theme_uri,
+                theme_textdomain=theme_textdomain,
+                theme_tags=theme_tags,
+                theme_license=theme_license
+            )
+                wp_theme_dir, 
+                plan, 
+                dna, 
+                images, 
+                theme_name, 
+                theme_description, 
+                theme_slug, 
+                css_framework,
+                theme_version=ctx.get('theme_version', '1.0.0'),
+                theme_author=ctx.get('theme_author', ''),
+                theme_uri=ctx.get('theme_uri', ''),
+                theme_textdomain=ctx.get('theme_textdomain', ''),
+                theme_tags=ctx.get('theme_tags', ''),
+                theme_license=ctx.get('theme_license', 'GPLv2 or later')
+            )
             # Configurar framework CSS
             setup_css_framework(wp_theme_dir, css_framework)
             # Crear bloques personalizados
