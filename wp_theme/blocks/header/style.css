@@ -1,0 +1,9 @@
+.img2html-header { display: flex; align-items: center; width: 100%; }
+.img2html-header__inner { display: flex; align-items: center; gap: 1rem; width: 100%; }
+.img2html-header--justify-space-between .img2html-header__inner { justify-content: space-between; }
+.img2html-header--justify-left .img2html-header__inner { justify-content: flex-start; }
+.img2html-header--justify-right .img2html-header__inner { justify-content: flex-end; }
+.img2html-header--sticky { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(180%) blur(8px); }
+.img2html-header--transparent { background: transparent; }
+.img2html-header--dark { background: rgba(0,0,0,.75); color: #fff; }
+

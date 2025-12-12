@@ -1,0 +1,25 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/organism-hero",
+  "title": "Hero (Organismo)",
+  "category": "layout",
+  "description": "Sección hero con título, subtítulo y acción",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "title": {"type": "string", "default": "Título destacado"},
+    "subtitle": {"type": "string", "default": "Subtítulo breve"},
+    "buttonText": {"type": "string", "default": "Empezar"},
+    "buttonUrl": {"type": "string", "default": "#"},
+    "sticky": {"type": "boolean", "default": false},
+    "transparent": {"type": "boolean", "default": false},
+    "darkBackground": {"type": "boolean", "default": false},
+    "align": {"type": "string", "default": "left"}
+  },
+  "supports": {
+    "spacing": {"margin": true, "padding": true},
+    "color": {"background": true, "text": false},
+    "html": false
+  }
+}

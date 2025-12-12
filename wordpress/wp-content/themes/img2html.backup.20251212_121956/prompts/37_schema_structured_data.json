@@ -1,0 +1,12 @@
+{
+  "name": "Datos estructurados",
+  "model": "auto",
+  "role": "Autor de schema.org",
+  "objective": "Añadir JSON-LD básico para sitio y artículos (guía/apéndice).",
+  "requirements": [
+    "Site/Organization y Article/BlogPosting",
+    "Insertar vía hook en head",
+    "Advertencia: mejor mediante plugin dedicado"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/SCHEMA.md", "functions.php"], "target_dir": ".."}
+}

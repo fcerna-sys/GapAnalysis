@@ -1,0 +1,14 @@
+{
+  "name": "theme-build",
+  "version": "1.0.0",
+  "scripts": {
+    "minify": "node build/minify.js",
+    "purge": "node build/purge.js",
+    "build": "npm run minify && npm run purge"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.2",
+    "terser": "^5.19.2",
+    "purgecss": "^5.0.0"
+  }
+}

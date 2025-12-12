@@ -1,0 +1,29 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/hero",
+  "title": "Hero",
+  "category": "layout",
+  "description": "Sección hero con título, subtítulo y acción",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "title": { "type": "string", "default": "Título Principal" },
+    "subtitle": { "type": "string", "default": "Subtítulo descriptivo" },
+    "buttonText": { "type": "string", "default": "Llamada a la acción" },
+    "buttonUrl": { "type": "string", "default": "#" },
+    "align": { "type": "string", "default": "center" },
+    "sticky": { "type": "boolean", "default": false },
+    "transparent": { "type": "boolean", "default": false },
+    "darkBackground": { "type": "boolean", "default": false }
+  },
+  "supports": {
+    "spacing": { "margin": true, "padding": true },
+    "color": { "background": true, "text": false },
+    "html": false,
+    "customClassName": false
+  },
+  "example": { "attributes": {} },
+  "version": "1.0.0"
+}
+

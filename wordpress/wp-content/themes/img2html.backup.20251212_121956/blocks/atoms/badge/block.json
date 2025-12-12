@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atom-badge",
+  "title": "Badge (Átomo)",
+  "category": "widgets",
+  "description": "Insignia de estado/etiqueta",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "text": {"type": "string", "default": "Nuevo"},
+    "variant": {"type": "string", "default": "default"}
+  },
+  "supports": {
+    "spacing": {"margin": true},
+    "color": {"background": false, "text": false},
+    "html": false
+  }
+}

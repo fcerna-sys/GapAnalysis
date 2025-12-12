@@ -1,0 +1,26 @@
+{
+  "name": "Patrones de Bloques",
+  "model": "auto",
+  "role": "Creador de patrones",
+  "objective": "Definir patrones reutilizables (hero, formulario, galería, comentarios) y registrarlos.",
+  "requirements": [
+    "Organización en subcarpetas /patterns (WordPress 6.8)",
+    "Usar presets de color/typography",
+    "Registrar categoría 'Img2HTML'"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": [
+      "patterns/hero.html",
+      "patterns/form.html",
+      "patterns/gallery.html",
+      "patterns/comments.html",
+      "functions.php"
+    ],
+    "target_dir": ".."
+  },
+  "acceptance_criteria": [
+    "Patrones aparecen en el insertador del editor",
+    "functions.php registra y encola assets necesarios"
+  ]
+}

@@ -15,20 +15,22 @@ if (is_dir($dir)){
 
 // Registrar patterns del tema
 function img2html_register_patterns() {
-    register_block_pattern_category('img2html', array('label' => 'Img2HTML'));
+    register_block_pattern_category('img2html', array('label' => sanitize_text_field('Img2HTML')));
     
     $patterns_dir = get_theme_file_path('patterns');
     if (is_dir($patterns_dir)) {
         $pattern_files = glob($patterns_dir . '/*.html');
         foreach ($pattern_files as $file) {
             $slug = basename($file, '.html');
+            $slug = sanitize_title($slug);
             $content = file_get_contents($file);
             if ($content) {
+                $content = wp_kses_post($content);
                 register_block_pattern(
                     'img2html/' . $slug,
                     array(
-                        'title' => ucwords(str_replace('-', ' ', $slug)),
-                        'description' => 'Patrón generado desde imágenes',
+                        'title' => sanitize_text_field(ucwords(str_replace('-', ' ', $slug))),
+                        'description' => sanitize_text_field('Patrón generado desde imágenes'),
                         'content' => $content,
                         'categories' => array('img2html'),
                     )
@@ -53,6 +55,15 @@ function img2html_register_atomic_blocks(){
       }
     }
   }
+  // Registrar también bloques en la raíz de /blocks (ej. /blocks/cta, /blocks/card, /blocks/hero)
+  foreach (glob($base.'/*', GLOB_ONLYDIR) as $blockDir){
+    $name = basename($blockDir);
+    if (in_array($name, $groups, true)) continue; // ya procesados
+    $blockJson = $blockDir.'/block.json';
+    if (file_exists($blockJson)){
+      register_block_type($blockDir);
+    }
+  }
 }
 add_action('init','img2html_register_atomic_blocks');
 
@@ -72,6 +83,7 @@ function img2html_register_synced_patterns() {
 
     foreach (glob($patterns_dir . '/*.php') as $file) {
         $slug = basename($file, '.php');
+        $slug = sanitize_title($slug);
         $content = file_get_contents($file);
         if (!$content) continue;
 
@@ -84,10 +96,10 @@ function img2html_register_synced_patterns() {
         preg_match('/Categories:\s*(.+)/', $content, $cat_match);
         preg_match('/Sync Status:\s*(synced|unsynced)/i', $content, $sync_match);
 
-        $title = isset($title_match[1]) ? trim($title_match[1]) : ucwords(str_replace('-', ' ', $slug));
-        $description = isset($desc_match[1]) ? trim($desc_match[1]) : 'Patrón reutilizable';
+        $title = isset($title_match[1]) ? sanitize_text_field(trim($title_match[1])) : sanitize_text_field(ucwords(str_replace('-', ' ', $slug)));
+        $description = isset($desc_match[1]) ? sanitize_text_field(trim($desc_match[1])) : sanitize_text_field('Patrón reutilizable');
         $cat_string = isset($cat_match[1]) ? trim($cat_match[1]) : 'img2html';
-        $categories = array_map('trim', explode(',', $cat_string));
+        $categories = array_map(function($c){ return sanitize_text_field(trim($c)); }, explode(',', $cat_string));
         $is_synced = isset($sync_match[1]) && strtolower($sync_match[1]) === 'synced';
 
         register_block_pattern(
@@ -95,7 +107,7 @@ function img2html_register_synced_patterns() {
             array(
                 'title' => $title,
                 'description' => $description,
-                'content' => trim($html_content),
+                'content' => wp_kses_post(trim($html_content)),
                 'categories' => $categories,
                 'syncStatus' => $is_synced ? 'synced' : 'unsynced',
             )

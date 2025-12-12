@@ -1,0 +1,12 @@
+{
+  "name": "Fuentes y Webfonts API",
+  "model": "auto",
+  "role": "Gestor de tipografías",
+  "objective": "Configurar font-face con Webfonts API y mapear familias en theme.json.",
+  "requirements": [
+    "Declarar font-face y registrar via Webfonts API",
+    "Mapear en theme.json presets de font-family y font-size",
+    "Conjuntos tipográficos para stylebook"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "functions.php", "docs/FONTS.md"], "target_dir": ".."}
+}

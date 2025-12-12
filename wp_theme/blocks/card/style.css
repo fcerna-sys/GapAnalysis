@@ -1,0 +1,7 @@
+.img2html-card { display: grid; gap: .75rem; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; overflow: hidden; }
+.img2html-card__image { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+.img2html-card__body { padding: 1rem; }
+.img2html-card__title { margin: 0 0 .5rem 0; font-size: 1.25rem; }
+.img2html-card__text { margin: 0 0 .75rem 0; opacity: .85; }
+.img2html-card__button { display: inline-block; padding: .5rem .9rem; border-radius: 8px; text-decoration: none; border: 1px solid currentColor; }
+

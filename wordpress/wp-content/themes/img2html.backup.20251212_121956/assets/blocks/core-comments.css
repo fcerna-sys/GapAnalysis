@@ -1,0 +1,6 @@
+.wp-block-comments .wp-block-comment-author-name{
+  font-weight: 600;
+}
+.wp-block-comments .wp-block-avatar img{
+  border-radius: 50%;
+}

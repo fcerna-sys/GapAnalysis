@@ -1,0 +1,10 @@
+(function(){
+  try{
+    document.addEventListener('keydown', function(e){
+      if (e.key.toLowerCase() === 'k'){
+        var v = document.querySelector('.wp-block-video video');
+        if (v){ if (v.paused) v.play(); else v.pause(); }
+      }
+    });
+  }catch(err){}
+})();

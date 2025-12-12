@@ -1,0 +1,12 @@
+{
+  "name": "Imágenes responsivas",
+  "model": "auto",
+  "role": "Autor de media responsive",
+  "objective": "Definir tamaños de imagen recomendados y comprobar srcset/sizes.",
+  "requirements": [
+    "Guía de tamaños en featured-image y cover",
+    "Evitar pixelación y sobredimensionado",
+    "Usar lightbox cuando aplique"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/MEDIA_RESPONSIVE.md"], "target_dir": ".."}
+}

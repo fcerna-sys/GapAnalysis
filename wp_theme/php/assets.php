@@ -1,4 +1,5 @@
 <?php
+if (!defined('ABSPATH')) { exit; }
 function img2html_enqueue_assets(){
   $css = get_theme_file_uri('blocks.css');
   if ($css) { wp_enqueue_style('img2html-blocks', $css, [], null); }
@@ -14,7 +15,10 @@ if (!function_exists('img2html_bem_prefix')){
     $theme = wp_get_theme();
     $td = $theme && method_exists($theme,'get') ? $theme->get('TextDomain') : '';
     $name = $theme && method_exists($theme,'get') ? $theme->get('Name') : '';
-    $slug = $td ? sanitize_title($td) : ($name ? sanitize_title($name) : 'img2html');
+    $slug_raw = $td ?: $name;
+    $slug = $slug_raw ? sanitize_key($slug_raw) : 'img2html';
+    $slug = $slug ?: sanitize_title($slug_raw);
+    if (!$slug) { error_log('img2html_bem_prefix: invalid theme slug'); return 'img2html'; }
     return apply_filters('img2html_bem_prefix', $slug ?: 'img2html');
   }
 }

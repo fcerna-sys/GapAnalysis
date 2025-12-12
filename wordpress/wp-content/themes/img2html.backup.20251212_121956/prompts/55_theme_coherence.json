@@ -1,0 +1,19 @@
+{
+  "name": "Coherencia del tema",
+  "model": "auto",
+  "role": "Validador de coherencia",
+  "objective": "Verificar coherencia entre theme.json, styles.json, patrones y templates parts; proponer ajustes mínimos para armonizar.",
+  "inputs": {
+    "theme": "../theme.json",
+    "styles": "../styles.json",
+    "patterns": "../patterns.json",
+    "templateParts": "../templateParts,json",
+    "customTemplates": "../customTemplates.json"
+  },
+  "requirements": [
+    "Presets usados consistentemente en templates/patterns",
+    "Bloques estilizados según theme.json",
+    "Sin colisiones de variaciones; nombres amigables"
+  ],
+  "deliverables": {"format": "json", "files": ["COHERENCE.md"], "target_dir": ".."}
+}

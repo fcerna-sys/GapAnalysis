@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Style Guide · img2html</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; }
+    body { margin: 0; padding: 2rem; background: #f7f7f8; color: #111; }
+    header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2rem; }
+    h1 { font-size: 1.5rem; margin: 0; }
+    .grid { display: grid; gap: 1rem; }
+    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; padding: 1rem; }
+    .swatches { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .75rem; }
+    .swatch { border-radius: 10px; height: 64px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,.06); }
+    .swatch span { position: absolute; bottom: 6px; left: 8px; right: 8px; font-size: .8rem; background: rgba(255,255,255,.8); padding: 2px 6px; border-radius: 6px; }
+    code { background: #f0f0f2; padding: .2rem .4rem; border-radius: 6px; }
+    .tokens { display: grid; gap: .5rem; }
+    .token { display: flex; justify-content: space-between; background: #fff; border: 1px solid rgba(0,0,0,.06); border-radius: 10px; padding: .5rem .75rem; }
+    .list { display: grid; gap: .5rem; }
+    .row { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid rgba(0,0,0,.06); border-radius: 10px; padding: .5rem .75rem; }
+    .sample { font-size: 1.1rem; }
+  </style>
+  <script>
+    async function loadThemeJSON(){
+      try {
+        const res = await fetch('./theme.json');
+        if (!res.ok) return null;
+        return await res.json();
+      } catch { return null; }
+    }
+    function renderPalette(theme){
+      const palette = theme?.settings?.color?.palette || [];
+      const wrap = document.querySelector('#palette');
+      if (!palette.length){ wrap.innerHTML = '<p>No se detectó paleta en theme.json</p>'; return; }
+      wrap.innerHTML = palette.map(c => `<div class="swatch" style="background:${c.color}"><span>${c.name || c.slug} · ${c.color}</span></div>`).join('');
+    }
+    function renderTypography(){
+      const wrap = document.querySelector('#typography');
+      wrap.innerHTML = `
+        <h1>H1 · Título Principal</h1>
+        <h2>H2 · Sección</h2>
+        <h3>H3 · Subtítulo</h3>
+        <p>Parágrafo de ejemplo con <code>code</code> y <strong>negritas</strong>.</p>
+      `;
+    }
+    function renderFontFamilies(theme){
+      const wrap = document.querySelector('#fontFamilies');
+      const families = theme?.settings?.typography?.fontFamilies || [];
+      if (!families.length){ wrap.innerHTML = '<p>Sin familias en settings.typography.fontFamilies</p>'; return; }
+      wrap.innerHTML = families.map(f => {
+        const stack = Array.isArray(f.fontFamily) ? f.fontFamily.join(', ') : (f.fontFamily || '');
+        const name = f.name || f.slug || 'family';
+        return `<div class="row"><div><strong>${name}</strong><div class="sample" style="font-family:${stack}">Aa · Texto de muestra</div></div><code>${stack}</code></div>`;
+      }).join('');
+    }
+    function renderFontSizes(theme){
+      const wrap = document.querySelector('#fontSizes');
+      const sizes = theme?.settings?.typography?.fontSizes || [];
+      if (!sizes.length){ wrap.innerHTML = '<p>Sin tamaños en settings.typography.fontSizes</p>'; return; }
+      wrap.innerHTML = sizes.map(s => {
+        const sz = s.size || s.slug || '';
+        const name = s.name || s.slug || 'size';
+        return `<div class="row"><span>${name}</span><code>${sz}</code></div>`;
+      }).join('');
+    }
+    function renderSpacing(theme){
+      const wrap = document.querySelector('#spacing');
+      const units = theme?.settings?.spacing?.units || [];
+      const gap = theme?.styles?.spacing?.blockGap || '';
+      const scale = theme?.settings?.spacing?.spacingScale?.steps || [];
+      const items = [];
+      if (gap) items.push(['Block Gap', gap]);
+      if (units?.length) items.push(['Unidades', units.join(', ')]);
+      if (scale?.length) items.push(['Escala', scale.join(', ')]);
+      wrap.innerHTML = items.length ? items.map(([k,v])=>`<div class="row"><span>${k}</span><code>${v}</code></div>`).join('') : '<p>Sin configuraciones de espaciado</p>';
+    }
+    function renderTokens(theme){
+      const tokens = [];
+      const radius = theme?.styles?.elements?.button?.border?.radius;
+      if (radius) tokens.push(['Radius botón', radius]);
+      const spacing = theme?.styles?.spacing?.blockGap;
+      if (spacing) tokens.push(['Gap global', spacing]);
+      const wrap = document.querySelector('#tokens');
+      wrap.innerHTML = tokens.length ? tokens.map(([k,v])=>`<div class="token"><span>${k}</span><code>${v}</code></div>`).join('') : '<p>Sin tokens detectados</p>';
+    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      const theme = await loadThemeJSON();
+      if (theme){
+        renderPalette(theme);
+        renderTokens(theme);
+        renderFontFamilies(theme);
+        renderFontSizes(theme);
+        renderSpacing(theme);
+      }
+      renderTypography();
+    });
+  </script>
+  </head>
+<body>
+  <header>
+    <h1>Guía de Estilos</h1>
+    <span>img2html · Styleguide</span>
+  </header>
+  <div class="grid cols-3">
+    <section class="card">
+      <h2>Paleta</h2>
+      <div id="palette" class="swatches"></div>
+    </section>
+    <section class="card">
+      <h2>Tipografía</h2>
+      <div id="typography"></div>
+    </section>
+    <section class="card">
+      <h2>Tokens</h2>
+      <div id="tokens" class="tokens"></div>
+    </section>
+  </div>
+  <div class="grid cols-2" style="margin-top:1rem">
+    <section class="card">
+      <h2>Familias</h2>
+      <div id="fontFamilies" class="list"></div>
+    </section>
+    <section class="card">
+      <h2>Tamaños</h2>
+      <div id="fontSizes" class="list"></div>
+    </section>
+  </div>
+  <div class="grid cols-2" style="margin-top:1rem">
+    <section class="card">
+      <h2>Espaciados</h2>
+      <div id="spacing" class="list"></div>
+    </section>
+  </div>
+</body>
+</html>

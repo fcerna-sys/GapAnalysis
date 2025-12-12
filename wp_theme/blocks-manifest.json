@@ -82,5 +82,35 @@
       "assets/blocks/components/img2html-hero.css"
     ],
     "version": "1.0.0"
+  },
+  "img2html/hero": {
+    "style": [
+      "blocks/hero/style.css"
+    ],
+    "version": "1.0.0"
+  },
+  "img2html/cta": {
+    "style": [
+      "blocks/cta/style.css"
+    ],
+    "version": "1.0.0"
+  },
+  "img2html/card": {
+    "style": [
+      "blocks/card/style.css"
+    ],
+    "version": "1.0.0"
+  },
+  "img2html/header": {
+    "style": [
+      "blocks/header/style.css"
+    ],
+    "version": "1.0.0"
+  },
+  "img2html/footer": {
+    "style": [
+      "blocks/footer/style.css"
+    ],
+    "version": "1.0.0"
   }
 }

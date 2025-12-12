@@ -1,0 +1,16 @@
+{
+  "name": "Sidebar y Layouts",
+  "model": "auto",
+  "role": "Diseñador de sidebar",
+  "objective": "Generar una plantilla page-with-sidebar y patrón de sidebar con widgets y buscador.",
+  "requirements": [
+    "Plantilla templates/page-with-sidebar.html con columns",
+    "Sidebar con bloques: search, categories, latest-posts, tag-cloud",
+    "Estilos coherentes en theme.json/blocks.css"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["templates/page-with-sidebar.html", "patterns/sidebar.html", "blocks.css", "theme.json"],
+    "target_dir": ".."
+  }
+}

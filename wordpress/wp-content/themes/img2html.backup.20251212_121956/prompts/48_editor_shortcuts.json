@@ -1,0 +1,12 @@
+{
+  "name": "Atajos del editor",
+  "model": "auto",
+  "role": "Autor de guía UX",
+  "objective": "Proveer guía de atajos y buenas prácticas para el editor.",
+  "requirements": [
+    "Lista de atajos comunes",
+    "Buenas prácticas de bloque y patrones",
+    "Consejos para locking y sincronización"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/EDITOR_SHORTCUTS.md"], "target_dir": ".."}
+}

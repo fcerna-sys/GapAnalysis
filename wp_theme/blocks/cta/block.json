@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/cta",
+  "title": "CTA",
+  "category": "widgets",
+  "description": "Llamada a la acción con botones",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "title": { "type": "string", "default": "¿Listo para empezar?" },
+    "text": { "type": "string", "default": "Únete hoy y mejora tu proyecto." },
+    "primaryButtonText": { "type": "string", "default": "Comenzar" },
+    "primaryButtonUrl": { "type": "string", "default": "#" },
+    "secondaryButtonText": { "type": "string", "default": "Saber más" },
+    "secondaryButtonUrl": { "type": "string", "default": "#" },
+    "showSecondaryButton": { "type": "boolean", "default": true },
+    "alignment": { "type": "string", "default": "center" },
+    "backgroundStyle": { "type": "string", "default": "primary" }
+  },
+  "supports": {
+    "spacing": { "margin": true, "padding": true },
+    "color": { "background": true, "text": false },
+    "html": false,
+    "customClassName": false
+  },
+  "example": { "attributes": {} },
+  "version": "1.0.0"
+}
+

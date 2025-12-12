@@ -1,0 +1,16 @@
+{
+  "name": "Style Variations",
+  "model": "auto",
+  "role": "Creador de variaciones",
+  "objective": "Generar style variations adicionales (brand A/B) y ajustar las existentes.",
+  "requirements": [
+    "Crear styles/brand-a.json y styles/brand-b.json",
+    "Usar paleta del theme.json base como punto de partida",
+    "Mantener contrastes AA/AAA en enlaces y botones"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["styles/brand-a.json", "styles/brand-b.json"],
+    "target_dir": ".."
+  }
+}

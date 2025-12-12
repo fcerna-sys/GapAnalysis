@@ -1,0 +1,4 @@
+.img2html-footer { width: 100%; }
+.img2html-footer__inner { display: grid; gap: 1rem; }
+.img2html-footer--dark { background: rgba(0,0,0,.85); color: #fff; }
+

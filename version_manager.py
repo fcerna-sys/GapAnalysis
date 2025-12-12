@@ -16,11 +16,17 @@ class VersionManager:
     
     def __init__(self, theme_dir: str, theme_slug: Optional[str] = None):
         self.theme_dir = theme_dir
-        self.theme_slug = theme_slug or 'img2html'
+        self.theme_slug = self._sanitize_slug(theme_slug or 'img2html')
         self.version_file = os.path.join(theme_dir, 'version.json')
         self.changelog_file = os.path.join(theme_dir, 'CHANGELOG.json')
         self.build_dir = os.path.join(theme_dir, 'build')
         self.dist_dir = os.path.join(theme_dir, 'dist')
+    
+    @staticmethod
+    def _sanitize_slug(name: str) -> str:
+        name = (name or '').lower()
+        name = re.sub(r'[^a-z0-9\-]+', '-', name)
+        return name.strip('-') or 'img2html'
         
     def get_current_version(self) -> Dict:
         """Obtiene la versión actual del tema."""

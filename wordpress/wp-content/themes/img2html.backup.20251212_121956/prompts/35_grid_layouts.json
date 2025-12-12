@@ -1,0 +1,12 @@
+{
+  "name": "Layouts en grid",
+  "model": "auto",
+  "role": "Arquitecto de layouts",
+  "objective": "Definir plantillas con columns y group para grillas responsive (cards, features, pricing).",
+  "requirements": [
+    "Usar columns con responsive stacks",
+    "Patterns: cards, features, pricing",
+    "Estilos de gaps y borders en theme.json"
+  ],
+  "deliverables": {"format": "json", "files": ["patterns/cards.html", "patterns/features.html", "patterns/pricing.html", "theme.json"], "target_dir": ".."}
+}

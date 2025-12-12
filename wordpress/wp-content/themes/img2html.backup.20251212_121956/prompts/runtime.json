@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "selection": {
+    "strategy": "prefer_local_fallback_remote",
+    "max_tokens": 4096,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "token_rotation": {
+      "policy": "sequential",
+      "retry_on_401": true,
+      "retry_on_429": true,
+      "cooldown_seconds": 60
+    }
+  },
+  "local_models": [
+    { "name": "gemma-3", "runner": "ollama", "id": "gemma:latest", "enabled": true },
+    { "name": "llama-3.1-8b", "runner": "ollama", "id": "llama3.1:8b", "enabled": true },
+    { "name": "mistral-7b", "runner": "ollama", "id": "mistral:7b", "enabled": false }
+  ],
+  "remote_models": [
+    {
+      "name": "gpt-4.1",
+      "provider": "openai",
+      "endpoint": "https://api.openai.com/v1/chat/completions",
+      "tokens": ["OPENAI_TOKEN_1", "OPENAI_TOKEN_2"],
+      "enabled": true
+    },
+    {
+      "name": "gemini-1.5-pro",
+      "provider": "google",
+      "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent",
+      "tokens": ["GOOGLE_API_KEY_1", "GOOGLE_API_KEY_2"],
+      "enabled": true
+    },
+    {
+      "name": "mistral-large",
+      "provider": "mistral",
+      "endpoint": "https://api.mistral.ai/v1/chat/completions",
+      "tokens": ["MISTRAL_TOKEN_1"],
+      "enabled": false
+    },
+    {
+      "name": "qwen2-vl-7b-instruct",
+      "provider": "lmstudio",
+      "endpoint": "http://localhost:1234/v1/chat/completions",
+      "tokens": [],
+      "enabled": true
+    }
+  ]
+}

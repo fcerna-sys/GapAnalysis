@@ -1,0 +1,28 @@
+{
+  "name": "Fusión de theme.json base → wp_theme",
+  "model": "auto",
+  "role": "Integrador de estilos",
+  "objective": "Fusionar el contenido de ../../theme.json dentro de wp_theme/theme.json, preservando rasgos propios del tema y agregando elementos faltantes.",
+  "inputs": {
+    "base_theme": "../../theme.json",
+    "target_theme": "../theme.json"
+  },
+  "requirements": [
+    "Añadir estilos de enlace: textDecoration none y hover underline",
+    "Incorporar padding del botón (0.75rem/1.5rem) sin cambiar su radius",
+    "Mantener radius 50px y hover de botón del tema",
+    "No sobrescribir tipografías únicas (site-title uppercase)",
+    "Alinear elementos faltantes cuando no exista conflicto"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["theme.json"],
+    "target_dir": ".."
+  },
+  "acceptance_criteria": [
+    "El editor carga sin errores",
+    "Los enlaces respetan decoración por defecto y hover",
+    "Los botones muestran padding y radius definido",
+    "Difencias únicas del tema se conservan"
+  ]
+}

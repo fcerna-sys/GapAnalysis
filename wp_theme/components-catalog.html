@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Components Catalog · img2html</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif; }
+    body { margin: 0; padding: 2rem; background: #f7f7f8; color: #111; }
+    header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2rem; }
+    h1 { font-size: 1.5rem; margin: 0; }
+    .list { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; }
+    .item { background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; padding: 1rem; }
+    .item h3 { margin: 0 0 .25rem 0; font-size: 1rem; }
+    .item a { color: #1d4ed8; text-decoration: none; }
+    .tags { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem; }
+    .tag { font-size: .75rem; background: #eef2ff; color: #3730a3; padding: .15rem .4rem; border-radius: 8px; }
+  </style>
+  <script>
+    const customBlocks = [
+      { name: 'img2html/hero', path: 'blocks/hero/block.json', group: 'layout' },
+      { name: 'img2html/cta', path: 'blocks/cta/block.json', group: 'widgets' },
+      { name: 'img2html/card', path: 'blocks/card/block.json', group: 'widgets' },
+      { name: 'img2html/header', path: 'blocks/header/block.json', group: 'layout' },
+      { name: 'img2html/footer', path: 'blocks/footer/block.json', group: 'layout' }
+    ];
+    async function loadManifest(){
+      try {
+        const res = await fetch('./blocks-manifest.json');
+        if (!res.ok) return {};
+        return await res.json();
+      } catch { return {}; }
+    }
+    function renderList(manifest){
+      const list = document.querySelector('#list');
+      const items = [];
+      for (const [name, meta] of Object.entries(manifest)){
+        items.push({ name, path: null, group: 'manifest', style: (meta?.style||[])[0]||'' });
+      }
+      customBlocks.forEach(b => items.push(b));
+      list.innerHTML = items.map(i => `
+        <div class="item">
+          <h3>${i.name}</h3>
+          ${i.path ? `<a href="${i.path}" target="_blank">Ver block.json</a>` : (i.style?`<code>${i.style}</code>`:'')}
+          <div class="tags"><span class="tag">${i.group}</span></div>
+        </div>
+      `).join('');
+    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      const manifest = await loadManifest();
+      renderList(manifest);
+    });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Catálogo de Componentes</h1>
+    <span>img2html · Blocks</span>
+  </header>
+  <section id="list" class="list"></section>
+</body>
+</html>
+

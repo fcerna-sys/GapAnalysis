@@ -533,6 +533,8 @@ function img2html_register_patterns() {
             $slug = basename($file, '.html');
             $content = file_get_contents($file);
             if ($content) {
+                // Sanitizar HTML del patrón para prevenir XSS
+                $content = wp_kses_post($content);
                 register_block_pattern(
                     'img2html/' . $slug,
                     array(
@@ -641,6 +643,9 @@ def build_complete_theme(theme_dir: str, plan: Dict, dna: Optional[Dict] = None,
     if not theme_description:
         theme_description = 'Tema de bloques generado y refinado con IA desde imágenes'
     
+    # Sanitizar slug
+    theme_slug = _sanitize_slug(theme_slug) if theme_slug else 'img2html'
+
     # Generar style.css
     style_css = generate_style_css(theme_dir, dna, theme_name, theme_description)
     style_path = os.path.join(theme_dir, 'style.css')
@@ -3033,6 +3038,8 @@ def ensure_patterns_php(theme_dir: str, theme_slug: Optional[str] = None):
                 f"    $slug = '{slug}';\n"
                 f"    $content = file_get_contents(get_theme_file_path('patterns/' . $slug . '.html'));\n"
                 "    if ($content) {\n"
+                "        // Sanitizar HTML del patrón para prevenir XSS\n"
+                "        $content = wp_kses_post($content);\n"
                 "        $registry = WP_Block_Patterns_Registry::get_instance();\n"
                 f"        if (!$registry->is_registered('{bem_prefix}/' . $slug)) {{\n"
                 f"            register_block_pattern('{bem_prefix}/' . $slug, array(\n"
@@ -4201,3 +4208,10 @@ def generate_theme_screenshot(theme_dir: str, plan: Dict, dna: Optional[Dict] = 
         blocks.setdefault('img2html/molecule-features-list', {"spacing": {"margin": True, "padding": True}})
         blocks.setdefault('img2html/molecule-pricing-feature', {"color": {"background": True}, "spacing": {"margin": True, "padding": True}})
         blocks.setdefault('img2html/organism-hero', {"spacing": {"padding": True}, "color": {"background": True}, "typography": {"fontFamily": False}})
+def _sanitize_slug(name: Optional[str]) -> Optional[str]:
+    if not name:
+        return name
+    import re
+    name = name.lower()
+    name = re.sub(r'[^a-z0-9\-]+', '-', name)
+    return name.strip('-') or 'img2html'

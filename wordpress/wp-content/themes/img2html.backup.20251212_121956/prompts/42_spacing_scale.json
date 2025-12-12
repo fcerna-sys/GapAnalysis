@@ -1,0 +1,12 @@
+{
+  "name": "Escala de espaciados",
+  "model": "auto",
+  "role": "Autor de spacing",
+  "objective": "Definir una escala de espaciado coherente y mapearla en theme.json.",
+  "requirements": [
+    "Presets spacing (xs, sm, md, lg, xl)",
+    "Usar la escala en blocks y patterns",
+    "Con coherencia en responsive"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json"], "target_dir": ".."}
+}

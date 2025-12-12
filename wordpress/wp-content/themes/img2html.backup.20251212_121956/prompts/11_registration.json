@@ -1,0 +1,16 @@
+{
+  "name": "Registro de bloques (manifiesto)",
+  "model": "auto",
+  "role": "Integrador de metadata",
+  "objective": "Generar scaffolding para registrar bloques desde colección de metadata.",
+  "requirements": [
+    "Proveer ejemplo de blocks-manifest.php y ruta build/",
+    "Usar wp_register_block_types_from_metadata_collection()",
+    "Compatibilidad con temas (nota: usualmente en plugins)"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["blocks-manifest.php", "docs/README.md"],
+    "target_dir": ".."
+  }
+}

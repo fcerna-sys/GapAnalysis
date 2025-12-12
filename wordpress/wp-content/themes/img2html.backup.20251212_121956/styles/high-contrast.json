@@ -1,0 +1,14 @@
+{
+  "title": "High Contrast",
+  "styles": {
+    "color": {
+      "background": "#000000",
+      "text": "#ffffff"
+    },
+    "elements": {
+      "button": {
+        "color": { "background": "#ffff00", "text": "#000000" }
+      }
+    }
+  }
+}

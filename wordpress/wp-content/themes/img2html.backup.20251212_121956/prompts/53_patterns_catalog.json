@@ -1,0 +1,41 @@
+{
+  "name": "Catálogo de patrones",
+  "model": "auto",
+  "role": "Materializador de patterns",
+  "objective": "Generar contenido para los slugs listados en patterns.json (hero*, features*, cta*, testimonials*, pricing*, team*, stats*, faq*, contact*, query*, hidden*).",
+  "inputs": {
+    "catalog": "../patterns.json"
+  },
+  "requirements": [
+    "Usar presets y estilos de theme.json/styles.json",
+    "Categorizar patrones para insertador (Img2HTML)",
+    "Diseños responsivos, accesibles"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": [
+      "patterns/hero-standard.html",
+      "patterns/hero-video-background.html",
+      "patterns/hero-split-screen.html",
+      "patterns/features-grid-3-col.html",
+      "patterns/features-list-with-icons.html",
+      "patterns/cta-centered-large.html",
+      "patterns/cta-newsletter-signup.html",
+      "patterns/cta-with-image.html",
+      "patterns/testimonials-grid.html",
+      "patterns/testimonials-carousel.html",
+      "patterns/pricing-table-basic.html",
+      "patterns/pricing-table-comparison.html",
+      "patterns/team-members-grid.html",
+      "patterns/stats-counters.html",
+      "patterns/faq-accordion.html",
+      "patterns/contact-section-with-map.html",
+      "patterns/query-blog-grid.html",
+      "patterns/query-blog-list-sidebar.html",
+      "patterns/query-portfolio-masonry.html",
+      "patterns/hidden-404-error.html",
+      "patterns/hidden-search-results.html"
+    ],
+    "target_dir": ".."
+  }
+}

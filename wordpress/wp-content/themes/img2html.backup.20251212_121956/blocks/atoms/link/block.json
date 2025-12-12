@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atom-link",
+  "title": "Link (Átomo)",
+  "category": "text",
+  "description": "Enlace simple reutilizable",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "text": {"type": "string", "default": "Leer más"},
+    "url": {"type": "string", "default": "#"},
+    "target": {"type": "string", "default": ""},
+    "rel": {"type": "string", "default": ""}
+  },
+  "supports": {
+    "spacing": {"margin": true},
+    "color": {"text": false},
+    "html": false
+  }
+}

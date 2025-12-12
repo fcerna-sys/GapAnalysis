@@ -1,0 +1,12 @@
+{
+  "name": "Contenido inicial",
+  "model": "auto",
+  "role": "Autor de contenido inicial",
+  "objective": "Definir patrones de contenido inicial para páginas y entradas.",
+  "requirements": [
+    "Patrones iniciales para core/post-content",
+    "Categoría Contenido inicial visible",
+    "Botón para desactivar modal si se desea"
+  ],
+  "deliverables": {"format": "json", "files": ["functions.php", "patterns/initial/page.php", "patterns/initial/post.php"], "target_dir": ".."}
+}

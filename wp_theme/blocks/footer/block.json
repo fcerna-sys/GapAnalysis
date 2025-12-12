@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/footer",
+  "title": "Footer",
+  "category": "layout",
+  "description": "Pie de página en columnas",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "columns": { "type": "number", "default": 3 },
+    "darkBackground": { "type": "boolean", "default": false }
+  },
+  "supports": {
+    "spacing": { "margin": true, "padding": true },
+    "color": { "background": true, "text": false },
+    "html": false,
+    "customClassName": false
+  },
+  "example": { "attributes": {} },
+  "version": "1.0.0"
+}
+

@@ -1,0 +1,12 @@
+{
+  "name": "Organización de patrones",
+  "model": "auto",
+  "role": "Arquitecto de patrones",
+  "objective": "Organizar patrones en subcarpetas y categorías (WordPress 6.8).",
+  "requirements": [
+    "Subcarpetas /patterns/header, /patterns/footer, /patterns/sections",
+    "Categorías coherentes para el insertador",
+    "Registrar patrones iniciales (core/post-content)"
+  ],
+  "deliverables": {"format": "json", "files": ["functions.php", "docs/README_patterns.md"], "target_dir": ".."}
+}

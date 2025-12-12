@@ -1,0 +1,1 @@
+(function(){try{var links=document.querySelectorAll('.wp-block-social-links a');links.forEach(function(a){a.setAttribute('rel','noopener');});}catch(e){}})();

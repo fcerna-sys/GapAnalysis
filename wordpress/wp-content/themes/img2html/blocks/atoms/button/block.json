@@ -8,15 +8,41 @@
   "style": "file:./style.css",
   "render": "file:./render.php",
   "attributes": {
-    "text": {"type": "string", "default": "Acción"},
-    "url": {"type": "string", "default": "#"},
-    "variant": {"type": "string", "default": "primary"},
-    "fullWidth": {"type": "boolean", "default": false}
+    "text": {
+      "type": "string",
+      "default": "Acción"
+    },
+    "url": {
+      "type": "string",
+      "default": "#"
+    },
+    "variant": {
+      "type": "string",
+      "default": "primary"
+    },
+    "fullWidth": {
+      "type": "boolean",
+      "default": false
+    }
   },
   "supports": {
-    "align": ["left","center","right"],
-    "spacing": {"margin": true},
-    "color": {"background": true, "text": false},
-    "html": false
-  }
+    "align": [
+      "left",
+      "center",
+      "right"
+    ],
+    "spacing": {
+      "margin": true
+    },
+    "color": {
+      "background": true,
+      "text": false
+    },
+    "html": false,
+    "customClassName": false
+  },
+  "example": {
+    "attributes": {}
+  },
+  "version": "1.0.0"
 }

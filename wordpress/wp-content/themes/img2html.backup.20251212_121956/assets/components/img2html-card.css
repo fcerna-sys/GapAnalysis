@@ -1,0 +1,4 @@
+.img2html-card{border:1px solid var(--wp--preset--color--surface);border-radius:8px;padding:1rem;background:var(--wp--preset--color--background)}
+.img2html-card__titulo{margin:0 0 .5rem 0;font-weight:700}
+.img2html-card__texto{margin:0 0 1rem 0;color:var(--wp--preset--color--text)}
+.img2html-card__acciones{margin-top:.5rem}

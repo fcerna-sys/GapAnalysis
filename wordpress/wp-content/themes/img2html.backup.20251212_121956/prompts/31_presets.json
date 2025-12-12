@@ -1,0 +1,12 @@
+{
+  "name": "Presets avanzados",
+  "model": "auto",
+  "role": "Diseñador de presets",
+  "objective": "Definir presets de color, gradients, duotone, sombras, tipografías y espaciados en theme.json.",
+  "requirements": [
+    "Agregar presets: color, gradient, duotone, shadow, font-family, font-size, spacing",
+    "Usar nombres semánticos y slugs consistentes",
+    "Compatibles con style variations existentes"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json"], "target_dir": ".."}
+}

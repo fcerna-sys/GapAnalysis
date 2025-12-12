@@ -5,7 +5,12 @@
   "title": "Card (Molécula)",
   "category": "widgets",
   "description": "Tarjeta compuesta con imagen, título, texto y acciones",
-  "keywords": ["card","tarjeta","molecule","component"],
+  "keywords": [
+    "card",
+    "tarjeta",
+    "molecule",
+    "component"
+  ],
   "style": "file:./style.css",
   "render": "file:./render.php",
   "example": {
@@ -18,15 +23,37 @@
     }
   },
   "attributes": {
-    "title": {"type": "string", "default": "Título"},
-    "text": {"type": "string", "default": "Descripción corta."},
-    "imageUrl": {"type": "string", "default": ""},
-    "buttonText": {"type": "string", "default": "Ver más"},
-    "buttonUrl": {"type": "string", "default": "#"}
+    "title": {
+      "type": "string",
+      "default": "Título"
+    },
+    "text": {
+      "type": "string",
+      "default": "Descripción corta."
+    },
+    "imageUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "buttonText": {
+      "type": "string",
+      "default": "Ver más"
+    },
+    "buttonUrl": {
+      "type": "string",
+      "default": "#"
+    }
   },
   "supports": {
-    "spacing": {"margin": true},
-    "color": {"background": true, "text": false},
-    "html": false
-  }
+    "spacing": {
+      "margin": true
+    },
+    "color": {
+      "background": true,
+      "text": false
+    },
+    "html": false,
+    "customClassName": false
+  },
+  "version": "1.0.0"
 }

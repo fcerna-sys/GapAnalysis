@@ -1,0 +1,16 @@
+<!-- wp:template-part {"slug":"header"} /-->
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
+<main id="main-content">
+  <!-- wp:pattern {"slug":"img2html/hero-section"} /-->
+  <!-- wp:pattern {"slug":"img2html/features-grid-3-col"} /-->
+  <!-- wp:query {"queryId":9,"query":{"perPage":6,"pages":0,"offset":0,"postType":"post","order":"desc","orderby":"date"}} -->
+  <div class="wp-block-query">
+    <!-- wp:post-template -->
+    <!-- wp:post-title {"isLink":true} /-->
+    <!-- wp:post-excerpt /-->
+    <!-- /wp:post-template -->
+  </div>
+  <!-- /wp:query -->
+</main>
+<!-- /wp:group -->
+<!-- wp:template-part {"slug":"footer"} /-->
