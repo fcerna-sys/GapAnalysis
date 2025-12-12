@@ -2,6 +2,7 @@
 Funciones de registro de bloques en functions.php de WordPress.
 """
 import os
+from .prefix_manager import get_prefix_manager
 
 
 def register_blocks_in_functions(theme_dir: str, blocks_dir: str):
@@ -56,6 +57,10 @@ add_action('init', 'img2html_register_blocks');
 
 def register_atomic_blocks_in_functions(theme_dir: str, blocks_dir: str, bem_prefix: str = 'img2html'):
     """Registra todos los bloques atómicos, moleculares y organismos en functions.php."""
+    # Usar PrefixManager para obtener prefijos consistentes
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
+    php_prefix = pm.bem_prefix.replace('-', '_')
+    
     functions_path = os.path.join(theme_dir, 'functions.php')
     
     # Leer functions.php existente
@@ -65,18 +70,21 @@ def register_atomic_blocks_in_functions(theme_dir: str, blocks_dir: str, bem_pre
             functions_content = f.read()
     
     # Agregar registro de bloques atómicos si no existe
-    if f'{bem_prefix}_register_atomic_blocks' not in functions_content:
+    register_function = pm.get_php_function_name('register_atomic_blocks')
+    categories_function = pm.get_php_function_name('register_block_categories')
+    
+    if register_function not in functions_content:
         blocks_registration = f"""
 // Registrar categorías de bloques atómicos
-function {bem_prefix}_register_block_categories() {{
-    register_block_pattern_category('{bem_prefix}-atoms', array('label' => 'Átomos'));
-    register_block_pattern_category('{bem_prefix}-molecules', array('label' => 'Moléculas'));
-    register_block_pattern_category('{bem_prefix}-organisms', array('label' => 'Organismos'));
+function {categories_function}() {{
+    register_block_pattern_category('{pm.get_block_category('atoms')}', array('label' => 'Átomos'));
+    register_block_pattern_category('{pm.get_block_category('molecules')}', array('label' => 'Moléculas'));
+    register_block_pattern_category('{pm.get_block_category('organisms')}', array('label' => 'Organismos'));
 }}
-add_action('init', '{bem_prefix}_register_block_categories');
+add_action('init', '{categories_function}');
 
 // Registrar bloques con estructura atómica (átomos → moléculas → organismos)
-function {bem_prefix}_register_atomic_blocks() {{
+function {register_function}() {{
     $base_path = get_template_directory() . '/blocks';
     
     // Átomos: Componentes básicos reutilizables
@@ -107,7 +115,7 @@ function {bem_prefix}_register_atomic_blocks() {{
         }}
     }}
 }}
-add_action('init', '{bem_prefix}_register_atomic_blocks');
+add_action('init', '{register_function}');
 """
         # Agregar al final del archivo
         if not functions_content.strip().endswith('?>'):

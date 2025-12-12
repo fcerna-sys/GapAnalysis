@@ -7,6 +7,7 @@ import json
 from typing import Optional
 from .helpers import get_bem_prefix, generate_bem_css
 from .editor_ux import enhance_block_json_ux
+from .prefix_manager import get_prefix_manager
 
 
 def create_atom_button(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
@@ -44,16 +45,18 @@ def create_atom_button(atoms_dir: str, css_framework: str, bem_prefix: str = 'im
             bem_prefix=bem_prefix
         )
     else:
+        # Usar PrefixManager para asegurar consistencia
+        pm = get_prefix_manager(bem_prefix, bem_prefix)
         block_json = {
             "$schema": "https://schemas.wp.org/trunk/block.json",
             "apiVersion": 3,
-            "name": f"{bem_prefix}/atom-button",
+            "name": pm.get_block_name('atom', 'button'),
             "version": "1.0.0",
             "title": "Botón (Átomo)",
-            "category": f"{bem_prefix}-atoms",
+            "category": pm.get_block_category('atoms'),
             "icon": "button",
             "description": "Botón básico reutilizable",
-            "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
             "render": "file:./render.php",
             "attributes": attributes
         }
@@ -128,16 +131,18 @@ def create_atom_heading(atoms_dir: str, css_framework: str, bem_prefix: str = 'i
             bem_prefix=bem_prefix
         )
     else:
+        # Usar PrefixManager para asegurar consistencia
+        pm = get_prefix_manager(bem_prefix, bem_prefix)
         block_json = {
             "$schema": "https://schemas.wp.org/trunk/block.json",
             "apiVersion": 3,
-            "name": f"{bem_prefix}/atom-heading",
+            "name": pm.get_block_name('atom', 'heading'),
             "version": "1.0.0",
             "title": "Título (Átomo)",
-            "category": "img2html-atoms",
+            "category": pm.get_block_category('atoms'),
             "icon": "heading",
             "description": "Título básico reutilizable",
-            "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
             "render": "file:./render.php",
             "attributes": attributes
         }
@@ -172,19 +177,21 @@ $align_class = $align === 'center' ? '{bem_prefix}-atom-heading--center' :
 
 def create_atom_input(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
     """Crea el átomo Input - campo de entrada básico."""
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     input_dir = os.path.join(atoms_dir, 'input')
     os.makedirs(input_dir, exist_ok=True)
     
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/atom-input",
+            "name": pm.get_block_name('atom', 'input'),
         "version": "1.0.0",
         "title": "Input (Átomo)",
-        "category": "img2html-atoms",
+            "category": pm.get_block_category('atoms'),
         "icon": "edit",
         "description": "Campo de entrada básico",
-        "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "type": {"type": "string", "default": "text"},
@@ -227,6 +234,8 @@ $required = $attributes['required'] ?? false;
 
 def create_atom_icon(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
     """Crea el átomo Icon - icono reutilizable."""
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     icon_dir = os.path.join(atoms_dir, 'icon')
     os.makedirs(icon_dir, exist_ok=True)
     
@@ -236,10 +245,10 @@ def create_atom_icon(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2
         "name": f"{bem_prefix}/atom-icon",
         "version": "1.0.0",
         "title": "Icono (Átomo)",
-        "category": "img2html-atoms",
+            "category": pm.get_block_category('atoms'),
         "icon": "star-filled",
         "description": "Icono básico reutilizable",
-        "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "name": {"type": "string", "default": "star"},
@@ -278,6 +287,8 @@ $size_class = $size === 'sm' ? '{bem_prefix}-atom-icon--small' :
 
 def create_atom_badge(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
     """Crea el átomo Badge - etiqueta reutilizable."""
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     badge_dir = os.path.join(atoms_dir, 'badge')
     os.makedirs(badge_dir, exist_ok=True)
     
@@ -287,10 +298,10 @@ def create_atom_badge(atoms_dir: str, css_framework: str, bem_prefix: str = 'img
         "name": f"{bem_prefix}/atom-badge",
         "version": "1.0.0",
         "title": "Badge (Átomo)",
-        "category": "img2html-atoms",
+            "category": pm.get_block_category('atoms'),
         "icon": "tag",
         "description": "Etiqueta básica reutilizable",
-        "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "text": {"type": "string", "default": "Nuevo"},
@@ -329,6 +340,8 @@ $variant_class = $variant === 'success' ? '{bem_prefix}-atom-badge--success' :
 
 def create_atom_link(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
     """Crea el átomo Link - enlace reutilizable."""
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     link_dir = os.path.join(atoms_dir, 'link')
     os.makedirs(link_dir, exist_ok=True)
     
@@ -338,10 +351,10 @@ def create_atom_link(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2
         "name": f"{bem_prefix}/atom-link",
         "version": "1.0.0",
         "title": "Enlace (Átomo)",
-        "category": "img2html-atoms",
+            "category": pm.get_block_category('atoms'),
         "icon": "admin-links",
         "description": "Enlace básico reutilizable",
-        "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "text": {"type": "string", "default": "Enlace"},
@@ -382,6 +395,8 @@ $target = $attributes['target'] ?? '_self';
 
 def create_atom_image(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
     """Crea el átomo Image - imagen reutilizable."""
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     image_dir = os.path.join(atoms_dir, 'image')
     os.makedirs(image_dir, exist_ok=True)
     
@@ -391,10 +406,10 @@ def create_atom_image(atoms_dir: str, css_framework: str, bem_prefix: str = 'img
         "name": f"{bem_prefix}/atom-image",
         "version": "1.0.0",
         "title": "Imagen (Átomo)",
-        "category": "img2html-atoms",
+            "category": pm.get_block_category('atoms'),
         "icon": "format-image",
         "description": "Imagen básica reutilizable",
-        "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "render": "file:./render.php",

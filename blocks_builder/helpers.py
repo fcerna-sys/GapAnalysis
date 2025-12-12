@@ -189,6 +189,7 @@ def generate_bem_css(
     Returns:
         CSS completo con metodología BEM
     """
+    # Asegurar que el prefijo se use correctamente en clases CSS
     base_class = f".{bem_prefix}-{block_name}"
     
     css_lines = []

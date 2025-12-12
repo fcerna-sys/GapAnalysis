@@ -3,6 +3,7 @@ Módulo modular para crear bloques personalizados de Gutenberg.
 Estructura organizada por propósito para facilitar mantenimiento.
 """
 from .helpers import get_bem_prefix, setup_css_framework, generate_bem_css
+from .prefix_manager import initialize_prefix_manager, get_prefix_manager
 from .atoms import (
     create_atom_button,
     create_atom_heading,
@@ -74,8 +75,9 @@ def create_custom_blocks(theme_dir: str, css_framework: str, plan: dict, theme_s
     blocks_dir = os.path.join(theme_dir, 'blocks')
     os.makedirs(blocks_dir, exist_ok=True)
     
-    # Obtener prefijo BEM
+    # Obtener prefijo BEM e inicializar PrefixManager
     bem_prefix = get_bem_prefix(theme_slug)
+    initialize_prefix_manager(theme_slug, theme_slug)  # textdomain = slug por defecto
     
     # Crear estructura de directorios atómicos
     atoms_dir = os.path.join(blocks_dir, 'atoms')

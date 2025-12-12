@@ -7,6 +7,7 @@ import json
 from typing import Optional
 from .helpers import get_bem_prefix, generate_bem_css
 from .editor_ux import enhance_block_json_ux
+from .prefix_manager import get_prefix_manager
 
 
 def create_molecule_card(molecules_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
@@ -51,10 +52,10 @@ def create_molecule_card(molecules_dir: str, css_framework: str, bem_prefix: str
             "name": f"{bem_prefix}/molecule-card",
             "version": "1.0.0",
             "title": "Tarjeta (Molécula)",
-            "category": "img2html-molecules",
+            "category": pm.get_block_category('molecules'),
             "icon": "index-card",
             "description": "Tarjeta que combina átomos",
-            "textdomain": bem_prefix,
+            "textdomain": pm.get_block_textdomain(),
             "render": "file:./render.php",
             "attributes": attributes
         }
@@ -107,16 +108,18 @@ def create_molecule_form_field(molecules_dir: str, css_framework: str, bem_prefi
     formfield_dir = os.path.join(molecules_dir, 'form-field')
     os.makedirs(formfield_dir, exist_ok=True)
     
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/molecule-form-field",
+        "name": pm.get_block_name('molecule', 'form-field'),
         "version": "1.0.0",
         "title": "Campo de Formulario (Molécula)",
-        "category": "img2html-molecules",
+        "category": pm.get_block_category('molecules'),
         "icon": "forms",
         "description": "Campo de formulario con label",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "label": {"type": "string", "default": "Etiqueta"},
@@ -164,19 +167,21 @@ $required = $attributes['required'] ?? false;
 
 def create_molecule_nav_item(molecules_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
     """Crea la molécula NavItem - combina link + icon opcional."""
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     navitem_dir = os.path.join(molecules_dir, 'nav-item')
     os.makedirs(navitem_dir, exist_ok=True)
     
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/molecule-nav-item",
+        "name": pm.get_block_name('molecule', 'nav-item'),
         "version": "1.0.0",
         "title": "Item de Navegación (Molécula)",
         "category": "img2html-molecules",
         "icon": "admin-links",
         "description": "Item de menú con enlace",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "text": {"type": "string", "default": "Enlace"},
@@ -229,7 +234,7 @@ def create_molecule_testimonial(molecules_dir: str, css_framework: str, bem_pref
         "category": "img2html-molecules",
         "icon": "format-quote",
         "description": "Testimonio con cita y autor",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "quote": {"type": "string", "default": "Excelente servicio"},
@@ -280,6 +285,8 @@ $image = $attributes['imageUrl'] ?? '';
 
 def create_molecule_pricing_item(molecules_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
     """Crea la molécula PricingItem - combina precio + features + button."""
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     pricing_dir = os.path.join(molecules_dir, 'pricing-item')
     os.makedirs(pricing_dir, exist_ok=True)
     
@@ -292,7 +299,7 @@ def create_molecule_pricing_item(molecules_dir: str, css_framework: str, bem_pre
         "category": "img2html-molecules",
         "icon": "money-alt",
         "description": "Item de precio con características",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "title": {"type": "string", "default": "Plan"},

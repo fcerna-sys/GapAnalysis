@@ -544,8 +544,68 @@ function img2html_register_patterns() {
 add_action('init', 'img2html_register_patterns');
 """
     
+    # Incluir carga condicional de assets
+    from blocks_builder.prefix_manager import get_prefix_manager
+    pm = get_prefix_manager(theme_slug or 'img2html', theme_slug or 'img2html')
+    bem_prefix = pm.bem_prefix
+    
+    # Agregar includes y funciones de registro mejoradas
+    functions_php_enhanced = functions_php + f"""
+
+// Incluir sistema de carga condicional de assets
+require_once get_template_directory() . '/php/conditional-assets.php';
+
+// Registrar estilos de bloques (block styles/variants)
+function {bem_prefix}_register_block_styles() {{
+    // Registrar variantes de bloques core
+    register_block_style('core/button', [
+        'name' => 'primary',
+        'label' => __('Primario', '{bem_prefix}'),
+    ]);
+    
+    register_block_style('core/button', [
+        'name' => 'secondary',
+        'label' => __('Secundario', '{bem_prefix}'),
+    ]);
+    
+    register_block_style('core/heading', [
+        'name' => 'display',
+        'label' => __('Display', '{bem_prefix}'),
+    ]);
+    
+    register_block_style('core/paragraph', [
+        'name' => 'lead',
+        'label' => __('Lead', '{bem_prefix}'),
+    ]);
+    
+    // Registrar variantes de bloques personalizados si existen
+    $custom_blocks = [
+        '{bem_prefix}/organism-hero',
+        '{bem_prefix}/organism-cta',
+        '{bem_prefix}/organism-cards',
+        '{bem_prefix}/molecule-card',
+    ];
+    
+    foreach ($custom_blocks as $block_name) {{
+        if (block_exists($block_name)) {{
+            // Variantes comunes
+            register_block_style($block_name, [
+                'name' => 'default',
+                'label' => __('Por defecto', '{bem_prefix}'),
+            ]);
+            
+            register_block_style($block_name, [
+                'name' => 'dark',
+                'label' => __('Oscuro', '{bem_prefix}'),
+            ]);
+        }}
+    }}
+}}
+add_action('init', '{bem_prefix}_register_block_styles');
+"""
+    
     required_files = {
-        'functions.php': functions_php,
+        'functions.php': functions_php_enhanced,
         'index.php': """<?php
 /**
  * Silence is golden.
@@ -591,6 +651,17 @@ def build_complete_theme(theme_dir: str, plan: Dict, dna: Optional[Dict] = None,
     # Templates FSE esenciales y biblioteca de patterns
     ensure_fse_templates(theme_dir, plan)
     ensure_pattern_library(theme_dir)
+    
+    # Configurar carga condicional de assets (CRÍTICO para performance)
+    from blocks_builder.assets import setup_conditional_assets
+    from blocks_builder import get_bem_prefix
+    bem_prefix_assets = get_bem_prefix(theme_slug or 'img2html')
+    try:
+        setup_conditional_assets(theme_dir, bem_prefix_assets)
+        print(f"✓ Sistema de carga condicional configurado")
+    except Exception as e:
+        print(f"Advertencia: Error al configurar carga condicional: {e}")
+    
     # Generar patrones globales (Synced Patterns) y reutilizables
     ensure_global_patterns(theme_dir, theme_slug, plan, dna)
 
@@ -1970,12 +2041,267 @@ def ensure_pattern_library(theme_dir: str):
         print(f"Error al crear patterns: {e}")
 
 
+def generate_automatic_patterns(theme_dir: str, theme_slug: str, plan: Dict, dna: Optional[Dict] = None):
+    """
+    Genera patterns automáticamente basados en el análisis de la imagen.
+    Detecta tipo de patrón (visual, textual, híbrido) y genera contenido apropiado.
+    Crea archivos .php en /patterns/ con prefijo dinámico.
+    """
+    from blocks_builder import get_bem_prefix
+    from blocks_builder.prefix_manager import get_prefix_manager
+    from datetime import datetime
+    
+    bem_prefix = get_bem_prefix(theme_slug)
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
+    
+    patterns_dir = os.path.join(theme_dir, 'patterns')
+    os.makedirs(patterns_dir, exist_ok=True)
+    
+    sections = plan.get('sections', [])
+    patterns_meta = []
+    
+    for idx, section in enumerate(sections):
+        # Detectar tipo de patrón
+        pattern_type = _detect_pattern_type(section, dna)
+        
+        # Generar pattern según tipo
+        if pattern_type == 'visual':
+            pattern_data = _generate_visual_pattern(section, bem_prefix, pm, idx)
+        elif pattern_type == 'textual':
+            pattern_data = _generate_textual_pattern(section, bem_prefix, pm, idx)
+        else:  # híbrido
+            pattern_data = _generate_hybrid_pattern(section, bem_prefix, pm, idx)
+        
+        if pattern_data:
+            # Crear archivo PHP
+            filename = f"{bem_prefix}-{pattern_data['slug']}.php"
+            pattern_path = os.path.join(patterns_dir, filename)
+            
+            php_content = f"""<?php
+/**
+ * Title: {pattern_data['title']}
+ * Slug: {pm.get_pattern_slug(pattern_data['slug'])}
+ * Description: {pattern_data['description']}
+ * Categories: {', '.join(pattern_data['categories'])}
+ * Keywords: {', '.join(pattern_data.get('keywords', []))}
+ * Viewport Width: {pattern_data.get('viewportWidth', 1200)}
+ * Block Types: {', '.join(pattern_data.get('blockTypes', ['core/post-content']))}
+ * Inserter: {'yes' if pattern_data.get('inserter', True) else 'no'}
+ * Sync Status: {pattern_data.get('syncStatus', 'unsynced')}
+ * Pattern Type: {pattern_type}
+ */
+?>
+{pattern_data['content']}
+"""
+            
+            with open(pattern_path, 'w', encoding='utf-8') as f:
+                f.write(php_content)
+            
+            # Agregar a metadata
+            patterns_meta.append({
+                'slug': pm.get_pattern_slug(pattern_data['slug']),
+                'title': pattern_data['title'],
+                'description': pattern_data['description'],
+                'categories': pattern_data['categories'],
+                'syncStatus': pattern_data.get('syncStatus', 'unsynced'),
+                'filename': filename,
+                'patternType': pattern_type,
+                'blockTypes': pattern_data.get('blockTypes', ['core/post-content']),
+                'inserter': pattern_data.get('inserter', True),
+                'viewportWidth': pattern_data.get('viewportWidth', 1200),
+                'keywords': pattern_data.get('keywords', []),
+                'version': '1.0.0',
+                'created': datetime.now().isoformat(),
+                'updated': datetime.now().isoformat()
+            })
+    
+    return patterns_meta
+
+
+def _detect_pattern_type(section: Dict, dna: Optional[Dict] = None) -> str:
+    """
+    Detecta el tipo de patrón basado en el contenido de la sección.
+    Retorna: 'visual', 'textual', o 'hybrid'
+    """
+    # Analizar contenido de la sección
+    has_images = bool(section.get('images') or section.get('imageUrl'))
+    has_text = bool(section.get('text') or section.get('title') or section.get('content'))
+    
+    # Contar elementos visuales
+    visual_elements = 0
+    if has_images:
+        visual_elements += 1
+    if section.get('pattern') in ['hero', 'gallery', 'cards', 'slider']:
+        visual_elements += 2
+    
+    # Contar elementos textuales
+    textual_elements = 0
+    if has_text:
+        textual_elements += 1
+    if section.get('pattern') in ['text', 'testimonial', 'pricing']:
+        textual_elements += 2
+    
+    # Determinar tipo
+    if visual_elements > textual_elements and visual_elements >= 2:
+        return 'visual'
+    elif textual_elements > visual_elements and textual_elements >= 2:
+        return 'textual'
+    else:
+        return 'hybrid'
+
+
+def _generate_visual_pattern(section: Dict, bem_prefix: str, pm, idx: int) -> Optional[Dict]:
+    """Genera un pattern visual (imágenes, galerías, sliders)."""
+    pattern_name = section.get('pattern', 'section')
+    title = section.get('title', f'Sección Visual {idx + 1}')
+    
+    # Determinar bloque apropiado
+    if pattern_name == 'hero':
+        content = f"""<!-- wp:{pm.get_block_name('organism', 'hero')} {{"title":"{title}","subtitle":"{section.get('subtitle', 'Descripción visual impactante')}","buttonText":"Ver más","buttonUrl":"#","fullHeight":true,"showOverlay":true}} /-->"""
+        categories = [pm.get_pattern_category('hero'), 'hero', 'visual']
+    elif pattern_name == 'gallery':
+        content = f"""<!-- wp:{pm.get_block_name('organism', 'gallery')} {{"columns":3,"showCaptions":true}} /-->"""
+        categories = [pm.get_pattern_category('gallery'), 'gallery', 'visual']
+    elif pattern_name == 'slider':
+        content = f"""<!-- wp:{pm.get_block_name('organism', 'slider')} {{"showSlider":true,"autoplay":true,"showArrows":true,"showDots":true}} /-->"""
+        categories = [pm.get_pattern_category('slider'), 'slider', 'visual']
+    elif pattern_name == 'cards':
+        content = f"""<!-- wp:{pm.get_block_name('organism', 'cards')} {{"columns":3,"showButton":true}} /-->"""
+        categories = [pm.get_pattern_category('cards'), 'cards', 'visual']
+    else:
+        # Pattern visual genérico
+        content = f"""<!-- wp:cover {{"dimRatio":30,"overlayColor":"primary","minHeight":420}} -->
+<div class="wp-block-cover has-primary-background-color has-background-dim-30 has-background-dim">
+    <span aria-hidden="true" class="wp-block-cover__background has-primary-background-color has-background-dim-30 has-background-dim"></span>
+    <div class="wp-block-cover__inner-container">
+        <!-- wp:heading {{"level":2,"textAlign":"center"}} -->
+        <h2 class="has-text-align-center">{title}</h2>
+        <!-- /wp:heading -->
+    </div>
+</div>
+<!-- /wp:cover -->"""
+        categories = [pm.get_pattern_category('sections'), 'visual', 'cover']
+    
+    return {
+        'slug': f'{pattern_name}-visual-{idx}',
+        'title': f'{title} (Visual)',
+        'description': f'Patrón visual reutilizable: {pattern_name}',
+        'categories': categories,
+        'content': content,
+        'syncStatus': 'unsynced',
+        'keywords': [pattern_name, 'visual', 'image', 'gallery'],
+        'inserter': True,
+        'viewportWidth': 1200
+    }
+
+
+def _generate_textual_pattern(section: Dict, bem_prefix: str, pm, idx: int) -> Optional[Dict]:
+    """Genera un pattern textual (texto, testimonios, precios)."""
+    pattern_name = section.get('pattern', 'text')
+    title = section.get('title', f'Sección Textual {idx + 1}')
+    text_content = section.get('text', section.get('content', 'Contenido textual descriptivo.'))
+    
+    if pattern_name == 'testimonial':
+        content = f"""<!-- wp:group {{"align":"wide"}} -->
+<div class="wp-block-group alignwide">
+    <!-- wp:heading {{"textAlign":"center","level":2}} -->
+    <h2 class="has-text-align-center">Testimonios</h2>
+    <!-- /wp:heading -->
+    <!-- wp:columns -->
+    <div class="wp-block-columns">
+        <!-- wp:column -->
+        <div class="wp-block-column">
+            <!-- wp:{pm.get_block_name('molecule', 'testimonial')} {{"quote":"{text_content}","author":"Cliente"}} /-->
+        </div>
+        <!-- /wp:column -->
+    </div>
+    <!-- /wp:columns -->
+</div>
+<!-- /wp:group -->"""
+        categories = [pm.get_pattern_category('testimonials'), 'testimonials', 'textual']
+    elif pattern_name == 'pricing':
+        content = f"""<!-- wp:group {{"align":"wide"}} -->
+<div class="wp-block-group alignwide">
+    <!-- wp:heading {{"textAlign":"center","level":2}} -->
+    <h2 class="has-text-align-center">{title}</h2>
+    <!-- /wp:heading -->
+    <!-- wp:columns -->
+    <div class="wp-block-columns">
+        <!-- wp:column -->
+        <div class="wp-block-column">
+            <!-- wp:{pm.get_block_name('molecule', 'pricing-item')} /-->
+        </div>
+        <!-- /wp:column -->
+    </div>
+    <!-- /wp:columns -->
+</div>
+<!-- /wp:group -->"""
+        categories = [pm.get_pattern_category('pricing'), 'pricing', 'textual']
+    else:
+        # Pattern textual genérico
+        content = f"""<!-- wp:group {{"align":"wide","layout":{{"type":"constrained"}}}} -->
+<div class="wp-block-group alignwide">
+    <!-- wp:heading {{"level":2}} -->
+    <h2>{title}</h2>
+    <!-- /wp:heading -->
+    <!-- wp:paragraph -->
+    <p>{text_content}</p>
+    <!-- /wp:paragraph -->
+</div>
+<!-- /wp:group -->"""
+        categories = [pm.get_pattern_category('sections'), 'textual', 'content']
+    
+    return {
+        'slug': f'{pattern_name}-textual-{idx}',
+        'title': f'{title} (Textual)',
+        'description': f'Patrón textual reutilizable: {pattern_name}',
+        'categories': categories,
+        'content': content,
+        'syncStatus': 'unsynced',
+        'keywords': [pattern_name, 'textual', 'text', 'content'],
+        'inserter': True,
+        'viewportWidth': 1200
+    }
+
+
+def _generate_hybrid_pattern(section: Dict, bem_prefix: str, pm, idx: int) -> Optional[Dict]:
+    """Genera un pattern híbrido (texto + imagen)."""
+    pattern_name = section.get('pattern', 'text-image')
+    title = section.get('title', f'Sección Híbrida {idx + 1}')
+    text_content = section.get('text', section.get('content', 'Contenido descriptivo.'))
+    
+    # Usar bloque text-image del tema
+    content = f"""<!-- wp:{pm.get_block_name('organism', 'text-image')} {{"title":"{title}","text":"{text_content}","imagePosition":"right","textAlign":"left"}} /-->"""
+    
+    return {
+        'slug': f'{pattern_name}-hybrid-{idx}',
+        'title': f'{title} (Híbrido)',
+        'description': f'Patrón híbrido reutilizable: texto + imagen',
+        'categories': [pm.get_pattern_category('sections'), 'hybrid', 'text-image'],
+        'content': content,
+        'syncStatus': 'unsynced',
+        'keywords': [pattern_name, 'hybrid', 'text-image', 'content'],
+        'inserter': True,
+        'viewportWidth': 1200
+    }
+
+
 def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, plan: Optional[Dict] = None, dna: Optional[Dict] = None):
     """
     Genera patrones globales (Synced Patterns) y bloques reutilizables.
     Crea archivos .php en /patterns/ con metadata completa.
+    También genera patterns automáticos basados en el análisis de la imagen.
     También genera patterns_meta.json con información de cada patrón.
     """
+    # Primero generar patterns automáticos desde el análisis
+    auto_patterns_meta = []
+    if plan and theme_slug:
+        try:
+            auto_patterns_meta = generate_automatic_patterns(theme_dir, theme_slug, plan, dna)
+        except Exception as e:
+            print(f"Advertencia: Error al generar patterns automáticos: {e}")
+    
+    try:
     try:
         from blocks_builder import get_bem_prefix
         bem_prefix = get_bem_prefix(theme_slug)
@@ -2123,8 +2449,8 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
             }
         }
         
-        # Generar archivos .php para cada patrón
-        patterns_meta = []
+        # Generar archivos .php para cada patrón global
+        global_patterns_meta = []
         for filename, pattern_data in synced_patterns.items():
             slug = os.path.splitext(filename)[0]
             pattern_path = os.path.join(patterns_dir, filename)
@@ -2156,7 +2482,7 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
                 f.write(php_content)
             
             # Agregar a metadata
-            patterns_meta.append({
+            global_patterns_meta.append({
                 'slug': f"{bem_prefix}/{slug}",
                 'title': pattern_data['title'],
                 'description': pattern_data['description'],
@@ -2172,14 +2498,19 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
                 'updated': datetime.now().isoformat()
             })
         
+        # Combinar patterns automáticos con patterns globales
+        all_patterns_meta = auto_patterns_meta + global_patterns_meta
+        
         # Guardar patterns_meta.json inicial
         meta_path = os.path.join(patterns_dir, 'patterns_meta.json')
         with open(meta_path, 'w', encoding='utf-8') as f:
             json.dump({
-                'patterns': patterns_meta,
+                'patterns': all_patterns_meta,
                 'generated': True,
                 'bemPrefix': bem_prefix,
-                'version': '1.0.0'
+                'version': '1.0.0',
+                'autoGenerated': len(auto_patterns_meta),
+                'globalPatterns': len(global_patterns_meta)
             }, f, ensure_ascii=False, indent=2)
         
         # Mejorar patterns_meta.json con versiones y metadatos
@@ -2205,14 +2536,19 @@ function {sync_function_name}() {{
     $patterns_dir = get_theme_file_path('patterns');
     if (!is_dir($patterns_dir)) return;
     
-    // Registrar categorías de patrones
-    register_block_pattern_category('{bem_prefix}-header', array('label' => 'Header'));
-    register_block_pattern_category('{bem_prefix}-footer', array('label' => 'Footer'));
-    register_block_pattern_category('{bem_prefix}-call-to-action', array('label' => 'Call to Action'));
-    register_block_pattern_category('{bem_prefix}-hero', array('label' => 'Hero'));
-    register_block_pattern_category('{bem_prefix}-cards', array('label' => 'Cards'));
-    register_block_pattern_category('{bem_prefix}-testimonials', array('label' => 'Testimonials'));
-    register_block_pattern_category('{bem_prefix}-sections', array('label' => 'Sections'));
+    // Registrar categorías de patrones con prefijo dinámico
+    register_block_pattern_category('{bem_prefix}-header', array('label' => __('Header', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-footer', array('label' => __('Footer', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-call-to-action', array('label' => __('Call to Action', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-hero', array('label' => __('Hero', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-cards', array('label' => __('Cards', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-testimonials', array('label' => __('Testimonials', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-sections', array('label' => __('Sections', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-gallery', array('label' => __('Gallery', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-slider', array('label' => __('Slider', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-visual', array('label' => __('Visual', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-textual', array('label' => __('Textual', '{bem_prefix}')));
+    register_block_pattern_category('{bem_prefix}-hybrid', array('label' => __('Híbrido', '{bem_prefix}')));
     
     $pattern_files = glob($patterns_dir . '/*.php');
     foreach ($pattern_files as $file) {{

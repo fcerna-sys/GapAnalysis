@@ -36,6 +36,7 @@ from .styles import (
     _generate_slider_editor_css,
 )
 from .editor_ux import enhance_block_json_ux
+from .prefix_manager import get_prefix_manager
 
 
 def create_slider_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
@@ -47,18 +48,21 @@ def create_slider_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     slider_dir = os.path.join(blocks_dir, 'slider')
     os.makedirs(slider_dir, exist_ok=True)
     
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
+    
     # block.json
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/slider",
+        "name": pm.get_block_name('organism', 'slider'),
         "version": "1.0.0",
         "title": "Slider",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "slides",
         "description": "Slider administrable con múltiples diapositivas",
         "keywords": ["slider", "carousel", "slideshow"],
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "editorStyle": "file:./editor.css",
         "style": "file:./style.css",
@@ -145,13 +149,13 @@ def create_hero_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/hero",
+        "name": pm.get_block_name('organism', 'hero'),
         "version": "1.0.0",
         "title": "Hero",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "cover-image",
         "description": "Bloque Hero administrable",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "title": {"type": "string", "default": "Título hero"},
@@ -185,13 +189,13 @@ def create_section_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/section",
+        "name": pm.get_block_name('organism', 'section'),
         "version": "1.0.0",
         "title": "Sección",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "columns",
         "description": "Bloque de sección multipropósito",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "variant": {"type": "string", "default": "default"},
@@ -218,13 +222,13 @@ def create_cards_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'i
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/cards",
+        "name": pm.get_block_name('organism', 'cards'),
         "version": "1.0.0",
         "title": "Cards",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "grid-view",
         "description": "Bloque de tarjetas",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "cards": {"type": "array", "default": []},
@@ -250,13 +254,13 @@ def create_gallery_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/gallery",
+        "name": pm.get_block_name('organism', 'gallery'),
         "version": "1.0.0",
         "title": "Galería",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "format-gallery",
         "description": "Bloque de galería",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "render": "file:./render.php",
         "attributes": {
             "images": {"type": "array", "default": []},
@@ -282,13 +286,13 @@ def create_text_image_block(blocks_dir: str, css_framework: str, bem_prefix: str
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/text-image",
+        "name": pm.get_block_name('organism', 'text-image'),
         "version": "1.0.0",
         "title": "Texto + Imagen",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "align-pull-left",
         "description": "Bloque de texto con imagen multipropósito",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -318,13 +322,13 @@ def create_sidebar_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/sidebar",
+        "name": pm.get_block_name('organism', 'sidebar'),
         "version": "1.0.0",
         "title": "Sidebar Dinámico",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "menu",
         "description": "Sidebar administrable con enlaces y widgets",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -354,13 +358,13 @@ def create_search_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/search-extended",
+        "name": pm.get_block_name('organism', 'search-extended'),
         "version": "1.0.0",
         "title": "Buscador",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "search",
         "description": "Buscador extendido",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -389,13 +393,13 @@ def create_pagination_block(blocks_dir: str, css_framework: str, bem_prefix: str
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/pagination",
+        "name": pm.get_block_name('organism', 'pagination'),
         "version": "1.0.0",
         "title": "Paginación",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "controls-repeat",
         "description": "Bloque de paginación",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -424,13 +428,13 @@ def create_header_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/header",
+        "name": pm.get_block_name('organism', 'header'),
         "version": "1.0.0",
         "title": "Header",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "admin-site",
         "description": "Header editable con logo, menú y CTA",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -461,13 +465,13 @@ def create_footer_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/footer",
+        "name": pm.get_block_name('organism', 'footer'),
         "version": "1.0.0",
         "title": "Footer",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "editor-insertmore",
         "description": "Footer editable multicolumna",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -496,13 +500,13 @@ def create_form_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/form",
+        "name": pm.get_block_name('organism', 'form'),
         "version": "1.0.0",
         "title": "Formulario de Contacto",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "email",
         "description": "Formulario nativo (nombre, email, teléfono, mensaje)",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "render": "file:./render.php",
@@ -532,13 +536,13 @@ def create_menu_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/menu",
+        "name": pm.get_block_name('organism', 'menu'),
         "version": "1.0.0",
         "title": "Menú Avanzado",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "menu",
         "description": "Menú desktop/mobile con CTA y redes",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "render": "file:./render.php",
@@ -628,16 +632,18 @@ def create_organism_cta(organisms_dir: str, css_framework: str, bem_prefix: str 
     cta_dir = os.path.join(organisms_dir, 'cta')
     os.makedirs(cta_dir, exist_ok=True)
     
+    # Usar PrefixManager para asegurar consistencia
+    pm = get_prefix_manager(bem_prefix, bem_prefix)
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": f"{bem_prefix}/organism-cta",
+        "name": pm.get_block_name('organism', 'cta'),
         "version": "1.0.0",
         "title": "CTA (Call to Action)",
-        "category": f"{bem_prefix}-organisms",
+        "category": pm.get_block_category('organisms'),
         "icon": "megaphone",
         "description": "Bloque CTA completo con título, descripción y botones",
-        "textdomain": bem_prefix,
+        "textdomain": pm.get_block_textdomain(),
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "render": "file:./render.php",
