@@ -1,19 +1,16 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "img2html/header",
-  "title": "Header",
+  "name": "img2html/cards-grid",
+  "title": "Cards Grid",
   "category": "layout",
-  "description": "Encabezado con logo, navegación y acciones",
+  "description": "Grid de tarjetas con título y columnas configurables",
   "style": "file:./style.css",
   "render": "file:./render.php",
   "editorScript": "file:./editor.js",
   "attributes": {
-    "sticky": { "type": "boolean", "default": false },
-    "transparent": { "type": "boolean", "default": false },
-    "darkBackground": { "type": "boolean", "default": false },
-    "alignment": { "type": "string", "default": "space-between" },
-    "shadow": { "type": "boolean", "default": true }
+    "title": { "type": "string", "default": "Nuestros Servicios" },
+    "columns": { "type": "number", "default": 3 }
   },
   "supports": {
     "spacing": { "margin": true, "padding": true },

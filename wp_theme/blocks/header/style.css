@@ -4,6 +4,6 @@
 .img2html-header--justify-left .img2html-header__inner { justify-content: flex-start; }
 .img2html-header--justify-right .img2html-header__inner { justify-content: flex-end; }
 .img2html-header--sticky { position: sticky; top: 0; z-index: 50; backdrop-filter: saturate(180%) blur(8px); }
+.img2html-header--shadow { box-shadow: 0 6px 24px rgba(0,0,0,.08); }
 .img2html-header--transparent { background: transparent; }
 .img2html-header--dark { background: rgba(0,0,0,.75); color: #fff; }
-

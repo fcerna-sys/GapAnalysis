@@ -112,5 +112,24 @@
       "blocks/footer/style.css"
     ],
     "version": "1.0.0"
+  },
+  "img2html/contact-info": {
+    "style": [
+      "blocks/contact-info/style.css"
+    ],
+    "version": "1.0.0"
+  },
+  "img2html/social-links": {
+    "style": [
+      "blocks/social-links/style.css"
+    ],
+    "version": "1.0.0"
+  },
+  "img2html/classic-menu": {
+    "style": [
+      "blocks/classic-menu/style.css",
+      "assets/components/img2html-menu.css"
+    ],
+    "version": "1.0.0"
   }
 }

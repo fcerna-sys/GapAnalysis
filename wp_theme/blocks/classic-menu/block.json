@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/classic-menu",
+  "title": "Classic Menu",
+  "category": "widgets",
+  "description": "Imprime wp_nav_menu con Walker personalizado",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "editorScript": "file:./editor.js",
+  "attributes": {
+    "location": { "type": "string", "default": "primary_menu" },
+    "menuClass": { "type": "string", "default": "menu-principal" },
+    "depth": { "type": "number", "default": 3 },
+    "menuId": { "type": "number", "default": 0 },
+    "menuStyle": { "type": "string", "default": "default" },
+    "compact": { "type": "boolean", "default": false }
+  },
+  "supports": {
+    "spacing": { "margin": true, "padding": true },
+    "color": { "background": true, "text": false },
+    "html": false,
+    "customClassName": false
+  },
+  "example": { "attributes": {} },
+  "version": "1.0.0"
+}

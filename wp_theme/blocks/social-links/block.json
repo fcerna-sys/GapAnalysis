@@ -1,16 +1,17 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "img2html/footer",
-  "title": "Footer",
-  "category": "layout",
-  "description": "Pie de página en columnas",
+  "name": "img2html/social-links",
+  "title": "Social Links",
+  "category": "widgets",
+  "description": "Enlaces a redes sociales vinculados a opciones del tema",
   "style": "file:./style.css",
   "render": "file:./render.php",
-  "editorScript": "file:./editor.js",
   "attributes": {
-    "columns": { "type": "number", "default": 3 },
-    "darkBackground": { "type": "boolean", "default": false }
+    "facebook": { "type": "string", "default": "" },
+    "twitter": { "type": "string", "default": "" },
+    "instagram": { "type": "string", "default": "" },
+    "linkedin": { "type": "string", "default": "" }
   },
   "supports": {
     "spacing": { "margin": true, "padding": true },
@@ -21,3 +22,4 @@
   "example": { "attributes": {} },
   "version": "1.0.0"
 }
+

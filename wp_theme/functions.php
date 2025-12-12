@@ -11,6 +11,12 @@ if (is_dir($dir)){
   foreach (glob($dir.'/*.php') as $file){
     require_once $file;
   }
+  $sub = $dir.'/menu';
+  if (is_dir($sub)){
+    foreach (glob($sub.'/*.php') as $file){
+      require_once $file;
+    }
+  }
 }
 
 // Registrar patterns del tema
@@ -40,6 +46,16 @@ function img2html_register_patterns() {
     }
 }
 add_action('init', 'img2html_register_patterns');
+
+// Registrar menús del tema
+function img2html_register_menus(){
+  register_nav_menus([
+    'primary_menu'   => __('Menú Principal', 'img2html'),
+    'secondary_menu' => __('Menú Secundario', 'img2html'),
+    'footer_menu'    => __('Menú Footer', 'img2html'),
+  ]);
+}
+add_action('init','img2html_register_menus');
 
 function img2html_register_atomic_blocks(){
   $base = get_template_directory().'/blocks';

@@ -1,0 +1,4 @@
+.img2html-social-links { list-style: none; display: grid; gap: .5rem; padding: 0; margin: 0; }
+.img2html-social-links__item { }
+.img2html-social-links__link { color: var(--wp--preset--color--primary, #1d4ed8); text-decoration: none; }
+

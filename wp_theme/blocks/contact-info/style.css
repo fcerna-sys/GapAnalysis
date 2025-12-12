@@ -1,0 +1,5 @@
+.img2html-contact-info { display: grid; gap: .5rem; }
+.img2html-contact-info__item { display: flex; gap: .5rem; align-items: baseline; }
+.img2html-contact-info__link { color: var(--wp--preset--color--primary, #1d4ed8); text-decoration: none; }
+.img2html-contact-info__text { opacity: .9; }
+
