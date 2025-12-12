@@ -15,7 +15,8 @@
     "buttonUrl": {"type": "string", "default": "#"}
   },
   "supports": {
-    "spacing": {"margin": true, "padding": true},
-    "color": {"background": true}
+    "spacing": {"margin": true},
+    "color": {"background": true, "text": false},
+    "html": false
   }
 }

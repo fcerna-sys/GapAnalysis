@@ -128,7 +128,20 @@ function img2html_enqueue_block_manifest_assets(){
         }
       }
       $classes = array_unique($classes);
+      // Evitar duplicidad: saltar componentes cubiertos por style.css del bloque
+      $skip_map = [
+        'img2html/organism-hero' => ['img2html-hero'],
+        'img2html/molecule-card' => ['img2html-card'],
+        'img2html/molecule-testimonial' => ['img2html-testimonial'],
+        'img2html/molecule-features-list' => ['img2html-features-list'],
+        'img2html/molecule-team-member' => ['img2html-team-member']
+      ];
       foreach ($classes as $cls){
+        if ($name && isset($skip_map[$name])){
+          foreach ($skip_map[$name] as $skip_base){
+            if (strpos($cls, $skip_base) === 0) { continue 1; }
+          }
+        }
         $base = preg_replace('/(__.*$|--.*$)/', '', $cls);
         if (isset($enqueued_components[$base])) continue;
         $css_rel = 'assets/components/'.$base.'.css';

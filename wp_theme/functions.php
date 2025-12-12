@@ -41,7 +41,7 @@ add_action('init', 'img2html_register_patterns');
 
 function img2html_register_atomic_blocks(){
   $base = get_template_directory().'/blocks';
-  $groups = ['atoms','molecules'];
+  $groups = ['atoms','molecules','organisms'];
   foreach ($groups as $grp){
     $dir = $base.'/'.$grp;
     if (is_dir($dir)){

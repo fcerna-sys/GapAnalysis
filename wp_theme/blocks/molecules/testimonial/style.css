@@ -1,6 +1,1 @@
-.img2html-testimonial{border:1px solid var(--wp--preset--color--surface);border-radius:8px;padding:1rem;background:var(--wp--preset--color--background)}
-.img2html-testimonial__header{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem}
-.img2html-testimonial__avatar{width:40px;height:40px;border-radius:50%}
-.img2html-testimonial__author{display:block}
-.img2html-testimonial__role{color:var(--wp--preset--color--secondary);font-size:.875rem}
-.img2html-testimonial__text{margin:0}
+@import url("../../assets/components/img2html-testimonial.css");

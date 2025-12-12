@@ -1,16 +1,15 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "img2html/molecule-testimonial",
-  "title": "Testimonial (Molécula)",
+  "name": "img2html/molecule-team-member",
+  "title": "Miembro del equipo (Molécula)",
   "category": "widgets",
-  "description": "Testimonial pequeño con avatar, texto y autor",
+  "description": "Tarjeta de miembro con avatar, nombre y rol",
   "style": "file:./style.css",
   "render": "file:./render.php",
   "attributes": {
-    "text": {"type": "string", "default": "Excelente servicio."},
-    "author": {"type": "string", "default": "Nombre"},
-    "role": {"type": "string", "default": "Cargo"},
+    "name": {"type": "string", "default": "Nombre"},
+    "role": {"type": "string", "default": "Rol"},
     "avatarUrl": {"type": "string", "default": ""}
   },
   "supports": {
