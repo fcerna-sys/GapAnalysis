@@ -5,5 +5,5 @@ $variant = isset($attributes['variant']) ? $attributes['variant'] : 'primary';
 $prefix = function_exists('img2html_bem_prefix') ? img2html_bem_prefix() : 'img2html';
 $base = $prefix.'-button';
 $full = !empty($attributes['fullWidth']) ? ' '.$base.'--full' : '';
-$cls = $base.' '.$base.'__'.$variant.$full;
+$cls = $base.' '.($variant === 'ghost' ? $base.'--ghost' : $base.'__'.$variant).$full;
 echo '<div class="wp-block-button '.$cls.'"><a class="wp-block-button__link" href="'.esc_url($url).'">'.esc_html($text).'</a></div>';

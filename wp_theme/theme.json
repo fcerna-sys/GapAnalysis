@@ -1,8 +1,25 @@
 {
   "$schema": "https://schemas.wp.org/trunk/theme.json",
   "version": 3,
+  "templateParts": [
+    { "name": "header", "title": "Header", "area": "header" },
+    { "name": "header-centered", "title": "Header Centered", "area": "header" },
+    { "name": "header-sticky", "title": "Header Sticky", "area": "header" },
+    { "name": "footer", "title": "Footer", "area": "footer" },
+    { "name": "footer-widgets", "title": "Footer Widgets", "area": "footer" },
+    { "name": "sidebar", "title": "Sidebar", "area": "uncategorized" }
+  ],
+  "customTemplates": [
+    { "name": "blank", "title": "Blank Canvas", "postTypes": ["page","post"] },
+    { "name": "landing-page", "title": "Landing Page (Narrow)", "postTypes": ["page"] },
+    { "name": "full-width", "title": "Full Width", "postTypes": ["page"] },
+    { "name": "sidebar-left", "title": "Sidebar Left", "postTypes": ["page","post"] },
+    { "name": "sidebar-right", "title": "Sidebar Right", "postTypes": ["page","post"] },
+    { "name": "blog-grid", "title": "Blog Grid", "postTypes": ["page"] }
+  ],
   "settings": {
     "appearanceTools": true,
+    "lightbox": { "enabled": true },
     "layout": {
       "contentSize": "720px",
       "wideSize": "1200px",

@@ -1,66 +1,27 @@
 <?php
-/**
- * Manifest de assets por bloque
- * Generado automáticamente - NO EDITAR MANUALMENTE
- * 
- * @package img2html
- */
-
 return [
-        'img2html/atom-badge' => [
-        'style' => ['assets/blocks/components/img2html-badge.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/atom-button' => [
-        'style' => ['assets/blocks/components/img2html-button.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/atom-container' => [
-        'style' => ['assets/blocks/components/img2html-container.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/atom-heading' => [
-        'style' => ['assets/blocks/components/img2html-heading.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/atom-icon' => [
-        'style' => ['assets/blocks/components/img2html-icon.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/atom-input' => [
-        'style' => ['assets/blocks/components/img2html-input.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/atom-link' => [
-        'style' => ['assets/blocks/components/img2html-link.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/atom-paragraph' => [
-        'style' => ['assets/blocks/components/img2html-paragraph.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/molecule-card' => [
-        'style' => ['assets/blocks/components/img2html-card.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/molecule-features-list' => [
-        'style' => ['assets/blocks/components/img2html-features-list.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/molecule-pricing-feature' => [
-        'style' => ['assets/blocks/components/img2html-pricing-feature.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/molecule-team-member' => [
-        'style' => ['assets/blocks/components/img2html-team-member.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/molecule-testimonial' => [
-        'style' => ['assets/blocks/components/img2html-testimonial.css'],
-        'version' => '1.0.0'
-    ],
-        'img2html/organism-hero' => [
-        'style' => ['assets/blocks/components/img2html-hero.css'],
-        'version' => '1.0.0'
-    ]
-    ];
+  'core/button' => [
+    'style' => ['assets/components/img2html-block-styles.css']
+  ],
+  'core/navigation' => [
+    'style' => ['assets/components/img2html-block-styles.css']
+  ],
+  'img2html/classic-menu' => [
+    'style' => ['assets/components/img2html-block-styles.css']
+  ],
+  'core/image' => [
+    'style' => ['assets/blocks/core-image.css']
+  ],
+  'core/quote' => [
+    'style' => ['assets/blocks/core-quote.css']
+  ],
+  'core/table' => [
+    'style' => ['assets/blocks/core-table.css']
+  ],
+  'core/cover' => [
+    'style' => ['assets/blocks/core-cover.css']
+  ],
+  'core/gallery' => [
+    'style' => ['assets/blocks/core-gallery.css']
+  ]
+];

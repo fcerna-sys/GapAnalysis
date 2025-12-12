@@ -13,7 +13,8 @@ $prefix = function_exists('img2html_bem_prefix') ? img2html_bem_prefix() : 'img2
 $base = $prefix.'-cta';
 ?>
 <div class="<?php echo esc_attr($base.' '.$base.'--align-'.$align.' '.$base.'--bg-'.$bg); ?>">
-  <div class="<?php echo esc_attr($base.'__content'); ?>">
+  <div class="<?php echo esc_attr($base.'__wrapper'); ?>">
+    <div class="<?php echo esc_attr($base.'__content'); ?>">
     <h2 class="<?php echo esc_attr($base.'__title'); ?>"><?php echo esc_html($title); ?></h2>
     <p class="<?php echo esc_attr($base.'__description'); ?>"><?php echo esc_html($text); ?></p>
     <div class="<?php echo esc_attr($base.'__actions'); ?>">
@@ -23,4 +24,5 @@ $base = $prefix.'-cta';
       <?php endif; ?>
     </div>
   </div>
+</div>
 </div>

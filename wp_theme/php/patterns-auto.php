@@ -1,7 +1,7 @@
 <?php
 if (!defined('ABSPATH')) { exit; }
 
-function img2html_auto_patterns_generate(){
+function img2html_auto_patterns_generate($max_len = 3){
   if (!current_user_can('manage_options')) return ['created'=>0,'skipped'=>0];
   $q = new WP_Query(['post_type'=>['page','post'],'post_status'=>'publish','posts_per_page'=>200,'no_found_rows'=>true]);
   $seq_counts = [];
@@ -13,7 +13,7 @@ function img2html_auto_patterns_generate(){
       $blocks = parse_blocks($p->post_content);
       $types = array_map(function($b){ return $b['blockName']; }, $blocks);
       for($i=0;$i<count($types);$i++){
-        for($len=2;$len<=3;$len++){
+        for($len=2;$len<=$max_len;$len++){
           if ($i+$len<=count($types)){
             $slice = array_slice($blocks,$i,$len);
             $sig = 'seq:'.implode('|', array_map(function($b){ return $b['blockName']; }, $slice));
@@ -69,13 +69,23 @@ function img2html_auto_patterns_generate(){
       'categories' => [function_exists('img2html_bem_prefix')?img2html_bem_prefix():'img2html']
     ]);
   }
+  arsort($seq_counts);
+  arsort($grp_counts);
+  $report = [
+    'seq' => array_slice($seq_counts, 0, 25, true),
+    'grp' => array_slice($grp_counts, 0, 25, true),
+    'max_len' => intval($max_len),
+    'time' => time(),
+  ];
+  update_option('img2html_auto_patterns_report', $report, false);
   return ['created'=>$created,'skipped'=>$skipped];
 }
 
 add_action('admin_post_img2html_generate_patterns', function(){
   if (!current_user_can('manage_options')) wp_die('');
   check_admin_referer('img2html_generate_patterns');
-  $res = img2html_auto_patterns_generate();
+  $max_len = (!empty($_POST['len4'])) ? 4 : 3;
+  $res = img2html_auto_patterns_generate($max_len);
   wp_redirect(add_query_arg(['page'=>'img2html_auto_patterns','created'=>$res['created'],'skipped'=>$res['skipped']], admin_url('themes.php')));
   exit;
 });

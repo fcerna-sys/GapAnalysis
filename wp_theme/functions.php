@@ -134,9 +134,11 @@ add_action('init', 'img2html_register_synced_patterns', 20);
 
 // Inyectar Critical CSS inline
 function img2html_critical_css() {
-    $critical_path = get_theme_file_path('assets/css/critical.css');
-    if (file_exists($critical_path)) {
-        $critical_css = file_get_contents($critical_path);
+    $path = get_theme_file_path('assets/css/critical.css');
+    $path_min = get_theme_file_path('assets/css/critical.min.css');
+    $use = file_exists($path_min) ? $path_min : $path;
+    if (file_exists($use)) {
+        $critical_css = file_get_contents($use);
         echo '<style id="img2html-critical-css">' . $critical_css . '</style>';
     }
 }

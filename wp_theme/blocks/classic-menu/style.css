@@ -27,6 +27,15 @@
 .menu-principal.menu--ghost > li > a:hover{background:rgba(0,0,0,.06)}
 .menu-principal.menu--ghost.menu--compact > li > a{padding:.375rem .6rem;border-radius:6px}
 .menu-principal.menu--underline.menu--compact > li > a{border-bottom-width:1px}
+/* Block style mappings */
+.wp-block-img2html-classic-menu.is-style-underline .menu-principal>li>a{border-bottom:2px solid transparent}
+.wp-block-img2html-classic-menu.is-style-underline .menu-principal>li>a:hover{border-bottom-color:currentColor}
+.wp-block-img2html-classic-menu.is-style-pill .menu-principal>li>a{padding:.5rem .75rem;border-radius:999px;background:rgba(0,0,0,.06)}
+.wp-block-img2html-classic-menu.is-style-pill .menu-principal>li>a:hover{background:rgba(0,0,0,.12)}
+.wp-block-img2html-classic-menu.is-style-ghost .menu-principal>li>a{padding:.5rem .75rem;border-radius:8px;border:1px solid currentColor;background:transparent}
+.wp-block-img2html-classic-menu.is-style-ghost .menu-principal>li>a:hover{background:rgba(0,0,0,.06)}
+.wp-block-img2html-classic-menu.is-style-compact .menu-principal{gap:.5rem}
+.wp-block-img2html-classic-menu.is-style-compact .menu-principal>li>a{padding:.25rem .5rem}
 .menu-principal.menu--compact{gap:.5rem}
 .menu-principal.menu--compact > li > a{padding:.25rem .5rem}
 .menu-principal.menu--compact .menu-item--mega .mega-menu{padding:.75rem}

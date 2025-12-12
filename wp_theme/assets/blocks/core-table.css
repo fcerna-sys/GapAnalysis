@@ -1,11 +1,3 @@
-.wp-block-table table{
-  width: 100%;
-  border-collapse: collapse;
-}
-.wp-block-table tbody tr:nth-child(odd){
-  background: var(--wp--preset--color--surface);
-}
-.wp-block-table td,
-.wp-block-table th{
-  padding: 0.5rem;
-}
+.wp-block-table table{border-collapse:collapse;width:100%}
+.wp-block-table td,.wp-block-table th{border:1px solid var(--wp--preset--color--surface);padding:.5rem}
+.wp-block-table thead th{background:var(--wp--preset--color--surface)}

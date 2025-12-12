@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/doc-viewer",
+  "title": "Doc Viewer",
+  "category": "widgets",
+  "description": "Muestra contenido de documentación del tema",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "editorScript": "file:./editor.js",
+  "attributes": {
+    "file": { "type": "string", "default": "THEME_GUIDE.md" },
+    "section": { "type": "string", "default": "" },
+    "showTitle": { "type": "boolean", "default": true }
+  },
+  "supports": { "html": false }
+}

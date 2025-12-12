@@ -2,3 +2,4 @@
 .img2html-button__primary .wp-block-button__link{background-color:var(--wp--preset--color--primary);color:var(--wp--preset--color--background)}
 .img2html-button__primary .wp-block-button__link:hover{filter:brightness(1.05)}
 .img2html-button--full .wp-block-button__link{display:block;width:100%}
+.img2html-button--ghost .wp-block-button__link{background-color:transparent;border:1px solid var(--wp--preset--color--primary);color:var(--wp--preset--color--primary)}

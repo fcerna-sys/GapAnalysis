@@ -1,11 +1,1 @@
-.wp-block-quote{
-  padding-left: 1rem;
-}
-.wp-block-quote cite{
-  display:block;
-  margin-top: 0.5rem;
-  color: var(--wp--preset--color--secondary);
-}
-.wp-block-quote.is-style-large{
-  font-size: var(--wp--preset--font-size--x-large);
-}
+.wp-block-quote.is-style-highlight{border-left:4px solid var(--wp--preset--color--primary);padding-left:1rem}
