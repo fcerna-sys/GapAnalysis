@@ -41,6 +41,17 @@ function img2html_generate_minified_assets(){
   }
 }
 add_action('after_switch_theme','img2html_generate_minified_assets');
+add_action('admin_init','img2html_generate_minified_assets');
+
+function img2html_generate_minified_assets_once(){
+  if (function_exists('get_option') && function_exists('update_option')){
+    $done = get_option('img2html_min_assets_done');
+    if ($done) return;
+    img2html_generate_minified_assets();
+    update_option('img2html_min_assets_done', time());
+  }
+}
+add_action('init','img2html_generate_minified_assets_once');
 
 add_filter('wp_resource_hints', function($hints, $relation_type){
   $extra = apply_filters('img2html_resource_hints', [

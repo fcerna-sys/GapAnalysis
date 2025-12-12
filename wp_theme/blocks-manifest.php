@@ -55,9 +55,6 @@ return [
   'core/list' => [
     'style' => ['assets/blocks/core-list.css']
   ],
-  'core/table' => [
-    'style' => ['assets/blocks/core-table.css']
-  ],
   'core/code' => [
     'style' => ['assets/blocks/core-code.css']
   ],
