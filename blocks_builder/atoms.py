@@ -6,6 +6,7 @@ import os
 import json
 from typing import Optional
 from .helpers import get_bem_prefix, generate_bem_css
+from .editor_ux import enhance_block_json_ux
 
 
 def create_atom_button(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
@@ -49,13 +50,16 @@ def create_atom_button(atoms_dir: str, css_framework: str, bem_prefix: str = 'im
             "name": f"{bem_prefix}/atom-button",
             "version": "1.0.0",
             "title": "Botón (Átomo)",
-            "category": "img2html-atoms",
+            "category": f"{bem_prefix}-atoms",
             "icon": "button",
             "description": "Botón básico reutilizable",
             "textdomain": bem_prefix,
             "render": "file:./render.php",
             "attributes": attributes
         }
+    
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'atom', 'button', bem_prefix)
     
     with open(os.path.join(button_dir, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
@@ -190,6 +194,9 @@ def create_atom_input(atoms_dir: str, css_framework: str, bem_prefix: str = 'img
         }
     }
     
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'atom', 'input', bem_prefix)
+    
     with open(os.path.join(input_dir, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
     
@@ -240,6 +247,9 @@ def create_atom_icon(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2
         }
     }
     
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'atom', 'icon', bem_prefix)
+    
     with open(os.path.join(icon_dir, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
     
@@ -287,6 +297,9 @@ def create_atom_badge(atoms_dir: str, css_framework: str, bem_prefix: str = 'img
             "variant": {"type": "string", "default": "primary"}
         }
     }
+    
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'atom', 'badge', bem_prefix)
     
     with open(os.path.join(badge_dir, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
@@ -336,6 +349,9 @@ def create_atom_link(atoms_dir: str, css_framework: str, bem_prefix: str = 'img2
             "target": {"type": "string", "default": "_self"}
         }
     }
+    
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'atom', 'link', bem_prefix)
     
     with open(os.path.join(link_dir, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
@@ -404,6 +420,9 @@ def create_atom_image(atoms_dir: str, css_framework: str, bem_prefix: str = 'img
             }
         }
     }
+    
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'atom', 'image', bem_prefix)
     
     with open(os.path.join(image_dir, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)

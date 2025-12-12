@@ -212,12 +212,16 @@ registerBlockType('{bem_prefix}/slider', {{
                                         label={__('Título', 'img2html')}
                                         value={slide.title}
                                         onChange={(value) => updateSlide(index, 'title', value)}
+                                        placeholder={__('Ej: Título descriptivo del slide', 'img2html')}
+                                        help={__('💡 Tip: Sé conciso. Máximo 8-10 palabras.', 'img2html')}
                                     />
 
                                     <TextControl
                                         label={__('Subtítulo', 'img2html')}
                                         value={slide.subtitle}
                                         onChange={(value) => updateSlide(index, 'subtitle', value)}
+                                        placeholder={__('Ej: Descripción complementaria', 'img2html')}
+                                        help={__('Complementa el título sin repetir información.', 'img2html')}
                                     />
 
                                     <ToggleControl

@@ -6,6 +6,7 @@ import os
 import json
 from typing import Optional
 from .helpers import get_bem_prefix, generate_bem_css
+from .editor_ux import enhance_block_json_ux
 
 
 def create_molecule_card(molecules_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
@@ -57,6 +58,9 @@ def create_molecule_card(molecules_dir: str, css_framework: str, bem_prefix: str
             "render": "file:./render.php",
             "attributes": attributes
         }
+    
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'molecule', 'card', bem_prefix)
     
     with open(os.path.join(card_dir, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)

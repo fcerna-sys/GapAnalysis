@@ -35,6 +35,7 @@ from .styles import (
     _generate_slider_style_css,
     _generate_slider_editor_css,
 )
+from .editor_ux import enhance_block_json_ux
 
 
 def create_slider_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
@@ -106,6 +107,9 @@ def create_slider_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
         }
     }
     
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'slider', bem_prefix)
+    
     block_json_path = os.path.join(slider_dir, 'block.json')
     with open(block_json_path, 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2, ensure_ascii=False)
@@ -163,6 +167,9 @@ def create_hero_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
             "imageThumb": {"type": "string", "default": ""}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'hero', bem_prefix)
+    
     block_json_path = os.path.join(hero_dir, 'block.json')
     with open(block_json_path, 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
@@ -225,6 +232,9 @@ def create_cards_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'i
             "gap": {"type": "number", "default": 16}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'cards', bem_prefix)
+    
     block_json_path = os.path.join(cards_dir, 'block.json')
     with open(block_json_path, 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
@@ -255,6 +265,9 @@ def create_gallery_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
             "lightbox": {"type": "boolean", "default": False}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'gallery', bem_prefix)
+    
     block_json_path = os.path.join(gallery_dir, 'block.json')
     with open(block_json_path, 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2)
@@ -358,6 +371,9 @@ def create_search_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
             "showIcon": {"type": "boolean", "default": True}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'search-extended', bem_prefix)
+    
     with open(os.path.join(dir_path, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2, ensure_ascii=False)
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
@@ -390,6 +406,9 @@ def create_pagination_block(blocks_dir: str, css_framework: str, bem_prefix: str
             "showPageCount": {"type": "boolean", "default": False}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'pagination', bem_prefix)
+    
     with open(os.path.join(dir_path, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2, ensure_ascii=False)
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
@@ -424,6 +443,9 @@ def create_header_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
             "ctaShow": {"type": "boolean", "default": True}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'header', bem_prefix)
+    
     with open(os.path.join(dir_path, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2, ensure_ascii=False)
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
@@ -456,6 +478,9 @@ def create_footer_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
             "showSocial": {"type": "boolean", "default": True}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'footer', bem_prefix)
+    
     with open(os.path.join(dir_path, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2, ensure_ascii=False)
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
@@ -489,6 +514,9 @@ def create_form_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
             "endpoint": {"type": "string", "default": "/wp-json/img2html/v1/contact"}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'form', bem_prefix)
+    
     with open(os.path.join(dir_path, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2, ensure_ascii=False)
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
@@ -523,6 +551,9 @@ def create_menu_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
             "showSocial": {"type": "boolean", "default": False}
         }
     }
+    # Mejorar UX del editor
+    block_json = enhance_block_json_ux(block_json, 'organism', 'menu', bem_prefix)
+    
     with open(os.path.join(dir_path, 'block.json'), 'w', encoding='utf-8') as f:
         json.dump(block_json, f, indent=2, ensure_ascii=False)
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:

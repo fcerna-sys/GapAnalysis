@@ -55,6 +55,10 @@ from .assets import (
     setup_conditional_assets,
     minimize_global_css
 )
+from .documentation import (
+    generate_comprehensive_block_docs,
+    generate_patterns_documentation
+)
 
 # Función principal que orquesta todo
 def create_custom_blocks(theme_dir: str, css_framework: str, plan: dict, theme_slug: str = None):
@@ -127,6 +131,15 @@ def create_custom_blocks(theme_dir: str, css_framework: str, plan: dict, theme_s
     
     # Minimizar CSS global
     minimize_global_css(theme_dir, bem_prefix)
+    
+    # Actualizar versiones de todos los bloques
+    try:
+        from .versioning import update_all_block_versions
+        updated_blocks = update_all_block_versions(theme_dir, bem_prefix, 'patch')
+        if updated_blocks:
+            print(f"✓ Versiones de bloques actualizadas: {len(updated_blocks)} bloques")
+    except Exception as e:
+        print(f"Advertencia: Error al actualizar versiones de bloques: {e}")
 
 
 # Exportar funciones principales para compatibilidad hacia atrás
@@ -165,5 +178,7 @@ __all__ = [
     'register_atomic_blocks_in_functions',
     'setup_conditional_assets',
     'minimize_global_css',
+    'generate_comprehensive_block_docs',
+    'generate_patterns_documentation',
 ]
 

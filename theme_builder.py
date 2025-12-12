@@ -6,6 +6,7 @@ import os
 import json
 import shutil
 from pathlib import Path
+from datetime import datetime
 from typing import Dict, List, Optional
 
 # Importar funciones de bloques
@@ -1283,18 +1284,20 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
         # core/heading - Limitado para mejor UX
         blocks.setdefault('core/heading', {
             "typography": {
-                "fontSize": True,
-                "fontFamily": True,
-                "fontWeight": True,
+                "fontSize": True,  # Solo tamaños predefinidos
+                "fontFamily": False,  # Usar familia global del tema
+                "fontWeight": True,  # Solo pesos permitidos
                 "fontStyle": False,  # Deshabilitado para simplificar
                 "lineHeight": True,
                 "textTransform": False,  # Deshabilitado para simplificar
-                "letterSpacing": False  # Deshabilitado para simplificar
+                "letterSpacing": False,  # Deshabilitado para simplificar
+                "textDecoration": False  # Deshabilitado para simplificar
             },
             "color": {
-                "text": True,
+                "text": True,  # Solo colores de la paleta
                 "background": False,  # Deshabilitado para simplificar
-                "link": True
+                "link": True,
+                "gradients": False  # Deshabilitado para simplificar
             },
             "spacing": {
                 "margin": True,
@@ -1308,15 +1311,21 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
         # core/paragraph - Limitado para mejor UX
         blocks.setdefault('core/paragraph', {
             "typography": {
-                "fontSize": True,
-                "fontFamily": True,
-                "fontWeight": True,
+                "fontSize": True,  # Solo tamaños predefinidos
+                "fontFamily": False,  # Usar familia global del tema
+                "fontWeight": False,  # Usar peso normal por defecto
+                "fontStyle": False,  # Deshabilitado
                 "lineHeight": True,
+                "textTransform": False,  # Deshabilitado
+                "letterSpacing": False,  # Deshabilitado
+                "textDecoration": False,  # Deshabilitado
                 "dropCap": False  # Deshabilitado para simplificar
             },
             "color": {
-                "text": True,
+                "text": True,  # Solo colores de la paleta
                 "background": False,  # Deshabilitado para simplificar
+                "link": True,
+                "gradients": False  # Deshabilitado
                 "link": True
             },
             "spacing": {
@@ -1325,23 +1334,26 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
             }
         })
         
-        # core/button
+        # core/button - Limitado para mejor UX
         blocks.setdefault('core/button', {
             "color": {
-                "text": True,
-                "background": True,
-                "gradients": True
+                "text": True,  # Solo colores de la paleta
+                "background": True,  # Solo colores de la paleta
+                "gradients": False  # Deshabilitado para simplificar (usar colores sólidos)
             },
             "typography": {
-                "fontSize": True,
-                "fontFamily": True,
-                "fontWeight": True
+                "fontSize": True,  # Solo tamaños predefinidos
+                "fontFamily": False,  # Usar familia global
+                "fontWeight": True,  # Solo pesos permitidos
+                "fontStyle": False,  # Deshabilitado
+                "textTransform": False,  # Deshabilitado
+                "letterSpacing": False  # Deshabilitado
             },
             "border": {
-                "color": True,
-                "radius": True,
-                "style": True,
-                "width": True
+                "radius": True,  # Solo radios predefinidos
+                "color": False,  # Deshabilitado
+                "style": False,  # Deshabilitado
+                "width": False  # Deshabilitado
             },
             "spacing": {
                 "padding": True,
@@ -1349,43 +1361,52 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
             }
         })
         
-        # core/columns
+        # core/columns - Limitado para mejor UX
         blocks.setdefault('core/columns', {
             "spacing": {
-                "blockGap": True,
+                "blockGap": True,  # Solo espaciados predefinidos
                 "padding": True,
                 "margin": True
             },
             "layout": {
-                "allowSwitching": True,
+                "allowSwitching": False,  # Deshabilitado para evitar cambios inesperados
                 "allowInheriting": True
-            }
+            },
+            "align": ["wide", "full"],  # Solo estas alineaciones
+            "color": False  # Deshabilitado (usar en columnas individuales)
         })
         
-        # core/image
+        # core/image - Limitado para mejor UX
         blocks.setdefault('core/image', {
             "border": {
-                "color": True,
-                "radius": True,
-                "style": True,
-                "width": True
+                "color": False,  # Deshabilitado
+                "radius": True,  # Solo radios predefinidos
+                "style": False,  # Deshabilitado
+                "width": False  # Deshabilitado
             },
             "spacing": {
                 "margin": True,
-                "padding": True
+                "padding": False  # Deshabilitado
             },
             "dimensions": {
                 "aspectRatio": True,
-                "minHeight": True
-            }
+                "minHeight": False  # Deshabilitado
+            },
+            "align": ["left", "center", "right", "wide", "full"],  # Todas las alineaciones permitidas
+            "color": False  # Deshabilitado
         })
         
-        # core/cover
+        # core/cover - Limitado para mejor UX
         blocks.setdefault('core/cover', {
             "color": {
-                "text": True,
-                "background": True,
-                "gradients": True
+                "text": True,  # Solo colores de la paleta
+                "background": True,  # Solo colores de la paleta
+                "gradients": False  # Deshabilitado para simplificar
+            },
+            "align": ["wide", "full"],  # Solo estas alineaciones
+            "spacing": {
+                "padding": True,
+                "margin": False  # Deshabilitado
             },
             "spacing": {
                 "padding": True,
@@ -2145,17 +2166,28 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
                 'blockTypes': pattern_data.get('blockTypes', ['core/post-content']),
                 'inserter': pattern_data.get('inserter', True),
                 'viewportWidth': pattern_data.get('viewportWidth', 1200),
-                'keywords': pattern_data.get('keywords', pattern_data.get('categories', []))
+                'keywords': pattern_data.get('keywords', pattern_data.get('categories', [])),
+                'version': '1.0.0',  # Versión inicial
+                'created': datetime.now().isoformat(),
+                'updated': datetime.now().isoformat()
             })
         
-        # Guardar patterns_meta.json
+        # Guardar patterns_meta.json inicial
         meta_path = os.path.join(patterns_dir, 'patterns_meta.json')
         with open(meta_path, 'w', encoding='utf-8') as f:
             json.dump({
                 'patterns': patterns_meta,
                 'generated': True,
-                'bemPrefix': bem_prefix
+                'bemPrefix': bem_prefix,
+                'version': '1.0.0'
             }, f, ensure_ascii=False, indent=2)
+        
+        # Mejorar patterns_meta.json con versiones y metadatos
+        try:
+            from blocks_builder.versioning import enhance_patterns_meta_with_versions
+            enhance_patterns_meta_with_versions(theme_dir, bem_prefix, plan, dna)
+        except Exception as e:
+            print(f"Advertencia: Error al mejorar versiones de patterns: {e}")
         
         # Actualizar functions.php para registrar patrones sincronizados
         functions_path = os.path.join(theme_dir, 'functions.php')
