@@ -11,7 +11,11 @@
     "title": {"type": "string", "default": "Título destacado"},
     "subtitle": {"type": "string", "default": "Subtítulo breve"},
     "buttonText": {"type": "string", "default": "Empezar"},
-    "buttonUrl": {"type": "string", "default": "#"}
+    "buttonUrl": {"type": "string", "default": "#"},
+    "sticky": {"type": "boolean", "default": false},
+    "transparent": {"type": "boolean", "default": false},
+    "darkBackground": {"type": "boolean", "default": false},
+    "align": {"type": "string", "default": "left"}
   },
   "supports": {
     "spacing": {"margin": true, "padding": true},

@@ -1,1 +1,10 @@
 @import url("../../assets/components/img2html-hero.css");
+.img2html-hero--transparent{background:transparent}
+.img2html-hero--sticky{position:sticky;top:0;z-index:10}
+.img2html-hero--dark{background:var(--wp--preset--color--text)}
+.img2html-hero--dark .img2html-hero__title{color:var(--wp--preset--color--background)}
+.img2html-hero--dark .img2html-hero__subtitle{color:var(--wp--preset--color--surface)}
+.img2html-hero--center{text-align:center}
+.img2html-hero--right{text-align:right}
+.img2html-hero--center .img2html-hero__actions{justify-content:center}
+.img2html-hero--right .img2html-hero__actions{justify-content:flex-end}
