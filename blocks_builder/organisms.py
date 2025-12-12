@@ -49,14 +49,14 @@ def create_slider_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/slider",
+        "name": f"{bem_prefix}/slider",
         "version": "1.0.0",
         "title": "Slider",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "slides",
         "description": "Slider administrable con múltiples diapositivas",
         "keywords": ["slider", "carousel", "slideshow"],
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "editorStyle": "file:./editor.css",
         "style": "file:./style.css",
@@ -116,19 +116,19 @@ def create_slider_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
         f.write(render_php)
     
     # index.js (editor)
-    editor_js = _generate_slider_editor_js()
+    editor_js = _generate_slider_editor_js(bem_prefix)
     editor_js_path = os.path.join(slider_dir, 'index.js')
     with open(editor_js_path, 'w', encoding='utf-8') as f:
         f.write(editor_js)
     
     # style.css (frontend)
-    style_css = _generate_slider_style_css(css_framework)
+    style_css = _generate_slider_style_css(css_framework, bem_prefix)
     style_path = os.path.join(slider_dir, 'style.css')
     with open(style_path, 'w', encoding='utf-8') as f:
         f.write(style_css)
     
     # editor.css (editor)
-    editor_css = _generate_slider_editor_css()
+    editor_css = _generate_slider_editor_css(bem_prefix)
     editor_css_path = os.path.join(slider_dir, 'editor.css')
     with open(editor_css_path, 'w', encoding='utf-8') as f:
         f.write(editor_css)
@@ -140,13 +140,13 @@ def create_hero_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/hero",
+        "name": f"{bem_prefix}/hero",
         "version": "1.0.0",
         "title": "Hero",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "cover-image",
         "description": "Bloque Hero administrable",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "render": "file:./render.php",
         "attributes": {
             "title": {"type": "string", "default": "Título hero"},
@@ -177,13 +177,13 @@ def create_section_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/section",
+        "name": f"{bem_prefix}/section",
         "version": "1.0.0",
         "title": "Sección",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "columns",
         "description": "Bloque de sección multipropósito",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "render": "file:./render.php",
         "attributes": {
             "variant": {"type": "string", "default": "default"},
@@ -210,13 +210,13 @@ def create_cards_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'i
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/cards",
+        "name": f"{bem_prefix}/cards",
         "version": "1.0.0",
         "title": "Cards",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "grid-view",
         "description": "Bloque de tarjetas",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "render": "file:./render.php",
         "attributes": {
             "cards": {"type": "array", "default": []},
@@ -239,13 +239,13 @@ def create_gallery_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/gallery",
+        "name": f"{bem_prefix}/gallery",
         "version": "1.0.0",
         "title": "Galería",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "format-gallery",
         "description": "Bloque de galería",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "render": "file:./render.php",
         "attributes": {
             "images": {"type": "array", "default": []},
@@ -268,13 +268,13 @@ def create_text_image_block(blocks_dir: str, css_framework: str, bem_prefix: str
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/text-image",
+        "name": f"{bem_prefix}/text-image",
         "version": "1.0.0",
         "title": "Texto + Imagen",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "align-pull-left",
         "description": "Bloque de texto con imagen multipropósito",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -294,7 +294,7 @@ def create_text_image_block(blocks_dir: str, css_framework: str, bem_prefix: str
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_simple_section(css_framework, "text-image", bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_simple_section())
+        f.write(_editor_simple_section(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* text-image styles */")
 
@@ -304,13 +304,13 @@ def create_sidebar_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/sidebar",
+        "name": f"{bem_prefix}/sidebar",
         "version": "1.0.0",
         "title": "Sidebar Dinámico",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "menu",
         "description": "Sidebar administrable con enlaces y widgets",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -330,7 +330,7 @@ def create_sidebar_block(blocks_dir: str, css_framework: str, bem_prefix: str = 
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_sidebar(css_framework, bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_sidebar())
+        f.write(_editor_sidebar(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* sidebar styles */")
 
@@ -340,13 +340,13 @@ def create_search_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/search-extended",
+        "name": f"{bem_prefix}/search-extended",
         "version": "1.0.0",
         "title": "Buscador",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "search",
         "description": "Buscador extendido",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -362,7 +362,7 @@ def create_search_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_search(css_framework, bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_search())
+        f.write(_editor_search(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* search styles */")
 
@@ -372,13 +372,13 @@ def create_pagination_block(blocks_dir: str, css_framework: str, bem_prefix: str
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/pagination",
+        "name": f"{bem_prefix}/pagination",
         "version": "1.0.0",
         "title": "Paginación",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "controls-repeat",
         "description": "Bloque de paginación",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -394,7 +394,7 @@ def create_pagination_block(blocks_dir: str, css_framework: str, bem_prefix: str
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_pagination(css_framework, bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_pagination())
+        f.write(_editor_pagination(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* pagination styles */")
 
@@ -404,13 +404,13 @@ def create_header_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/header",
+        "name": f"{bem_prefix}/header",
         "version": "1.0.0",
         "title": "Header",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "admin-site",
         "description": "Header editable con logo, menú y CTA",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -428,7 +428,7 @@ def create_header_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_header(css_framework, bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_header())
+        f.write(_editor_header(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* header styles */")
 
@@ -438,13 +438,13 @@ def create_footer_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/footer",
+        "name": f"{bem_prefix}/footer",
         "version": "1.0.0",
         "title": "Footer",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "editor-insertmore",
         "description": "Footer editable multicolumna",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "attributes": {
@@ -460,7 +460,7 @@ def create_footer_block(blocks_dir: str, css_framework: str, bem_prefix: str = '
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_footer(css_framework, bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_footer())
+        f.write(_editor_footer(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* footer styles */")
 
@@ -470,13 +470,13 @@ def create_form_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/form",
+        "name": f"{bem_prefix}/form",
         "version": "1.0.0",
         "title": "Formulario de Contacto",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "email",
         "description": "Formulario nativo (nombre, email, teléfono, mensaje)",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "render": "file:./render.php",
@@ -493,7 +493,7 @@ def create_form_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_form(css_framework, bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_form())
+        f.write(_editor_form(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* form styles */")
 
@@ -503,13 +503,13 @@ def create_menu_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     block_json = {
         "$schema": "https://schemas.wp.org/trunk/block.json",
         "apiVersion": 3,
-        "name": "img2html/menu",
+        "name": f"{bem_prefix}/menu",
         "version": "1.0.0",
         "title": "Menú Avanzado",
-        "category": "img2html",
+        "category": f"{bem_prefix}-organisms",
         "icon": "menu",
         "description": "Menú desktop/mobile con CTA y redes",
-        "textdomain": "img2html",
+        "textdomain": bem_prefix,
         "editorScript": "file:./index.js",
         "style": "file:./style.css",
         "render": "file:./render.php",
@@ -527,7 +527,7 @@ def create_menu_block(blocks_dir: str, css_framework: str, bem_prefix: str = 'im
     with open(os.path.join(dir_path, 'render.php'), 'w', encoding='utf-8') as f:
         f.write(_render_menu(css_framework, bem_prefix))
     with open(os.path.join(dir_path, 'index.js'), 'w', encoding='utf-8') as f:
-        f.write(_editor_menu())
+        f.write(_editor_menu(bem_prefix))
     with open(os.path.join(dir_path, 'style.css'), 'w', encoding='utf-8') as f:
         f.write("/* menu styles */")
 

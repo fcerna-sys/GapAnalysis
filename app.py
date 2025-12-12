@@ -702,7 +702,7 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
             # Configurar framework CSS
             setup_css_framework(wp_theme_dir, css_framework)
             # Crear bloques personalizados
-            create_custom_blocks(wp_theme_dir, css_framework, plan)
+            create_custom_blocks(wp_theme_dir, css_framework, plan, theme_slug)
             # Generar screenshot SVG
             generate_theme_screenshot(wp_theme_dir, plan, dna, theme_name, theme_description)
         except Exception as e:

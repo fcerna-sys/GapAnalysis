@@ -5,30 +5,30 @@ Código completo migrado desde blocks_builder_backup.py
 """
 
 
-def _generate_slider_editor_js() -> str:
+def _generate_slider_editor_js(bem_prefix: str = 'img2html') -> str:
     """Genera el JavaScript del editor para el bloque Slider."""
-    return """import { registerBlockType } from '@wordpress/blocks';
-import { 
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ 
     InspectorControls, 
     MediaUpload, 
     MediaUploadCheck,
     useBlockProps,
     RichText
-} from '@wordpress/block-editor';
-import { 
+}} from '@wordpress/block-editor';
+import {{ 
     PanelBody, 
     Button, 
     ToggleControl, 
     RangeControl,
     SelectControl,
     TextControl
-} from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+}} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
 import './editor.css';
 
-registerBlockType('img2html/slider', {
-    edit: ({ attributes, setAttributes }) => {
-        const {
+registerBlockType('{bem_prefix}/slider', {{
+    edit: ({{ attributes, setAttributes }}) => {{
+        const {{
             showSlider,
             fullWidth,
             showArrows,
@@ -38,11 +38,11 @@ registerBlockType('img2html/slider', {
             transitionSpeed,
             height,
             slides = []
-        } = attributes;
+        }} = attributes;
 
-        const blockProps = useBlockProps({
-            className: 'img2html-slider-editor'
-        });
+        const blockProps = useBlockProps({{
+            className: '{bem_prefix}-slider-editor'
+        }});
 
         const addSlide = () => {
             const newSlide = {
@@ -273,15 +273,15 @@ registerBlockType('img2html/slider', {
 });
 """
 
-def _editor_simple_section() -> str:
-    return """import { registerBlockType } from '@wordpress/blocks';
-import { InspectorControls, MediaUpload, MediaUploadCheck, useBlockProps, RichText } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, Button, TextareaControl, TextControl } from '@wordpress/components';
+def _editor_simple_section(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, MediaUpload, MediaUploadCheck, useBlockProps, RichText }} from '@wordpress/block-editor';
+import {{ PanelBody, SelectControl, Button, TextareaControl, TextControl }} from '@wordpress/components';
 
-registerBlockType('img2html/text-image', {
-  edit: ({ attributes, setAttributes }) => {
-    const { layout, title, body, imageUrl, bgStyle, padding } = attributes;
-    const blockProps = useBlockProps({ className: 'img2html-text-image-editor' });
+registerBlockType('{bem_prefix}/text-image', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ layout, title, body, imageUrl, bgStyle, padding }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-text-image-editor' }});
     return (
       <div {...blockProps}>
         <InspectorControls>
@@ -351,16 +351,16 @@ registerBlockType('img2html/text-image', {
 });
 """
 
-def _editor_sidebar() -> str:
-    return """import { registerBlockType } from '@wordpress/blocks';
-import { InspectorControls, useBlockProps, TextControl } from '@wordpress/block-editor';
-import { PanelBody, ToggleControl, Button, SelectControl } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+def _editor_sidebar(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps, TextControl }} from '@wordpress/block-editor';
+import {{ PanelBody, ToggleControl, Button, SelectControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
 
-registerBlockType('img2html/sidebar', {
-  edit: ({ attributes, setAttributes }) => {
-    const { title, links = [], showRecent, showCategories, showTags, styleVariant, padding, border, linkStyle } = attributes;
-    const blockProps = useBlockProps({ className: 'img2html-sidebar-editor' });
+registerBlockType('{bem_prefix}/sidebar', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ title, links = [], showRecent, showCategories, showTags, styleVariant, padding, border, linkStyle }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-sidebar-editor' }});
 
     const addLink = () => setAttributes({ links: [...links, { label: 'Nuevo enlace', url: '#' }] });
     const updateLink = (index, field, value) => {
@@ -457,16 +457,16 @@ registerBlockType('img2html/sidebar', {
 });
 """
 
-def _editor_search() -> str:
-    return """import { registerBlockType } from '@wordpress/blocks';
-import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, ToggleControl, TextControl } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+def _editor_search(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps }} from '@wordpress/block-editor';
+import {{ PanelBody, SelectControl, ToggleControl, TextControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
 
-registerBlockType('img2html/search-extended', {
-  edit: ({ attributes, setAttributes }) => {
-    const { size, rounded, buttonInside, placeholder, showIcon } = attributes;
-    const blockProps = useBlockProps({ className: 'img2html-search-editor' });
+registerBlockType('{bem_prefix}/search-extended', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ size, rounded, buttonInside, placeholder, showIcon }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-search-editor' }});
 
     return (
       <div {...blockProps}>
@@ -514,16 +514,16 @@ registerBlockType('img2html/search-extended', {
 });
 """
 
-def _editor_pagination() -> str:
-    return """import { registerBlockType } from '@wordpress/blocks';
-import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, ToggleControl, RangeControl } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+def _editor_pagination(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps }} from '@wordpress/block-editor';
+import {{ PanelBody, SelectControl, ToggleControl, RangeControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
 
-registerBlockType('img2html/pagination', {
-  edit: ({ attributes, setAttributes }) => {
-    const { mode, align, size, gap, showPageCount } = attributes;
-    const blockProps = useBlockProps({ className: 'img2html-pagination-editor' });
+registerBlockType('{bem_prefix}/pagination', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ mode, align, size, gap, showPageCount }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-pagination-editor' }});
 
     return (
       <div {...blockProps}>
@@ -581,16 +581,16 @@ registerBlockType('img2html/pagination', {
 });
 """
 
-def _editor_header() -> str:
-    return """import { registerBlockType } from '@wordpress/blocks';
-import { InspectorControls, useBlockProps, TextControl, ToggleControl } from '@wordpress/block-editor';
-import { PanelBody } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+def _editor_header(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps }} from '@wordpress/block-editor';
+import {{ PanelBody, ToggleControl, TextControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
 
-registerBlockType('img2html/header', {
-  edit: ({ attributes, setAttributes }) => {
-    const { sticky, transparent, scrollChange, height, ctaText, ctaUrl, ctaShow } = attributes;
-    const blockProps = useBlockProps({ className: 'img2html-header-editor' });
+registerBlockType('{bem_prefix}/header', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ sticky, transparent, scrollChange, height, ctaText, ctaUrl, ctaShow }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-header-editor' }});
 
     return (
       <div {...blockProps}>
@@ -636,16 +636,16 @@ registerBlockType('img2html/header', {
 });
 """
 
-def _editor_footer() -> str:
-    return """import { registerBlockType } from '@wordpress/blocks';
-import { InspectorControls, useBlockProps, TextControl, ToggleControl } from '@wordpress/block-editor';
-import { PanelBody, RangeControl, SelectControl } from '@wordpress/components';
-import { __ } from '@wordpress/i18n';
+def _editor_footer(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps }} from '@wordpress/block-editor';
+import {{ PanelBody, RangeControl, SelectControl, ToggleControl, TextControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
 
-registerBlockType('img2html/footer', {
-  edit: ({ attributes, setAttributes }) => {
-    const { columns, bg, legal, showSocial } = attributes;
-    const blockProps = useBlockProps({ className: 'img2html-footer-editor' });
+registerBlockType('{bem_prefix}/footer', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ columns, bg, legal, showSocial }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-footer-editor' }});
 
     return (
       <div {...blockProps}>
@@ -684,7 +684,107 @@ registerBlockType('img2html/footer', {
     );
   },
   save: () => null
-});
+}});
+"""
+
+def _editor_form(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps }} from '@wordpress/block-editor';
+import {{ PanelBody, ToggleControl, TextControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
+
+registerBlockType('{bem_prefix}/form', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ showPhone, submitText, successMessage, errorMessage }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-form-editor' }});
+
+    return (
+      <div {{...blockProps}}>
+        <InspectorControls>
+          <PanelBody title={{__('Configuración del Formulario', 'img2html')}} initialOpen={{true}}>
+            <ToggleControl
+              label={{__('Mostrar campo teléfono', 'img2html')}}
+              checked={{showPhone}}
+              onChange={{(value) => setAttributes({{ showPhone: value }})}}
+            />
+            <TextControl
+              label={{__('Texto del botón', 'img2html')}}
+              value={{submitText}}
+              onChange={{(value) => setAttributes({{ submitText: value }})}}
+            />
+            <TextControl
+              label={{__('Mensaje de éxito', 'img2html')}}
+              value={{successMessage}}
+              onChange={{(value) => setAttributes({{ successMessage: value }})}}
+            />
+            <TextControl
+              label={{__('Mensaje de error', 'img2html')}}
+              value={{errorMessage}}
+              onChange={{(value) => setAttributes({{ errorMessage: value }})}}
+            />
+          </PanelBody>
+        </InspectorControls>
+        <div className="preview">Formulario de contacto</div>
+      </div>
+    );
+  }},
+  save: () => null
+}});
+"""
+
+def _editor_menu(bem_prefix: str = 'img2html') -> str:
+    return f"""import {{ registerBlockType }} from '@wordpress/blocks';
+import {{ InspectorControls, useBlockProps }} from '@wordpress/block-editor';
+import {{ PanelBody, ToggleControl, TextControl }} from '@wordpress/components';
+import {{ __ }} from '@wordpress/i18n';
+
+registerBlockType('{bem_prefix}/menu', {{
+  edit: ({{ attributes, setAttributes }}) => {{
+    const {{ sticky, transparent, ctaText, ctaUrl, ctaShow, showSocial }} = attributes;
+    const blockProps = useBlockProps({{ className: '{bem_prefix}-menu-editor' }});
+
+    return (
+      <div {{...blockProps}}>
+        <InspectorControls>
+          <PanelBody title={{__('Configuración del Menú', 'img2html')}} initialOpen={{true}}>
+            <ToggleControl
+              label={{__('Sticky', 'img2html')}}
+              checked={{sticky}}
+              onChange={{(value) => setAttributes({{ sticky: value }})}}
+            />
+            <ToggleControl
+              label={{__('Transparente', 'img2html')}}
+              checked={{transparent}}
+              onChange={{(value) => setAttributes({{ transparent: value }})}}
+            />
+            <TextControl
+              label={{__('CTA Texto', 'img2html')}}
+              value={{ctaText}}
+              onChange={{(value) => setAttributes({{ ctaText: value }})}}
+            />
+            <TextControl
+              label={{__('CTA URL', 'img2html')}}
+              value={{ctaUrl}}
+              onChange={{(value) => setAttributes({{ ctaUrl: value }})}}
+            />
+            <ToggleControl
+              label={{__('Mostrar CTA', 'img2html')}}
+              checked={{ctaShow}}
+              onChange={{(value) => setAttributes({{ ctaShow: value }})}}
+            />
+            <ToggleControl
+              label={{__('Mostrar redes sociales', 'img2html')}}
+              checked={{showSocial}}
+              onChange={{(value) => setAttributes({{ showSocial: value }})}}
+            />
+          </PanelBody>
+        </InspectorControls>
+        <div className="preview">Menú navegación</div>
+      </div>
+    );
+  }},
+  save: () => null
+}});
 """
 
 __all__ = [

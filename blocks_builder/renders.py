@@ -52,12 +52,12 @@ $height_class = $height === 'auto' ? 'h-auto' : ($height === '100vh' ? 'h-screen
             $show_button = $slide['showButton'] ?? true;
             $text_position = $slide['textPosition'] ?? 'center';
             $show_overlay = $slide['showOverlay'] ?? true;
-            $active = $index === 0 ? 'active' : '';
+            $active_class = $index === 0 ? '{slide_class}--active' : '';
             
             $text_align = $text_position === 'left' ? 'text-left items-start' : 
                          ($text_position === 'right' ? 'text-right items-end' : 'text-center items-center');
             ?>
-            <div class="{slide_class} absolute inset-0 w-full h-full <?php echo esc_attr($active); ?>" data-slide="<?php echo $index; ?>">
+            <div class="{slide_class} absolute inset-0 w-full h-full <?php echo esc_attr($active_class); ?>" data-slide="<?php echo $index; ?>">
                 <?php if ($image_url): ?>
                     <picture>
                         <?php if ($image_webp): ?><source srcset="<?php echo esc_url($image_webp); ?>" type="image/webp"><?php endif; ?>
@@ -111,7 +111,7 @@ $height_class = $height === 'auto' ? 'h-auto' : ($height === '100vh' ? 'h-screen
     <?php if ($show_dots && count($slides) > 1): ?>
         <div class="{base_class}__dots absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
             <?php foreach ($slides as $index => $slide): ?>
-                <button class="{dot_class} w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition <?php echo $index === 0 ? '{dot_class}--active' : ''; ?>" 
+                <button class="{dot_class} w-3 h-3 rounded-full bg-white bg-opacity-50 hover:bg-opacity-100 transition <?php echo $index === 0 ? esc_attr('{dot_class}--active') : ''; ?>" 
                         data-slide="<?php echo $index; ?>"></button>
             <?php endforeach; ?>
         </div>
@@ -120,13 +120,13 @@ $height_class = $height === 'auto' ? 'h-auto' : ($height === '100vh' ? 'h-screen
 
 <script>
 (function() {{
-    const slider = document.querySelector('.img2html-slider');
+    const slider = document.querySelector('.{base_class}');
     if (!slider) return;
     
-    const slides = slider.querySelectorAll('.slide');
-    const dots = slider.querySelectorAll('.dot');
-    const prevBtn = slider.querySelector('.slider-prev');
-    const nextBtn = slider.querySelector('.slider-next');
+    const slides = slider.querySelectorAll('.{slide_class}');
+    const dots = slider.querySelectorAll('.{dot_class}');
+    const prevBtn = slider.querySelector('.{arrow_class}--prev');
+    const nextBtn = slider.querySelector('.{arrow_class}--next');
     const autoplay = slider.dataset.autoplay === 'true';
     const speed = parseInt(slider.dataset.speed) || 5000;
     const transition = parseInt(slider.dataset.transition) || 500;
@@ -136,10 +136,10 @@ $height_class = $height === 'auto' ? 'h-auto' : ($height === '100vh' ? 'h-screen
     
     function showSlide(index) {{
         slides.forEach((slide, i) => {{
-            slide.classList.toggle('active', i === index);
+            slide.classList.toggle('{slide_class}--active', i === index);
         }});
         dots.forEach((dot, i) => {{
-            dot.classList.toggle('active', i === index);
+            dot.classList.toggle('{dot_class}--active', i === index);
         }});
         currentSlide = index;
     }}

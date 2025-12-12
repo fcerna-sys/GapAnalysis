@@ -5,33 +5,42 @@ Código completo migrado desde blocks_builder_backup.py
 """
 
 
-def _generate_slider_style_css(css_framework: str) -> str:
+def _generate_slider_style_css(css_framework: str, bem_prefix: str = 'img2html') -> str:
     """Genera los estilos CSS del slider según el framework."""
+    base_class = f"{bem_prefix}-slider"
+    slide_class = f"{bem_prefix}-slider__slide"
+    arrow_class = f"{bem_prefix}-slider__arrow"
+    dot_class = f"{bem_prefix}-slider__dot"
+    
     if css_framework == 'tailwind':
-        return """/* Estilos del Slider - Tailwind CSS */
+        return f"""/* Estilos del Slider - Tailwind CSS */
 /* La mayoría de estilos se manejan con clases de Tailwind */
+.{slide_class}--active {{
+    opacity: 1;
+    z-index: 1;
+}}
 """
     elif css_framework == 'bootstrap':
-        return """/* Estilos del Slider - Bootstrap 5 */
+        return f"""/* Estilos del Slider - Bootstrap 5 */
 /* Los estilos principales vienen de Bootstrap */
-.img2html-slider .carousel-overlay {
+.{base_class} .carousel-overlay {{
     z-index: 1;
-}
+}}
 """
     else:
-        return """/* Estilos del Slider - CSS Propio */
-.img2html-slider {
+        return f"""/* Estilos del Slider - CSS Propio */
+.{base_class} {{
     position: relative;
     overflow: hidden;
-}
+}}
 
-.img2html-slider .slider-wrapper {
+.{base_class}__wrapper {{
     position: relative;
     width: 100%;
     height: 100%;
-}
+}}
 
-.img2html-slider .slide {
+.{slide_class} {{
     position: absolute;
     top: 0;
     left: 0;
@@ -39,41 +48,41 @@ def _generate_slider_style_css(css_framework: str) -> str:
     height: 100%;
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
-}
+}}
 
-.img2html-slider .slide.active {
+.{slide_class}--active {{
     opacity: 1;
     z-index: 1;
-}
+}}
 
-.img2html-slider .slider-arrow {
+.{arrow_class} {{
     cursor: pointer;
     z-index: 10;
-}
+}}
 
-.img2html-slider .slider-dots {
+.{base_class}__dots {{
     z-index: 10;
-}
+}}
 
-.img2html-slider .dot {
+.{dot_class} {{
     cursor: pointer;
     border: none;
     background: rgba(255, 255, 255, 0.5);
-}
+}}
 
-.img2html-slider .dot.active {
+.{dot_class}--active {{
     background: rgba(255, 255, 255, 1);
-}
+}}
 """
 
-def _generate_slider_editor_css() -> str:
+def _generate_slider_editor_css(bem_prefix: str = 'img2html') -> str:
     """Genera los estilos CSS del editor."""
-    return """/* Estilos del Editor del Slider */
-.img2html-slider-editor {
+    return f"""/* Estilos del Editor del Slider */
+.{bem_prefix}-slider-editor {{
     border: 2px dashed #ccc;
     padding: 20px;
     margin: 20px 0;
-}
+}}
 
 .slider-editor-header {
     display: flex;
