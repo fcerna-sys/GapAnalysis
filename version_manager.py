@@ -5,6 +5,7 @@ Incluye: versionado automático, changelog, build, deploy.
 import os
 import json
 import shutil
+import re
 from datetime import datetime
 from typing import Dict, List, Optional
 from pathlib import Path
@@ -488,4 +489,3 @@ def setup_version_management(theme_dir: str, theme_slug: Optional[str] = None, i
         print(f"Error al configurar versiones: {e}")
         import traceback
         traceback.print_exc()
-

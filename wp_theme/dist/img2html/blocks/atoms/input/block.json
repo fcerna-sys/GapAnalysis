@@ -8,14 +8,36 @@
   "style": "file:./style.css",
   "render": "file:./render.php",
   "attributes": {
-    "type": {"type": "string", "default": "text"},
-    "placeholder": {"type": "string", "default": ""},
-    "value": {"type": "string", "default": ""},
-    "fullWidth": {"type": "boolean", "default": false}
+    "type": {
+      "type": "string",
+      "default": "text"
+    },
+    "placeholder": {
+      "type": "string",
+      "default": ""
+    },
+    "value": {
+      "type": "string",
+      "default": ""
+    },
+    "fullWidth": {
+      "type": "boolean",
+      "default": false
+    }
   },
   "supports": {
-    "spacing": {"margin": true},
-    "color": {"background": false, "text": false},
-    "html": false
-  }
+    "spacing": {
+      "margin": true
+    },
+    "color": {
+      "background": false,
+      "text": false
+    },
+    "html": false,
+    "customClassName": false
+  },
+  "example": {
+    "attributes": {}
+  },
+  "version": "1.0.0"
 }

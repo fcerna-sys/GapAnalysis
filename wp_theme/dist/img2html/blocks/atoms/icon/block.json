@@ -8,12 +8,27 @@
   "style": "file:./style.css",
   "render": "file:./render.php",
   "attributes": {
-    "name": {"type": "string", "default": "star"},
-    "size": {"type": "number", "default": 20}
+    "name": {
+      "type": "string",
+      "default": "star"
+    },
+    "size": {
+      "type": "number",
+      "default": 20
+    }
   },
   "supports": {
-    "spacing": {"margin": true},
-    "color": {"text": true},
-    "html": false
-  }
+    "spacing": {
+      "margin": true
+    },
+    "color": {
+      "text": true
+    },
+    "html": false,
+    "customClassName": false
+  },
+  "example": {
+    "attributes": {}
+  },
+  "version": "1.0.0"
 }

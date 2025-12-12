@@ -280,7 +280,7 @@ def generate_pattern_from_section(section: Dict, dna: Optional[Dict] = None) -> 
             except Exception:
                 is_dark = False
             if image_url:
-                blocks.append('<!-- wp:group {"align":"full"} -->')
+                blocks.append('<!-- wp:group {"align":"full","templateLock":"all"} -->')
                 blocks.append('<div class="wp-block-group alignfull">')
                 blocks.append('<!-- wp:img2html/hero ')
                 hero_attrs = {
@@ -315,7 +315,7 @@ def generate_pattern_from_section(section: Dict, dna: Optional[Dict] = None) -> 
                 blocks.append('<!-- /wp:cover -->')
     else:
         # Sección normal con grupo
-        blocks.append('<!-- wp:group {"layout":{"type":"constrained"}} -->')
+        blocks.append('<!-- wp:group {"layout":{"type":"constrained"},"templateLock":"all"} -->')
         blocks.append('<div class="wp-block-group">')
         blocks.append(f'<!-- wp:heading {{"level":2}} -->')
         blocks.append(f'<h2>{title}</h2>')
@@ -358,13 +358,18 @@ def update_patterns_json(theme_dir: str, sections: List[Dict]):
     try:
         patterns_json_path = os.path.join(theme_dir, 'patterns.json')
         patterns_data = {"$schema": "https://schemas.wp.org/trunk/theme.json"}
+        try:
+            from blocks_builder import get_bem_prefix
+            bem_prefix = get_bem_prefix(None)
+        except Exception:
+            bem_prefix = 'img2html'
         
         patterns_list = []
         for section in sections:
             slug = section.get('slug', '')
             label = section.get('label', '')
             if slug:
-                patterns_list.append(f"img2html/{slug}")
+                patterns_list.append(f"{bem_prefix}/{slug}")
         
         patterns_data['patterns'] = patterns_list
         
@@ -671,9 +676,14 @@ def build_complete_theme(theme_dir: str, plan: Dict, dna: Optional[Dict] = None,
     ensure_patterns_php(theme_dir, theme_slug)
     try:
         from blocks_builder import get_bem_prefix
-        ensure_block_css_written(theme_dir, get_bem_prefix(theme_slug or 'img2html'))
+        bem = get_bem_prefix(theme_slug or 'img2html')
+        ensure_block_css_written(theme_dir, bem)
+        ensure_assets_block_css(theme_dir, bem)
+        ensure_assets_block_js(theme_dir, bem)
     except Exception:
         ensure_block_css_written(theme_dir, 'img2html')
+        ensure_assets_block_css(theme_dir, 'img2html')
+        ensure_assets_block_js(theme_dir, 'img2html')
 
     # Generar archivo php para CPT y WooCommerce opcional
     ensure_cpt_php(theme_dir, plan)
@@ -2784,6 +2794,21 @@ def ensure_block_json_supports(theme_dir: str):
             if 'html' not in supports:
                 supports['html'] = False
                 updated = True
+            if 'anchor' not in supports:
+                supports['anchor'] = False
+                updated = True
+            spacing_obj = supports.get('spacing')
+            if isinstance(spacing_obj, dict):
+                if 'margin' not in spacing_obj:
+                    spacing_obj['margin'] = True
+                    supports['spacing'] = spacing_obj
+                    updated = True
+            color_obj = supports.get('color')
+            if isinstance(color_obj, dict):
+                if 'link' not in color_obj:
+                    color_obj['link'] = False
+                    supports['color'] = color_obj
+                    updated = True
             if updated:
                 data['supports'] = supports
                 try:
@@ -2841,6 +2866,106 @@ def ensure_block_css_written(theme_dir: str, bem_prefix: Optional[str] = 'img2ht
                         f.write(css)
                 except Exception:
                     pass
+
+def ensure_assets_block_css(theme_dir: str, bem_prefix: Optional[str] = 'img2html'):
+    dest_dir = os.path.join(theme_dir, 'assets', 'blocks', 'components')
+    os.makedirs(dest_dir, exist_ok=True)
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    if not os.path.isdir(blocks_dir):
+        return
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            src = os.path.join(blocks_dir, level, block_name, 'style.css')
+            if not os.path.isfile(src):
+                continue
+            try:
+                with open(src, 'r', encoding='utf-8') as f:
+                    css = f.read()
+                out_name = f"{(bem_prefix or 'img2html')}-{block_name}.css"
+                out_path = os.path.join(dest_dir, out_name)
+                with open(out_path, 'w', encoding='utf-8') as wf:
+                    wf.write(css)
+                try:
+                    min_css = _minify_css_text(css)
+                    with open(out_path.replace('.css', '.min.css'), 'w', encoding='utf-8') as mwf:
+                        mwf.write(min_css)
+                except Exception:
+                    pass
+            except Exception:
+                continue
+            editor_src = os.path.join(blocks_dir, level, block_name, 'editor.css')
+            if os.path.isfile(editor_src):
+                try:
+                    with open(editor_src, 'r', encoding='utf-8') as ef:
+                        ecss = ef.read()
+                    e_out_name = f"{(bem_prefix or 'img2html')}-{block_name}-editor.css"
+                    e_out_path = os.path.join(dest_dir, e_out_name)
+                    with open(e_out_path, 'w', encoding='utf-8') as ewf:
+                        ewf.write(ecss)
+                    try:
+                        min_ecss = _minify_css_text(ecss)
+                        with open(e_out_path.replace('.css', '.min.css'), 'w', encoding='utf-8') as mewf:
+                            mewf.write(min_ecss)
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+
+def ensure_assets_block_js(theme_dir: str, bem_prefix: Optional[str] = 'img2html'):
+    dest_dir = os.path.join(theme_dir, 'assets', 'blocks', 'components')
+    os.makedirs(dest_dir, exist_ok=True)
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    if not os.path.isdir(blocks_dir):
+        return
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            src = os.path.join(blocks_dir, level, block_name, 'script.js')
+            if not os.path.isfile(src):
+                continue
+            try:
+                with open(src, 'r', encoding='utf-8') as f:
+                    js = f.read()
+                out_name = f"{(bem_prefix or 'img2html')}-{block_name}.js"
+                out_path = os.path.join(dest_dir, out_name)
+                with open(out_path, 'w', encoding='utf-8') as wf:
+                    wf.write(js)
+                try:
+                    min_js = _minify_js_text(js)
+                    with open(out_path.replace('.js', '.min.js'), 'w', encoding='utf-8') as mwf:
+                        mwf.write(min_js)
+                except Exception:
+                    pass
+            except Exception:
+                continue
+
+def _minify_css_text(txt: str) -> str:
+    import re
+    txt = re.sub(r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/", "", txt)
+    txt = re.sub(r"\s+", " ", txt)
+    txt = re.sub(r"\s*{\s*", "{", txt)
+    txt = re.sub(r"\s*}\s*", "}", txt)
+    txt = re.sub(r"\s*;\s*", ";", txt)
+    txt = re.sub(r"\s*:\s*", ":", txt)
+    return txt.strip()
+
+def _minify_js_text(txt: str) -> str:
+    import re
+    txt = re.sub(r"//.*", "", txt)
+    txt = re.sub(r"/\*[^*]*\*+(?:[^/*][^*]*\*+)*/", "", txt)
+    txt = re.sub(r"\s+", " ", txt)
+    return txt.strip()
 
 def generate_theme_documentation(theme_dir: str, theme_name: str, theme_description: str, theme_slug: Optional[str] = None, plan: Optional[Dict] = None, dna: Optional[Dict] = None):
     """

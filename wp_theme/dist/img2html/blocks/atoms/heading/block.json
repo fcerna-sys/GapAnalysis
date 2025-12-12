@@ -8,15 +8,44 @@
   "style": "file:./style.css",
   "render": "file:./render.php",
   "attributes": {
-    "text": {"type": "string", "default": "Título"},
-    "level": {"type": "number", "default": 2},
-    "align": {"type": "string", "default": "left"}
+    "text": {
+      "type": "string",
+      "default": "Título"
+    },
+    "level": {
+      "type": "number",
+      "default": 2
+    },
+    "align": {
+      "type": "string",
+      "default": "left"
+    }
   },
   "supports": {
-    "align": ["left","center","right"],
-    "spacing": {"margin": true},
-    "typography": {"fontSize": false, "lineHeight": false, "textDecoration": false, "textTransform": false, "fontStyle": false, "fontWeight": false},
-    "color": {"text": false},
-    "html": false
-  }
+    "align": [
+      "left",
+      "center",
+      "right"
+    ],
+    "spacing": {
+      "margin": true
+    },
+    "typography": {
+      "fontSize": false,
+      "lineHeight": false,
+      "textDecoration": false,
+      "textTransform": false,
+      "fontStyle": false,
+      "fontWeight": false
+    },
+    "color": {
+      "text": false
+    },
+    "html": false,
+    "customClassName": false
+  },
+  "example": {
+    "attributes": {}
+  },
+  "version": "1.0.0"
 }

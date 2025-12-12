@@ -8,59 +8,59 @@
 
 return [
         'img2html/atom-badge' => [
-        'style' => ['blocks/atoms/badge/style.css'],
+        'style' => ['assets/blocks/components/img2html-badge.css'],
         'version' => '1.0.0'
     ],
         'img2html/atom-button' => [
-        'style' => ['blocks/atoms/button/style.css'],
+        'style' => ['assets/blocks/components/img2html-button.css'],
         'version' => '1.0.0'
     ],
         'img2html/atom-container' => [
-        'style' => ['blocks/atoms/container/style.css'],
+        'style' => ['assets/blocks/components/img2html-container.css'],
         'version' => '1.0.0'
     ],
         'img2html/atom-heading' => [
-        'style' => ['blocks/atoms/heading/style.css'],
+        'style' => ['assets/blocks/components/img2html-heading.css'],
         'version' => '1.0.0'
     ],
         'img2html/atom-icon' => [
-        'style' => ['blocks/atoms/icon/style.css'],
+        'style' => ['assets/blocks/components/img2html-icon.css'],
         'version' => '1.0.0'
     ],
         'img2html/atom-input' => [
-        'style' => ['blocks/atoms/input/style.css'],
+        'style' => ['assets/blocks/components/img2html-input.css'],
         'version' => '1.0.0'
     ],
         'img2html/atom-link' => [
-        'style' => ['blocks/atoms/link/style.css'],
+        'style' => ['assets/blocks/components/img2html-link.css'],
         'version' => '1.0.0'
     ],
         'img2html/atom-paragraph' => [
-        'style' => ['blocks/atoms/paragraph/style.css'],
+        'style' => ['assets/blocks/components/img2html-paragraph.css'],
         'version' => '1.0.0'
     ],
         'img2html/molecule-card' => [
-        'style' => ['blocks/molecules/card/style.css'],
+        'style' => ['assets/blocks/components/img2html-card.css'],
         'version' => '1.0.0'
     ],
         'img2html/molecule-features-list' => [
-        'style' => ['blocks/molecules/features-list/style.css'],
+        'style' => ['assets/blocks/components/img2html-features-list.css'],
         'version' => '1.0.0'
     ],
         'img2html/molecule-pricing-feature' => [
-        'style' => ['blocks/molecules/pricing-feature/style.css'],
+        'style' => ['assets/blocks/components/img2html-pricing-feature.css'],
         'version' => '1.0.0'
     ],
         'img2html/molecule-team-member' => [
-        'style' => ['blocks/molecules/team-member/style.css'],
+        'style' => ['assets/blocks/components/img2html-team-member.css'],
         'version' => '1.0.0'
     ],
         'img2html/molecule-testimonial' => [
-        'style' => ['blocks/molecules/testimonial/style.css'],
+        'style' => ['assets/blocks/components/img2html-testimonial.css'],
         'version' => '1.0.0'
     ],
         'img2html/organism-hero' => [
-        'style' => ['blocks/organisms/hero/style.css'],
+        'style' => ['assets/blocks/components/img2html-hero.css'],
         'version' => '1.0.0'
     ]
     ];

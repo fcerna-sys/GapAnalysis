@@ -168,18 +168,41 @@ def generate_block_manifest(theme_dir: str, bem_prefix: str):
                 
                 # CSS del bloque
                 styles = []
-                if os.path.isfile(style_path):
+                asset_copy = os.path.join(theme_dir, 'assets', 'blocks', 'components', f"{bem_prefix}-{block_name}.css")
+                asset_copy_min = os.path.join(theme_dir, 'assets', 'blocks', 'components', f"{bem_prefix}-{block_name}.min.css")
+                if os.path.isfile(asset_copy_min):
+                    rel_style = f'assets/blocks/components/{bem_prefix}-{block_name}.min.css'
+                    styles.append(rel_style)
+                elif os.path.isfile(asset_copy):
+                    rel_style = f'assets/blocks/components/{bem_prefix}-{block_name}.css'
+                    styles.append(rel_style)
+                elif os.path.isfile(style_path):
                     rel_style = f'blocks/{level}/{block_name}/style.css'
                     styles.append(rel_style)
                 if os.path.isfile(editor_style_path):
                     rel_editor = f'blocks/{level}/{block_name}/editor.css'
                     styles.append(rel_editor)
+                asset_editor_copy = os.path.join(theme_dir, 'assets', 'blocks', 'components', f"{bem_prefix}-{block_name}-editor.css")
+                asset_editor_copy_min = os.path.join(theme_dir, 'assets', 'blocks', 'components', f"{bem_prefix}-{block_name}-editor.min.css")
+                if os.path.isfile(asset_editor_copy_min):
+                    rel_editor_asset = f'assets/blocks/components/{bem_prefix}-{block_name}-editor.min.css'
+                    styles.append(rel_editor_asset)
+                elif os.path.isfile(asset_editor_copy):
+                    rel_editor_asset = f'assets/blocks/components/{bem_prefix}-{block_name}-editor.css'
+                    styles.append(rel_editor_asset)
                 
                 if styles:
                     assets['style'] = styles
                 
-                # JS del bloque
-                if os.path.isfile(script_path):
+                asset_script_copy = os.path.join(theme_dir, 'assets', 'blocks', 'components', f"{bem_prefix}-{block_name}.js")
+                asset_script_copy_min = os.path.join(theme_dir, 'assets', 'blocks', 'components', f"{bem_prefix}-{block_name}.min.js")
+                if os.path.isfile(asset_script_copy_min):
+                    rel_script = f'assets/blocks/components/{bem_prefix}-{block_name}.min.js'
+                    assets['script'] = [rel_script]
+                elif os.path.isfile(asset_script_copy):
+                    rel_script = f'assets/blocks/components/{bem_prefix}-{block_name}.js'
+                    assets['script'] = [rel_script]
+                elif os.path.isfile(script_path):
                     rel_script = f'blocks/{level}/{block_name}/script.js'
                     assets['script'] = [rel_script]
                 
