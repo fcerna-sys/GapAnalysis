@@ -15,7 +15,8 @@
   },
   "supports": {
     "align": ["left","center","right"],
-    "spacing": {"margin": true, "padding": true},
-    "color": {"background": true, "text": true}
+    "spacing": {"margin": true},
+    "color": {"background": true, "text": false},
+    "html": false
   }
 }

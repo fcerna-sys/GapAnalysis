@@ -14,6 +14,9 @@
   },
   "supports": {
     "align": ["left","center","right"],
-    "spacing": {"margin": true}
+    "spacing": {"margin": true},
+    "typography": {"fontSize": false, "lineHeight": false, "textDecoration": false, "textTransform": false, "fontStyle": false, "fontWeight": false},
+    "color": {"text": false},
+    "html": false
   }
 }

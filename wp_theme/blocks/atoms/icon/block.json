@@ -10,5 +10,10 @@
   "attributes": {
     "name": {"type": "string", "default": "star"},
     "size": {"type": "number", "default": 20}
+  },
+  "supports": {
+    "spacing": {"margin": true},
+    "color": {"text": true},
+    "html": false
   }
 }

@@ -112,16 +112,17 @@ function img2html_enqueue_block_manifest_assets(){
 
       static $enqueued_components = [];
       $classes = [];
+      $bem_prefix = function_exists('img2html_bem_prefix') ? img2html_bem_prefix() : 'img2html';
       if (isset($block['attrs']['className']) && is_string($block['attrs']['className'])){
         foreach (preg_split('/\s+/', $block['attrs']['className']) as $cls){
-          if (strpos($cls, 'img2html-') === 0) $classes[] = $cls;
+          if (strpos($cls, $bem_prefix.'-') === 0 || strpos($cls, 'img2html-') === 0) $classes[] = $cls;
         }
       }
       if (is_string($content)){
         if (preg_match_all('/class="([^"]+)"/', $content, $m)){
           foreach ($m[1] as $classAttr){
             foreach (preg_split('/\s+/', $classAttr) as $cls){
-              if (strpos($cls, 'img2html-') === 0) $classes[] = $cls;
+              if (strpos($cls, $bem_prefix.'-') === 0 || strpos($cls, 'img2html-') === 0) $classes[] = $cls;
             }
           }
         }
@@ -134,6 +135,17 @@ function img2html_enqueue_block_manifest_assets(){
         $js_rel = 'assets/components/'.$base.'.js';
         $css_path = get_theme_file_path($css_rel);
         $js_path = get_theme_file_path($js_rel);
+        // Fallback a prefijo 'img2html-' si no existe el archivo para prefijo dinámico
+        if (!file_exists($css_path)){
+          $fallback_base = preg_replace('/^[^-]+-/', 'img2html-', $base);
+          $css_rel = 'assets/components/'.$fallback_base.'.css';
+          $css_path = get_theme_file_path($css_rel);
+        }
+        if (!file_exists($js_path)){
+          $fallback_base = preg_replace('/^[^-]+-/', 'img2html-', $base);
+          $js_rel = 'assets/components/'.$fallback_base.'.js';
+          $js_path = get_theme_file_path($js_rel);
+        }
         if (file_exists($css_path)){
           wp_enqueue_style('img2html-component-'.md5($base.$css_rel), get_theme_file_uri($css_rel), [], filemtime($css_path));
         }

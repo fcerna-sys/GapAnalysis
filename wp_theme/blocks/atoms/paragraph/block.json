@@ -12,6 +12,9 @@
     "align": {"type": "string", "default": "left"}
   },
   "supports": {
-    "spacing": {"margin": true}
+    "spacing": {"margin": true},
+    "typography": {"fontSize": false, "lineHeight": false},
+    "color": {"text": false},
+    "html": false
   }
 }
