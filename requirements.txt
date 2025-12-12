@@ -1,8 +1,8 @@
 flask
 google-cloud-vision
 google-generativeai
-pytesseract
-pillow
+pytesseract==0.3.10
+pillow==10.2.0
 colorgram.py
 pytest
 coverage

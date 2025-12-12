@@ -1,6 +1,21 @@
 import os
 import base64
 from typing import Dict, List
+import multiprocessing
+import io
+
+SAFE_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+
+def _is_safe_image_path(p: str) -> bool:
+    try:
+        ext = os.path.splitext(p)[1].lower()
+        if ext not in SAFE_IMAGE_EXTS:
+            return False
+        if not os.path.isfile(p):
+            return False
+        return True
+    except Exception:
+        return False
 
 def _qwen2_vl(paths: List[str]) -> Dict[str, str]:
     """
@@ -12,7 +27,6 @@ def _qwen2_vl(paths: List[str]) -> Dict[str, str]:
     try:
         import requests
         from PIL import Image
-        import io
     except ImportError:
         return {}
     
@@ -24,14 +38,12 @@ def _qwen2_vl(paths: List[str]) -> Dict[str, str]:
     for p in paths:
         try:
             # Validar que el archivo existe y es una imagen válida
-            if not os.path.isfile(p):
+            if not _is_safe_image_path(p):
                 out[p] = ''
                 continue
             
             # Optimizar imagen antes de enviar (redimensionar si es muy grande)
             try:
-                from PIL import Image
-                import io
                 img = Image.open(p).convert('RGB')
                 # Redimensionar si es muy grande (máx 2048px para OCR)
                 max_size = 2048
@@ -169,18 +181,57 @@ def _google_vision(paths: List[str]) -> Dict[str, str]:
             out[p] = ''
     return out
 
-def _tesseract(paths: List[str]) -> Dict[str, str]:
+def _tesseract_worker(path: str, conn):
     try:
         import pytesseract
         from PIL import Image
+        if not _is_safe_image_path(path):
+            conn.send('')
+            return
+        # Opcional: respetar ruta de Tesseract desde entorno
+        try:
+            cmd = os.environ.get('TESSERACT_CMD')
+            if cmd and os.path.isfile(cmd):
+                import pytesseract as _pt
+                _pt.pytesseract.tesseract_cmd = cmd
+        except Exception:
+            pass
+        img = Image.open(path).convert('RGB')
+        max_size = 2048
+        if max(img.size) > max_size:
+            ratio = max_size / max(img.size)
+            new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
+            img = img.resize(new_size, Image.Resampling.LANCZOS)
+        # Usar config conservadora
+        try:
+            text = pytesseract.image_to_string(img, config='--psm 6')
+        except Exception:
+            text = ''
+        conn.send(text or '')
     except Exception:
-        return {}
+        try:
+            conn.send('')
+        except Exception:
+            pass
+
+def _tesseract(paths: List[str]) -> Dict[str, str]:
     out: Dict[str, str] = {}
     for p in paths:
         try:
-            img = Image.open(p)
-            text = pytesseract.image_to_string(img)
-            out[p] = text
+            parent_conn, child_conn = multiprocessing.Pipe()
+            proc = multiprocessing.Process(target=_tesseract_worker, args=(p, child_conn))
+            proc.daemon = True
+            proc.start()
+            # Timeout estricto para evitar bloqueos
+            if parent_conn.poll(10):
+                text = parent_conn.recv()
+                out[p] = text
+            else:
+                try:
+                    proc.terminate()
+                except Exception:
+                    pass
+                out[p] = ''
         except Exception:
             out[p] = ''
     return out

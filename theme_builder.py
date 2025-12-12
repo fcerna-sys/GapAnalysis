@@ -842,7 +842,6 @@ def apply_typography_and_spacing(theme_dir: str, dna: Optional[Dict] = None, des
             ensure_size('3xl', '3XLarge', '1.875rem')
             ensure_size('4xl', '4XLarge', '2.25rem')
 
-        # Espaciados dinámicos desde DNA/plan
         spacing = settings.setdefault('spacing', {})
         spacing.setdefault('units', ['px', 'em', 'rem', '%', 'vh', 'vw'])
         preset_spacing = spacing.setdefault('spacingSizes', [])
@@ -877,6 +876,8 @@ def apply_typography_and_spacing(theme_dir: str, dna: Optional[Dict] = None, des
             ensure_space('xl', 'XLarge', '32px')
             ensure_space('2xl', '2XLarge', '48px')
             ensure_space('3xl', '3XLarge', '64px')
+
+        spacing['blockGap'] = 'var(--wp--preset--spacing--md)'
 
         # Border radius dinámico desde DNA/plan
         borders = settings.setdefault('border', {})
@@ -913,9 +914,7 @@ def apply_typography_and_spacing(theme_dir: str, dna: Optional[Dict] = None, des
         if 'fontFamily' not in body_typo:
             body_typo['fontFamily'] = 'var(--wp--preset--font-family--primary)' if settings.get('typography', {}).get('fontFamilies') else 'system-ui, sans-serif'
 
-        # Presets base de botones y textos
         presets = theme_data.setdefault('styles', {}).setdefault('blocks', {})
-        # Botón: usa color primario si existe
         btn_style = {
             "color": {
                 "text": "var(--wp--preset--color--background)",
@@ -930,24 +929,38 @@ def apply_typography_and_spacing(theme_dir: str, dna: Optional[Dict] = None, des
             },
             "spacing": {
                 "padding": {
-                    "top": "0.75rem",
-                    "right": "1.25rem",
-                    "bottom": "0.75rem",
-                    "left": "1.25rem"
+                    "top": "var(--wp--preset--spacing--sm)",
+                    "right": "var(--wp--preset--spacing--lg)",
+                    "bottom": "var(--wp--preset--spacing--sm)",
+                    "left": "var(--wp--preset--spacing--lg)"
                 }
             }
         }
         presets['core/button'] = btn_style
 
-        # Heading y párrafo base
         presets['core/heading'] = {
             "typography": {
-                "fontFamily": "var(--wp--preset--font-family--primary)"
+                "fontFamily": "var(--wp--preset--font-family--primary)",
+                "fontWeight": "700",
+                "lineHeight": "var(--wp--preset--line-height--snug)"
+            },
+            "spacing": {
+                "margin": {
+                    "top": "0",
+                    "bottom": "var(--wp--preset--spacing--md)"
+                }
             }
         }
         presets['core/paragraph'] = {
             "typography": {
-                "fontFamily": "var(--wp--preset--font-family--primary)"
+                "fontFamily": "var(--wp--preset--font-family--primary)",
+                "lineHeight": "var(--wp--preset--line-height--normal)"
+            },
+            "spacing": {
+                "margin": {
+                    "top": "0",
+                    "bottom": "var(--wp--preset--spacing--md)"
+                }
             }
         }
 

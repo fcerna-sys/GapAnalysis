@@ -80,11 +80,14 @@ function img2html_enqueue_block_manifest_assets(){
         $deps_script = isset($cfg['deps_script']) ? (array)$cfg['deps_script'] : [];
         $version = isset($cfg['version']) ? $cfg['version'] : null;
         foreach ($styles as $rel){
-          $uri = get_theme_file_uri($rel);
-          $path = get_theme_file_path($rel);
+          $rel_min = preg_replace('/\.css$/', '.min.css', $rel);
+          $path_min = get_theme_file_path($rel_min);
+          $use_rel = file_exists($path_min) ? $rel_min : $rel;
+          $uri = get_theme_file_uri($use_rel);
+          $path = get_theme_file_path($use_rel);
           if (file_exists($path)){
             $ver = $version ? $version : filemtime($path);
-            wp_enqueue_style('img2html-block-'.md5($block.$rel), $uri, $deps_style, $ver);
+            wp_enqueue_style('img2html-block-'.md5($block.$use_rel), $uri, $deps_style, $ver);
           }
         }
         foreach ($scripts as $rel){
@@ -199,10 +202,18 @@ function img2html_enqueue_block_manifest_assets(){
           $js_path = get_theme_file_path($js_rel);
         }
         if (file_exists($css_path)){
-          wp_enqueue_style('img2html-component-'.md5($base.$css_rel), get_theme_file_uri($css_rel), [], filemtime($css_path));
+          $css_rel_min = preg_replace('/\.css$/', '.min.css', $css_rel);
+          $css_path_min = get_theme_file_path($css_rel_min);
+          $css_use_rel = file_exists($css_path_min) ? $css_rel_min : $css_rel;
+          $css_use_path = file_exists($css_path_min) ? $css_path_min : $css_path;
+          wp_enqueue_style('img2html-component-'.md5($base.$css_use_rel), get_theme_file_uri($css_use_rel), [], filemtime($css_use_path));
         }
         if (file_exists($js_path)){
-          wp_enqueue_script('img2html-component-'.md5($base.$js_rel), get_theme_file_uri($js_rel), [], filemtime($js_path), true);
+          $js_rel_min = preg_replace('/\.js$/', '.min.js', $js_rel);
+          $js_path_min = get_theme_file_path($js_rel_min);
+          $js_use_rel = file_exists($js_path_min) ? $js_rel_min : $js_rel;
+          $js_use_path = file_exists($js_path_min) ? $js_path_min : $js_path;
+          wp_enqueue_script('img2html-component-'.md5($base.$js_use_rel), get_theme_file_uri($js_use_rel), [], filemtime($js_use_path), true);
         }
         $enqueued_components[$base] = true;
       }

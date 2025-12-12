@@ -20,6 +20,8 @@ ENV_PATH = os.path.join(BASE_DIR, '.env')
 
 app = Flask(__name__)
 app.secret_key = 'img2html-secret'
+# Límite de tamaño de carga (100 MB)
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024
 load_dotenv()
 try:
     if not os.path.isfile(os.path.join(BASE_DIR, '.env')):
@@ -29,11 +31,45 @@ except Exception:
     pass
 
 ALLOWED_EXTENSIONS = {'.zip'}
+SAFE_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+MAX_ZIP_FILES = 500
+MAX_ZIP_UNCOMPRESSED = 300 * 1024 * 1024  # 300 MB
 PROGRESS = {}
 
 def allowed_file(filename):
     ext = os.path.splitext(filename)[1].lower()
     return ext in ALLOWED_EXTENSIONS
+
+def _sanitize_slug(text: str):
+    slug = ''.join(ch if ch.isalnum() or ch in ('-', '_') else '-' for ch in (text or ''))
+    slug = slug.strip('-_').lower()
+    if not slug:
+        slug = 'img2html-theme'
+    return slug[:64]
+
+def _safe_extract_zip(zf: zipfile.ZipFile, dest_dir: str):
+    total_uncompressed = 0
+    count = 0
+    for info in zf.infolist():
+        name = info.filename
+        # Evitar traversal
+        if '..' in name or name.startswith('/') or name.startswith('\\'):
+            continue
+        ext = os.path.splitext(name)[1].lower()
+        # Solo extraer imágenes admitidas
+        if ext not in SAFE_IMAGE_EXTS:
+            continue
+        total_uncompressed += getattr(info, 'file_size', 0)
+        count += 1
+        if count > MAX_ZIP_FILES or total_uncompressed > MAX_ZIP_UNCOMPRESSED:
+            break
+        target_path = os.path.abspath(os.path.join(dest_dir, name))
+        if not target_path.startswith(os.path.abspath(dest_dir)):
+            continue
+        # Crear directorio padre si no existe
+        os.makedirs(os.path.dirname(target_path), exist_ok=True)
+        with zf.open(info) as rf, open(target_path, 'wb') as wf:
+            wf.write(rf.read())
 
 @app.template_filter('basename')
 def basename_filter(p):
@@ -86,7 +122,7 @@ def index():
 def upload():
     file = request.files.get('zipfile')
     theme_name = request.form.get('theme_name', '').strip() or 'Img2HTML AI Theme'
-    theme_slug = request.form.get('theme_slug', '').strip() or ''
+    theme_slug = _sanitize_slug(request.form.get('theme_slug', '').strip() or '')
     theme_description = request.form.get('theme_description', '').strip() or 'Tema de bloques generado y refinado con IA desde imágenes'
     theme_version = request.form.get('theme_version', '').strip() or '1.0.0'
     theme_author = request.form.get('theme_author', '').strip() or ''
@@ -115,13 +151,19 @@ def upload():
     zip_path = os.path.join(batch_dir, secure_filename(file.filename))
     file.save(zip_path)
     with zipfile.ZipFile(zip_path, 'r') as zf:
-        zf.extractall(batch_dir)
+        _safe_extract_zip(zf, batch_dir)
     images = []
+    from PIL import Image as PILImage
     for root, _, files in os.walk(batch_dir):
         for f in files:
             ext = os.path.splitext(f)[1].lower()
-            if ext in {'.png', '.jpg', '.jpeg', '.webp', '.gif'}:
-                images.append(os.path.join(root, f))
+            if ext in SAFE_IMAGE_EXTS:
+                p = os.path.join(root, f)
+                try:
+                    im = PILImage.open(p); im.verify()
+                    images.append(p)
+                except Exception:
+                    pass
     if not images:
         flash('El ZIP no contiene imágenes válidas')
         return redirect(url_for('index'))
@@ -177,7 +219,7 @@ def upload():
         try:
             from werkzeug.utils import secure_filename
             screenshot_ext = os.path.splitext(theme_screenshot_file.filename)[1].lower()
-            if screenshot_ext in {'.png', '.jpg', '.jpeg', '.webp', '.svg'}:
+            if screenshot_ext in {'.png', '.jpg', '.jpeg', '.webp'}:
                 screenshot_filename = f'screenshot{screenshot_ext}'
                 screenshot_path = os.path.join(batch_dir, screenshot_filename)
                 theme_screenshot_file.save(screenshot_path)
@@ -187,7 +229,7 @@ def upload():
     request.environ['img2html_batch_dir'] = batch_dir
     request.environ['img2html_plan'] = plan
     request.environ['img2html_theme_name'] = theme_name
-    request.environ['img2html_theme_slug'] = theme_slug
+    request.environ['img2html_theme_slug'] = theme_slug or _sanitize_slug(theme_name)
     request.environ['img2html_theme_description'] = theme_description
     request.environ['img2html_theme_version'] = theme_version
     request.environ['img2html_theme_author'] = theme_author
