@@ -49,14 +49,20 @@ function img2html_enqueue_block_manifest_assets(){
     $components_dir = get_theme_file_path('assets/components');
     if (is_dir($components_dir)){
       foreach (glob($components_dir.'/*.css') as $css){
-        $rel = str_replace(get_theme_file_path(''), '', $css);
-        $uri = get_theme_file_uri('assets/components/'.basename($css));
-        wp_enqueue_style('img2html-component-'.md5($rel), $uri, [], filemtime($css));
+        if (preg_match('/\.min\.css$/', $css)) continue;
+        $min = preg_replace('/\.css$/','.min.css',$css);
+        $use = file_exists($min) ? $min : $css;
+        $rel = str_replace(get_theme_file_path(''), '', $use);
+        $uri = get_theme_file_uri('assets/components/'.basename($use));
+        wp_enqueue_style('img2html-component-'.md5($rel), $uri, [], filemtime($use));
       }
       foreach (glob($components_dir.'/*.js') as $js){
-        $rel = str_replace(get_theme_file_path(''), '', $js);
-        $uri = get_theme_file_uri('assets/components/'.basename($js));
-        wp_enqueue_script('img2html-component-'.md5($rel), $uri, [], filemtime($js), true);
+        if (preg_match('/\.min\.js$/', $js)) continue;
+        $min = preg_replace('/\.js$/','.min.js',$js);
+        $use = file_exists($min) ? $min : $js;
+        $rel = str_replace(get_theme_file_path(''), '', $use);
+        $uri = get_theme_file_uri('assets/components/'.basename($use));
+        wp_enqueue_script('img2html-component-'.md5($rel), $uri, [], filemtime($use), true);
       }
     }
   };

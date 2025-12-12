@@ -41,3 +41,36 @@ function img2html_generate_minified_assets(){
   }
 }
 add_action('after_switch_theme','img2html_generate_minified_assets');
+
+add_filter('wp_resource_hints', function($hints, $relation_type){
+  $extra = apply_filters('img2html_resource_hints', [
+    'dns-prefetch' => [],
+    'preconnect' => []
+  ]);
+  if ($relation_type === 'preconnect' && !empty($extra['preconnect'])){
+    foreach ($extra['preconnect'] as $url){ $hints[] = $url; }
+  }
+  if ($relation_type === 'dns-prefetch' && !empty($extra['dns-prefetch'])){
+    foreach ($extra['dns-prefetch'] as $url){ $hints[] = $url; }
+  }
+  return array_unique($hints);
+}, 10, 2);
+
+function img2html_disable_emojis(){
+  remove_action('wp_head','print_emoji_detection_script',7);
+  remove_action('admin_print_scripts','print_emoji_detection_script');
+  remove_action('wp_print_styles','print_emoji_styles');
+  remove_action('admin_print_styles','print_emoji_styles');
+  remove_filter('the_content_feed','wp_staticize_emoji');
+  remove_filter('comment_text_rss','wp_staticize_emoji');
+  remove_filter('wp_mail','wp_staticize_emoji_for_email');
+  add_filter('emoji_svg_url','__return_false');
+}
+add_action('init','img2html_disable_emojis');
+
+function img2html_optimize_dashicons(){
+  if (!is_admin() && !is_user_logged_in()){
+    wp_deregister_style('dashicons');
+  }
+}
+add_action('wp_enqueue_scripts','img2html_optimize_dashicons');
