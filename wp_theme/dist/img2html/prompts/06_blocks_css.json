@@ -1,0 +1,16 @@
+{
+  "name": "CSS Complementario de Bloques",
+  "model": "auto",
+  "role": "Autor de blocks.css",
+  "objective": "Crear blocks.css para formularios, galería con lightbox, y comentarios.",
+  "requirements": [
+    "Usar variables preset en colores",
+    "Compatibilidad con 6.8 (gallery lightbox, botones border-box)",
+    "No duplicar lo ya definido en theme.json"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["blocks.css", "functions.php"],
+    "target_dir": ".."
+  }
+}

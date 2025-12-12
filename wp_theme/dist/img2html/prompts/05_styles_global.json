@@ -1,0 +1,19 @@
+{
+  "name": "Estilos Globales",
+  "model": "auto",
+  "role": "Diseñador de estilos",
+  "objective": "Mapear el CSS base a theme.json (styles.elements y styles.blocks) y complementar con presets.",
+  "inputs": {
+    "css_base": "../../temp_out/styles.css"
+  },
+  "requirements": [
+    "Trasladar colores, tipografías y espaciados al theme.json",
+    "Usar variables --wp--preset--color--* y --wp--preset--font-family--*",
+    "Cubrir elementos: h1–h6, link, button, caption"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["theme.json"],
+    "target_dir": ".."
+  }
+}

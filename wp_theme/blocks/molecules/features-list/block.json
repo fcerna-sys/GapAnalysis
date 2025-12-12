@@ -5,22 +5,48 @@
   "title": "Lista de features (Molécula)",
   "category": "widgets",
   "description": "Lista de características con título",
-  "keywords": ["features","lista","beneficios","molecule"],
+  "keywords": [
+    "features",
+    "lista",
+    "beneficios",
+    "molecule"
+  ],
   "style": "file:./style.css",
   "render": "file:./render.php",
   "example": {
     "attributes": {
       "title": "Características",
-      "items": ["Rápido","Seguro","Escalable"]
+      "items": [
+        "Rápido",
+        "Seguro",
+        "Escalable"
+      ]
     }
   },
   "attributes": {
-    "title": {"type": "string", "default": "Características"},
-    "items": {"type": "array", "default": ["Rápido", "Seguro", "Escalable"]}
+    "title": {
+      "type": "string",
+      "default": "Características"
+    },
+    "items": {
+      "type": "array",
+      "default": [
+        "Rápido",
+        "Seguro",
+        "Escalable"
+      ]
+    }
   },
   "supports": {
-    "spacing": {"margin": true},
-    "color": {"background": true, "text": false},
-    "html": false
-  }
+    "spacing": {
+      "margin": true
+    },
+    "color": {
+      "background": true,
+      "text": false
+    },
+    "html": false,
+    "customClassName": false
+  },
+  "version": "1.0.0"
 }

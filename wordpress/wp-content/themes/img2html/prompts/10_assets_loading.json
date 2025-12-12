@@ -1,0 +1,16 @@
+{
+  "name": "Assets bajo demanda",
+  "model": "auto",
+  "role": "Optimizador de performance",
+  "objective": "Configurar carga de assets de bloques bajo demanda y especulación de carga.",
+  "requirements": [
+    "Agregar filtros should_load_block_assets_on_demand",
+    "Opcional: reglas de carga especulativa (documentación WP 6.8)",
+    "No romper el editor de sitio"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["functions.php"],
+    "target_dir": ".."
+  }
+}

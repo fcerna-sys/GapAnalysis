@@ -1,0 +1,12 @@
+{
+  "name": "Librería de gradientes",
+  "model": "auto",
+  "role": "Autor de gradientes",
+  "objective": "Definir presets de gradientes en theme.json y ejemplos de uso.",
+  "requirements": [
+    "Agregar presets gradients con slugs",
+    "Ejemplos en hero y botones",
+    "Compatibilidad con variaciones de estilo"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "docs/GRADIENTS.md"], "target_dir": ".."}
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Widgets de Sidebar",
+  "model": "auto",
+  "role": "Compositor de widgets",
+  "objective": "Definir composición de sidebar con widgets nativos y estilos coherentes.",
+  "requirements": [
+    "Incluir core/search, core/categories, core/latest-posts, core/tag-cloud",
+    "Usar group/columns para layout",
+    "Estilos en theme.json blocks para esos widgets"
+  ],
+  "deliverables": {"format": "json", "files": ["patterns/sidebar.html", "theme.json"], "target_dir": ".."}
+}

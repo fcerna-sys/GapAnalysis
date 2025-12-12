@@ -1,0 +1,12 @@
+{
+  "name": "Block Hooks",
+  "model": "auto",
+  "role": "Integrador de hooks",
+  "objective": "Usar Block Hooks para insertar bloques en contenido y patrones sincronizados.",
+  "requirements": [
+    "Insertar call-to-action al final de páginas",
+    "Compatibilidad con patrones sincronizados",
+    "Documentar fallback si la versión es < 6.8"
+  ],
+  "deliverables": {"format": "json", "files": ["functions.php", "docs/HOOKS.md"], "target_dir": ".."}
+}

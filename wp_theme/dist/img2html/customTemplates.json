@@ -1,0 +1,57 @@
+{
+  "customTemplates": [
+    {
+      "name": "blank",
+      "postTypes": [
+        "page",
+        "post"
+      ],
+      "title": "Lienzo en Blanco (Sin Cabecera/Pie)"
+    },
+    {
+      "name": "page-no-title",
+      "postTypes": [
+        "page"
+      ],
+      "title": "Página sin Título"
+    },
+    {
+      "name": "landing-page",
+      "postTypes": [
+        "page"
+      ],
+      "title": "Landing Page (Angosta/Centrada)"
+    },
+    {
+      "name": "full-width",
+      "postTypes": [
+        "page",
+        "post"
+      ],
+      "title": "Ancho Completo (Sin Márgenes)"
+    },
+    {
+      "name": "sidebar-left",
+      "postTypes": [
+        "page",
+        "post"
+      ],
+      "title": "Diseño con Barra Lateral Izquierda"
+    },
+    {
+      "name": "sidebar-right",
+      "postTypes": [
+        "page",
+        "post"
+      ],
+      "title": "Diseño con Barra Lateral Derecha"
+    },
+    {
+      "name": "blog-grid",
+      "postTypes": [
+        "page"
+      ],
+      "title": "Blog en Cuadrícula"
+    }
+  ]
+}

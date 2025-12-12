@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atom-input",
+  "title": "Input (Átomo)",
+  "category": "widgets",
+  "description": "Campo de entrada básico",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "type": {"type": "string", "default": "text"},
+    "placeholder": {"type": "string", "default": ""},
+    "value": {"type": "string", "default": ""},
+    "fullWidth": {"type": "boolean", "default": false}
+  },
+  "supports": {
+    "spacing": {"margin": true},
+    "color": {"background": false, "text": false},
+    "html": false
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "Mejoras de búsqueda",
+  "model": "auto",
+  "role": "Autor de search avanzado",
+  "objective": "Mejorar plantilla de búsqueda con filtros, resaltado de términos y mensaje cuando no hay resultados.",
+  "requirements": [
+    "Plantilla con core/search y filtros por categoría",
+    "Resaltar términos en títulos y extractos",
+    "Mensaje accesible para 0 resultados"
+  ],
+  "deliverables": {"format": "json", "files": ["templates/search.html", "blocks.css"], "target_dir": ".."}
+}

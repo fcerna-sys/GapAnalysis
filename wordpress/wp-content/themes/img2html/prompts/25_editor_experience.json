@@ -1,0 +1,12 @@
+{
+  "name": "Experiencia del editor",
+  "model": "auto",
+  "role": "UX del editor",
+  "objective": "Configurar opciones del editor y soportes del tema para una mejor experiencia.",
+  "requirements": [
+    "appearanceTools en theme.json",
+    "Soporte de estilos separados si aplica",
+    "Describir cómo ocultar modal de contenido inicial"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "docs/EDITOR.md"], "target_dir": ".."}
+}

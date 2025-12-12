@@ -1,0 +1,12 @@
+{
+  "name": "Accesibilidad avanzada",
+  "model": "auto",
+  "role": "Especialista a11y",
+  "objective": "Implementar skip links, enfoque visible, reduced motion y landmarks completos.",
+  "requirements": [
+    "Skip link al main",
+    "Focus visible en navegación y botones",
+    "Soporte prefers-reduced-motion en transiciones"
+  ],
+  "deliverables": {"format": "json", "files": ["blocks.css", "docs/A11Y.md"], "target_dir": ".."}
+}

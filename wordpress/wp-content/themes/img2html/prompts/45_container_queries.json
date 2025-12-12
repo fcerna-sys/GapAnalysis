@@ -1,0 +1,12 @@
+{
+  "name": "Container queries (guía)",
+  "model": "auto",
+  "role": "Autor de guía de CSS",
+  "objective": "Proveer guía para usar container queries en CSS complementario cuando aplique.",
+  "requirements": [
+    "Ejemplos con cards y sidebar",
+    "No romper estilos del editor",
+    "Documentar soporte de navegadores"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/CONTAINER_QUERIES.md", "blocks.css"], "target_dir": ".."}
+}

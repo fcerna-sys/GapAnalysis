@@ -1,0 +1,1 @@
+(function(){try{var imgs=document.querySelectorAll('.wp-block-latest-posts img');imgs.forEach(function(i){i.setAttribute('loading','lazy')});}catch(e){}})();

@@ -1,0 +1,16 @@
+{
+  "name": "Página de Búsqueda",
+  "model": "auto",
+  "role": "Autor de search",
+  "objective": "Crear template de búsqueda con barra integrada y resultados.",
+  "requirements": [
+    "templates/search.html con heading, core/search, query loop filtrado",
+    "Estilos de core/search definidos en theme.json",
+    "Accesibilidad: labels, placeholder, focus"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["templates/search.html", "theme.json"],
+    "target_dir": ".."
+  }
+}

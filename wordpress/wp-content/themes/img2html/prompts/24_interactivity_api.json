@@ -1,0 +1,12 @@
+{
+  "name": "Interactivity API",
+  "model": "auto",
+  "role": "Autor de interactividad",
+  "objective": "Aplicar directivas interactivas wp-* (wp-each, data-wp-bind--style) según documentación 6.8.",
+  "requirements": [
+    "Ejemplo de acordeón con details name",
+    "Uso de wp-each sobre listas con comprobación de iterables",
+    "Eliminar estilos inline cuando haya directivas"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/INTERACTIVITY.md", "theme.json"], "target_dir": ".."}
+}

@@ -1,0 +1,23 @@
+{
+  "name": "Catálogo de Template Parts",
+  "model": "auto",
+  "role": "Integrador de templateParts",
+  "objective": "Generar y/o actualizar parts según templateParts,json (header, header-centered, footer, sidebar, comments).",
+  "inputs": {
+    "catalog": "../templateParts,json"
+  },
+  "requirements": [
+    "Crear parts/header-centered.html además de header/footer",
+    "Proveer parts/sidebar.html y parts/comments.html",
+    "Usar bloques core coherentes con theme.json"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": [
+      "parts/header-centered.html",
+      "parts/sidebar.html",
+      "parts/comments.html"
+    ],
+    "target_dir": ".."
+  }
+}

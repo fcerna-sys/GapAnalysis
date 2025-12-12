@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/molecule-card",
+  "title": "Card (Molécula)",
+  "category": "widgets",
+  "description": "Tarjeta compuesta con imagen, título, texto y acciones",
+  "keywords": ["card","tarjeta","molecule","component"],
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "example": {
+    "attributes": {
+      "title": "Título",
+      "text": "Descripción corta.",
+      "imageUrl": "https://via.placeholder.com/640x360",
+      "buttonText": "Ver más",
+      "buttonUrl": "#"
+    }
+  },
+  "attributes": {
+    "title": {"type": "string", "default": "Título"},
+    "text": {"type": "string", "default": "Descripción corta."},
+    "imageUrl": {"type": "string", "default": ""},
+    "buttonText": {"type": "string", "default": "Ver más"},
+    "buttonUrl": {"type": "string", "default": "#"}
+  },
+  "supports": {
+    "spacing": {"margin": true},
+    "color": {"background": true, "text": false},
+    "html": false
+  }
+}

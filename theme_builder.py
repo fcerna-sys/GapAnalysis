@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 # Importar funciones de bloques
 try:
     from blocks_builder import setup_css_framework, create_custom_blocks
-except ImportError:
+except Exception:
     def setup_css_framework(theme_dir: str, framework: str):
         pass
     def create_custom_blocks(theme_dir: str, css_framework: str, plan: Dict):
@@ -664,6 +664,16 @@ def build_complete_theme(theme_dir: str, plan: Dict, dna: Optional[Dict] = None,
     
     # Generar patrones globales (Synced Patterns) y reutilizables
     ensure_global_patterns(theme_dir, theme_slug, plan, dna)
+    replace_theme_placeholders(theme_dir, theme_slug)
+    normalize_block_json_assets(theme_dir)
+    ensure_block_json_supports(theme_dir)
+    ensure_block_json_examples(theme_dir)
+    ensure_patterns_php(theme_dir, theme_slug)
+    try:
+        from blocks_builder import get_bem_prefix
+        ensure_block_css_written(theme_dir, get_bem_prefix(theme_slug or 'img2html'))
+    except Exception:
+        ensure_block_css_written(theme_dir, 'img2html')
 
     # Generar archivo php para CPT y WooCommerce opcional
     ensure_cpt_php(theme_dir, plan)
@@ -699,6 +709,16 @@ def build_complete_theme(theme_dir: str, plan: Dict, dna: Optional[Dict] = None,
         print(f"Advertencia: Error al configurar versiones: {e}")
         import traceback
         traceback.print_exc()
+
+    try:
+        from version_manager import VersionManager
+        vm = VersionManager(theme_dir, theme_slug)
+        current = vm.get_current_version()
+        ver = (current or {}).get('version') or '1.0.0'
+        ensure_block_json_versions(theme_dir, ver)
+        vm.build_theme(minify=False, purge=False)
+    except Exception as e:
+        print(f"Advertencia: Error al empaquetar tema: {e}")
 
     # Optimizar imágenes de entrada (WebP y tamaños)
     try:
@@ -2663,6 +2683,165 @@ add_action('init', '{sync_function_name}', 20);
         traceback.print_exc()
 
 
+def replace_theme_placeholders(theme_dir: str, theme_slug: Optional[str] = None):
+    slug = theme_slug or 'img2html'
+    targets = [
+        os.path.join(theme_dir, 'patterns.json'),
+        os.path.join(theme_dir, 'customTemplates.json'),
+        os.path.join(theme_dir, 'theme.json'),
+    ]
+    for path in targets:
+        if os.path.isfile(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    txt = f.read()
+                new_txt = txt.replace('my-theme/', f'{slug}/')
+                if new_txt != txt:
+                    with open(path, 'w', encoding='utf-8') as f:
+                        f.write(new_txt)
+            except Exception:
+                pass
+    for root, _, files in os.walk(os.path.join(theme_dir, 'patterns')):
+        for fname in files:
+            if fname.endswith('.html') or fname.endswith('.php'):
+                path = os.path.join(root, fname)
+                try:
+                    with open(path, 'r', encoding='utf-8') as f:
+                        txt = f.read()
+                    new_txt = txt.replace('my-theme/', f'{slug}/')
+                    if new_txt != txt:
+                        with open(path, 'w', encoding='utf-8') as f:
+                            f.write(new_txt)
+                except Exception:
+                    continue
+
+
+def normalize_block_json_assets(theme_dir: str):
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    if not os.path.isdir(blocks_dir):
+        return
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            block_json_path = os.path.join(block_path, 'block.json')
+            if not os.path.isfile(block_json_path):
+                continue
+            try:
+                with open(block_json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            changed = False
+            if os.path.isfile(os.path.join(block_path, 'style.css')) and 'style' not in data:
+                data['style'] = 'file:./style.css'
+                changed = True
+            if os.path.isfile(os.path.join(block_path, 'editor.css')) and 'editorStyle' not in data:
+                data['editorStyle'] = 'file:./editor.css'
+                changed = True
+            if os.path.isfile(os.path.join(block_path, 'index.js')) and 'editorScript' not in data:
+                data['editorScript'] = 'file:./index.js'
+                changed = True
+            if os.path.isfile(os.path.join(block_path, 'render.php')) and 'render' not in data:
+                data['render'] = 'file:./render.php'
+                changed = True
+            if changed:
+                try:
+                    with open(block_json_path, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+                except Exception:
+                    pass
+
+def ensure_block_json_supports(theme_dir: str):
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    if not os.path.isdir(blocks_dir):
+        return
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            block_json_path = os.path.join(block_path, 'block.json')
+            if not os.path.isfile(block_json_path):
+                continue
+            try:
+                with open(block_json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            supports = data.get('supports') or {}
+            updated = False
+            if 'customClassName' not in supports:
+                supports['customClassName'] = False
+                updated = True
+            if 'html' not in supports:
+                supports['html'] = False
+                updated = True
+            if updated:
+                data['supports'] = supports
+                try:
+                    with open(block_json_path, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+                except Exception:
+                    pass
+
+def ensure_block_json_versions(theme_dir: str, version: str):
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    if not os.path.isdir(blocks_dir):
+        return
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            block_json_path = os.path.join(block_path, 'block.json')
+            if not os.path.isfile(block_json_path):
+                continue
+            try:
+                with open(block_json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            if data.get('version') != version:
+                data['version'] = version
+                try:
+                    with open(block_json_path, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+                except Exception:
+                    pass
+
+def ensure_block_css_written(theme_dir: str, bem_prefix: Optional[str] = 'img2html'):
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    if not os.path.isdir(blocks_dir):
+        return
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            style_path = os.path.join(block_path, 'style.css')
+            if not os.path.isfile(style_path):
+                try:
+                    base_class = f".{(bem_prefix or 'img2html')}-{level}-{block_name}"
+                    css = f"/* Auto-generated styles for {level}/{block_name} */\n{base_class} {{}}\n"
+                    with open(style_path, 'w', encoding='utf-8') as f:
+                        f.write(css)
+                except Exception:
+                    pass
+
 def generate_theme_documentation(theme_dir: str, theme_name: str, theme_description: str, theme_slug: Optional[str] = None, plan: Optional[Dict] = None, dna: Optional[Dict] = None):
     """
     Genera documentación automática completa del tema:
@@ -2704,6 +2883,84 @@ def generate_theme_documentation(theme_dir: str, theme_name: str, theme_descript
         print(f"Error al generar documentación: {e}")
         import traceback
         traceback.print_exc()
+
+def ensure_patterns_php(theme_dir: str, theme_slug: Optional[str] = None):
+    try:
+        try:
+            from blocks_builder import get_bem_prefix
+            bem_prefix = get_bem_prefix(theme_slug or 'img2html')
+        except Exception:
+            bem_prefix = theme_slug or 'img2html'
+        patterns_dir = os.path.join(theme_dir, 'patterns')
+        php_dir = os.path.join(theme_dir, 'php')
+        os.makedirs(php_dir, exist_ok=True)
+        if not os.path.isdir(patterns_dir):
+            return
+        for fname in os.listdir(patterns_dir):
+            if not fname.endswith('.html'):
+                continue
+            slug = os.path.splitext(fname)[0]
+            title = slug.replace('-', ' ').title()
+            php_path = os.path.join(php_dir, f'pattern-{slug}.php')
+            content = (
+                "<?php\n"
+                "add_action('init', function(){\n"
+                f"    $slug = '{slug}';\n"
+                f"    $content = file_get_contents(get_theme_file_path('patterns/' . $slug . '.html'));\n"
+                "    if ($content) {\n"
+                "        $registry = WP_Block_Patterns_Registry::get_instance();\n"
+                f"        if (!$registry->is_registered('{bem_prefix}/' . $slug)) {{\n"
+                f"            register_block_pattern('{bem_prefix}/' . $slug, array(\n"
+                f"                'title' => '{title}',\n"
+                "                'description' => 'Patrón',\n"
+                "                'content' => $content,\n"
+                f"                'categories' => array('{bem_prefix}'),\n"
+                "            ));\n"
+                "        }\n"
+                "    }\n"
+                "});\n"
+            )
+            try:
+                with open(php_path, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+def ensure_block_json_examples(theme_dir: str):
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    if not os.path.isdir(blocks_dir):
+        return
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            block_json_path = os.path.join(block_path, 'block.json')
+            if not os.path.isfile(block_json_path):
+                continue
+            try:
+                with open(block_json_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            except Exception:
+                continue
+            updated = False
+            if 'description' not in data:
+                data['description'] = 'Bloque generado por img2html'
+                updated = True
+            if 'example' not in data:
+                data['example'] = {'attributes': {}}
+                updated = True
+            if updated:
+                try:
+                    with open(block_json_path, 'w', encoding='utf-8') as f:
+                        json.dump(data, f, indent=2, ensure_ascii=False)
+                except Exception:
+                    pass
 
 
 def generate_theme_readme(theme_dir: str, theme_name: str, theme_description: str, theme_slug: Optional[str], plan: Optional[Dict], dna: Optional[Dict], bem_prefix: str):

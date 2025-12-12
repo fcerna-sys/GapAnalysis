@@ -1,0 +1,12 @@
+{
+  "name": "Taxonomías scaffold (opcional)",
+  "model": "auto",
+  "role": "Arquitecto de taxonomías",
+  "objective": "Proponer registro de taxonomías para CPT y plantillas de archivo.",
+  "requirements": [
+    "Taxonomías project-type y client",
+    "Templates archive-project-type.html",
+    "Nota: mejor en plugin, proveer scaffolding"
+  ],
+  "deliverables": {"format": "json", "files": ["templates/archive-project-type.html", "docs/README_TAX.md"], "target_dir": ".."}
+}

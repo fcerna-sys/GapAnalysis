@@ -1,0 +1,12 @@
+{
+  "name": "Libro de estilos",
+  "model": "auto",
+  "role": "Config del stylebook",
+  "objective": "Configurar secciones del libro de estilos y conjuntos de fuentes.",
+  "requirements": [
+    "Definir conjuntos de fuentes",
+    "Ajustar vista stylebook y ruta /wp-admin/site-editor.php?p=%2Fstyles&preview=stylebook",
+    "Compatibilidad con temas clásicos"
+  ],
+  "deliverables": {"format": "json", "files": ["docs/STYLEBOOK.md", "theme.json"], "target_dir": ".."}
+}

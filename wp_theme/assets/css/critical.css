@@ -1,0 +1,54 @@
+/* Critical CSS - Above the fold */
+/* Generado automáticamente */
+
+/* Reset básico */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Header crítico */
+.img2html-organism-header {
+    position: relative;
+    z-index: 100;
+}
+
+/* Hero crítico */
+.img2html-organism-hero {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Tipografía crítica */
+h1, h2, h3 {
+    margin: 0;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+/* Botones críticos */
+.img2html-atom-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.img2html-atom-button:hover {
+    opacity: 0.9;
+}
+
+/* Layout crítico */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}

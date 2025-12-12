@@ -1,0 +1,30 @@
+{
+  "name": "Theme JSON v3 Completo",
+  "model": "auto",
+  "role": "Diseñador de estilos globales FSE",
+  "objective": "Construir un theme.json v3 con cobertura total de bloques Core y estilos globales, fusionando la base existente con mejoras descritas en docs/prompt.md y docs/wordpress.md.",
+  "inputs": {
+    "theme_json_base": "../../theme.json",
+    "wp_guide": "../../docs/wordpress.md",
+    "prompt_md": "../../docs/prompt.md"
+  },
+  "requirements": [
+    "Mantener paleta y tipografías del JSON base",
+    "Añadir estilos para todas las categorías de bloques (texto, medios, diseño, widgets, tema)",
+    "Configurar layout contentSize/wideSize",
+    "Habilitar herramientas de diseño donde aplique",
+    "Usar tamaños fluidos (clamp) y presets",
+    "Ajustar blocks: button, quote, code, table, image, separator, navigation",
+    "Compatibilidad 6.8: mejoras CSS de bloques, lightbox en galería, detalles-accordion"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["theme.json"],
+    "target_dir": ".."
+  },
+  "acceptance_criteria": [
+    "Validación del schema: https://schemas.wp.org/trunk/theme.json",
+    "El editor muestra estilos de bloques coherentes",
+    "Sin errores de estilo en console al activar el tema"
+  ]
+}

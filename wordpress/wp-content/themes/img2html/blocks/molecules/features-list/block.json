@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/molecule-features-list",
+  "title": "Lista de features (Molécula)",
+  "category": "widgets",
+  "description": "Lista de características con título",
+  "keywords": ["features","lista","beneficios","molecule"],
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "example": {
+    "attributes": {
+      "title": "Características",
+      "items": ["Rápido","Seguro","Escalable"]
+    }
+  },
+  "attributes": {
+    "title": {"type": "string", "default": "Características"},
+    "items": {"type": "array", "default": ["Rápido", "Seguro", "Escalable"]}
+  },
+  "supports": {
+    "spacing": {"margin": true},
+    "color": {"background": true, "text": false},
+    "html": false
+  }
+}

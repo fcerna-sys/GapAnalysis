@@ -1,0 +1,12 @@
+{
+  "name": "Patrones de vista de datos",
+  "model": "auto",
+  "role": "Autor de patrones de consulta",
+  "objective": "Crear patrones con Total de la consulta y rangos de visualización.",
+  "requirements": [
+    "Usar core/query y core/query-title si aplica",
+    "Bloque Total de la consulta dentro del loop",
+    "Paginación coherente"
+  ],
+  "deliverables": {"format": "json", "files": ["patterns/query-total.html"], "target_dir": ".."}
+}

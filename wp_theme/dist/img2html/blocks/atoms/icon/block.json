@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atom-icon",
+  "title": "Ícono (Átomo)",
+  "category": "widgets",
+  "description": "Ícono simple reutilizable",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "name": {"type": "string", "default": "star"},
+    "size": {"type": "number", "default": 20}
+  },
+  "supports": {
+    "spacing": {"margin": true},
+    "color": {"text": true},
+    "html": false
+  }
+}

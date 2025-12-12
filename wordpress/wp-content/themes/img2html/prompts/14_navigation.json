@@ -1,0 +1,12 @@
+{
+  "name": "Navegación y Menús",
+  "model": "auto",
+  "role": "Diseñador de navegación",
+  "objective": "Configurar bloques de navegación, estados hover y menús secundarios.",
+  "requirements": [
+    "core/navigation con layout flex y soporte richtext",
+    "Submenús estilizados, activo/hover",
+    "Footer menú secundario en parts/footer.html"
+  ],
+  "deliverables": {"format": "json", "files": ["parts/header.html", "parts/footer.html", "theme.json"], "target_dir": ".."}
+}

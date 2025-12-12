@@ -1,0 +1,12 @@
+{
+  "name": "Variaciones y estilos de bloques",
+  "model": "auto",
+  "role": "Estilista de bloques",
+  "objective": "Crear estilos y variaciones (is-style-outline, is-style-fill, is-style-pill) para button y otros bloques.",
+  "requirements": [
+    "Definir estilos en theme.json blocks",
+    "Compatibilidad con editor: mostrar en selector de estilos",
+    "Evitar colisiones CSS"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "blocks.css"], "target_dir": ".."}
+}

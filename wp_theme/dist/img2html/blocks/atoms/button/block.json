@@ -1,0 +1,22 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atom-button",
+  "title": "Botón (Átomo)",
+  "category": "widgets",
+  "description": "Botón básico reutilizable",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "text": {"type": "string", "default": "Acción"},
+    "url": {"type": "string", "default": "#"},
+    "variant": {"type": "string", "default": "primary"},
+    "fullWidth": {"type": "boolean", "default": false}
+  },
+  "supports": {
+    "align": ["left","center","right"],
+    "spacing": {"margin": true},
+    "color": {"background": true, "text": false},
+    "html": false
+  }
+}

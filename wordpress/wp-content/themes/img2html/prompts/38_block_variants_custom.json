@@ -1,0 +1,12 @@
+{
+  "name": "Variantes personalizadas de bloques",
+  "model": "auto",
+  "role": "Estilista",
+  "objective": "Definir variantes personalizadas para image, separator, quote y navigation.",
+  "requirements": [
+    "Estilos en theme.json y soporte en blocks.css",
+    "Mostrar nombres amigables en el editor",
+    "Evitar CSS inline"
+  ],
+  "deliverables": {"format": "json", "files": ["theme.json", "blocks.css"], "target_dir": ".."}
+}

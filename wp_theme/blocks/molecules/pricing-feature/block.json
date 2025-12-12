@@ -5,27 +5,63 @@
   "title": "Pricing Feature (Molécula)",
   "category": "widgets",
   "description": "Feature de pricing con precio, lista de features y CTA",
-  "keywords": ["pricing","plan","tabla","molecule"],
+  "keywords": [
+    "pricing",
+    "plan",
+    "tabla",
+    "molecule"
+  ],
   "style": "file:./style.css",
   "render": "file:./render.php",
   "example": {
     "attributes": {
       "title": "Plan Básico",
       "price": "$19",
-      "features": ["Feature A","Feature B","Feature C"],
+      "features": [
+        "Feature A",
+        "Feature B",
+        "Feature C"
+      ],
       "buttonText": "Comprar",
       "buttonUrl": "#"
     }
   },
   "attributes": {
-    "title": {"type": "string", "default": "Plan Básico"},
-    "price": {"type": "string", "default": "$19"},
-    "features": {"type": "array", "default": ["Feature A","Feature B","Feature C"]},
-    "buttonText": {"type": "string", "default": "Comprar"},
-    "buttonUrl": {"type": "string", "default": "#"}
+    "title": {
+      "type": "string",
+      "default": "Plan Básico"
+    },
+    "price": {
+      "type": "string",
+      "default": "$19"
+    },
+    "features": {
+      "type": "array",
+      "default": [
+        "Feature A",
+        "Feature B",
+        "Feature C"
+      ]
+    },
+    "buttonText": {
+      "type": "string",
+      "default": "Comprar"
+    },
+    "buttonUrl": {
+      "type": "string",
+      "default": "#"
+    }
   },
   "supports": {
-    "spacing": {"margin": true, "padding": true},
-    "color": {"background": true}
-  }
+    "spacing": {
+      "margin": true,
+      "padding": true
+    },
+    "color": {
+      "background": true
+    },
+    "customClassName": false,
+    "html": false
+  },
+  "version": "1.0.0"
 }

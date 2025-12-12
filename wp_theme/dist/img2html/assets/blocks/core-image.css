@@ -1,0 +1,11 @@
+figure.wp-block-image{
+  margin: 0 0 1.5rem;
+}
+figure.wp-block-image img{
+  display:block;
+  height:auto;
+}
+figure.wp-block-image figcaption{
+  color: var(--wp--preset--color--secondary);
+  font-size: var(--wp--preset--font-size--small);
+}

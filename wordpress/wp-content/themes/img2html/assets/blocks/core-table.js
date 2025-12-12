@@ -1,0 +1,1 @@
+(function(){try{document.querySelectorAll('.wp-block-table').forEach(function(fig){var tbl=fig.querySelector('table');if(!tbl)return;var wrap=document.createElement('div');wrap.style.overflowX='auto';wrap.appendChild(tbl.cloneNode(true));fig.innerHTML='';fig.appendChild(wrap);});}catch(e){}})();

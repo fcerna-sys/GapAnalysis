@@ -1,0 +1,104 @@
+{
+  "name": "Img2HTML WordPress Theme Orchestrator",
+  "model": "auto",
+  "role": "Arquitecto de temas FSE para WordPress 6.8",
+  "objective": "Generar un tema completo de bloques (FSE) a partir de HTML/CSS base y documentación, utilizando todas las capacidades de WordPress (theme.json v3, templates, template parts, patterns, style variations, sidebar, search, query blocks, etc).",
+  "inputs": {
+    "html_base": "../../temp_out/index.html",
+    "css_base": "../../temp_out/styles.css",
+    "info_md": "../../docs/info.md",
+    "prompt_md": "../../docs/prompt.md",
+    "wp_guide": "../../docs/wordpress.md",
+    "theme_json_base": "../../theme.json"
+  },
+  "seeds": {
+    "customTemplates": "../customTemplates.json",
+    "templateParts": "../templateParts,json",
+    "patterns": "../patterns.json",
+    "styles": "../styles.json",
+    "theme": "../theme.json"
+  },
+  "runtime": {
+    "models_config": "./runtime.json",
+    "strategy": "prefer_local_fallback_remote",
+    "max_tokens": 4096,
+    "temperature": 0.2
+  },
+  "modules": [
+    { "ref": "01_theme_json_full.json" },
+    { "ref": "02_template_parts.json" },
+    { "ref": "03_templates.json" },
+    { "ref": "04_patterns.json" },
+    { "ref": "05_styles_global.json" },
+    { "ref": "06_blocks_css.json" },
+    { "ref": "07_sidebar.json" },
+    { "ref": "08_search.json" },
+    { "ref": "09_variations.json" },
+    { "ref": "10_assets_loading.json" },
+    { "ref": "11_registration.json" },
+    { "ref": "12_test_plan.json" },
+    { "ref": "13_widgets.json" },
+    { "ref": "14_navigation.json" },
+    { "ref": "15_block_styles_variations.json" },
+    { "ref": "16_pattern_organization.json" },
+    { "ref": "17_accessibility_audit.json" },
+    { "ref": "18_performance_optimizations.json" },
+    { "ref": "19_seo_basics.json" },
+    { "ref": "20_i18n_l10n.json" },
+    { "ref": "21_cpt_scaffold.json" },
+    { "ref": "22_taxonomies_scaffold.json" },
+    { "ref": "23_block_hooks.json" },
+    { "ref": "24_interactivity_api.json" },
+    { "ref": "25_editor_experience.json" },
+    { "ref": "26_stylebook_config.json" },
+    { "ref": "27_initial_content.json" },
+    { "ref": "28_data_view_patterns.json" },
+    { "ref": "29_media_settings.json" },
+    { "ref": "30_search_enhancements.json" }
+    ,{ "ref": "31_presets.json" }
+    ,{ "ref": "32_fonts_webfonts.json" }
+    ,{ "ref": "33_color_modes.json" }
+    ,{ "ref": "34_accessibility_advanced.json" }
+    ,{ "ref": "35_grid_layouts.json" }
+    ,{ "ref": "36_breadcrumbs.json" }
+    ,{ "ref": "37_schema_structured_data.json" }
+    ,{ "ref": "38_block_variants_custom.json" }
+    ,{ "ref": "39_gradients_library.json" }
+    ,{ "ref": "40_duotone_library.json" }
+    ,{ "ref": "41_shadows_library.json" }
+    ,{ "ref": "42_spacing_scale.json" }
+    ,{ "ref": "43_typography_scale.json" }
+    ,{ "ref": "44_motion_transitions.json" }
+    ,{ "ref": "45_container_queries.json" }
+    ,{ "ref": "46_responsive_images.json" }
+    ,{ "ref": "47_editor_color_palette.json" }
+    ,{ "ref": "48_editor_shortcuts.json" }
+    ,{ "ref": "49_woocommerce_support.json" }
+    ,{ "ref": "50_forms_patterns.json" }
+    ,{ "ref": "51_templates_catalog.json" }
+    ,{ "ref": "52_template_parts_catalog.json" }
+    ,{ "ref": "53_patterns_catalog.json" }
+    ,{ "ref": "54_styles_merge.json" }
+    ,{ "ref": "55_theme_coherence.json" }
+  ],
+  "deliverables": {
+    "format": "json",
+    "schema": "{\"filename\": \"content\"}",
+    "target_dir": ".."
+  },
+  "constraints": [
+    "Usar theme.json v3 con cobertura de bloques Core indicada en prompt.md",
+    "Usar variables --wp--preset--color--*, tipografías y tamaños fluidos",
+    "Mantener semántica HTML5 y accesibilidad (roles, aria, contraste)",
+    "Plantillas FSE con comentarios de bloques válidos",
+    "Patrones organizables en subcarpetas (WordPress 6.8)",
+    "Entrega estricta en formato JSON filename->content"
+  ],
+  "acceptance_criteria": [
+    "El tema se activa sin errores en WordPress 6.8+",
+    "Editor del sitio muestra style variations y patrones registrados",
+    "Front-page, archive, single, page y 404 operativos",
+    "Sidebar insertable y buscador funcional",
+    "Bloques core estilizados de forma coherente en theme.json"
+  ]
+}

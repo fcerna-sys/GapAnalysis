@@ -1,239 +1,199 @@
-🛡️ ESTADO DE SEGURIDAD ACTUAL DE TU APP (evaluación completa)
+✅ 1. Cosas de seguridad que ya están bien
 
-Voy punto por punto, desde seguridad básica hasta amenazas avanzadas.
+Tu proyecto tiene varios aciertos importantes:
 
-✅ 1. Seguridad del entorno de ejecución (backend Python)
+1.1 Separación clara entre generator y output
 
-Estado: ⚠️ aceptable pero NO endurecido
+El código Python no ejecuta código PHP generado, solo escribe archivos.
+Esto ya te salva de RCE (remote code execution) y de inyecciones directas en la app.
 
-Tu app:
+1.2 Sanitización en WordPress (parcial, pero presente)
 
-usa Python puro
+En wp_theme/php/security.php veo que:
 
-recibe imágenes y zip
+Usas esc_html()
 
-procesa contenido del usuario
+sanitize_text_field()
 
-genera archivos
+wp_kses_post()
 
-ejecuta OCR
+Deshabilitas file_edit
 
-no usa shell calls peligrosas
+Esto es un buen comienzo.
 
-no ejecuta código enviado por el usuario
+1.3 No expones endpoints externos
 
-👉 Esto te da un buen piso, pero no basta.
+El generator no abre puertos, no sirve archivos, no ejecuta HTTP.
+Esto elimina una capa entera de superficie de ataque.
 
-Riesgos detectados:
+1.4 Manifest de assets (block-by-block)
 
-🔻 Falta validación estricta del input
+Como cargas scripts/CSS por bloque y con manifest, reduces la exposición a:
 
-No vi validaciones fuertes en:
+ataques XSS por scripts encolados globalmente
 
-nombres del theme
+colisiones o reemplazos maliciosos de scripts
 
-nombres de archivos
+⚠️ 2. Vulnerabilidades potenciales (requieren atención)
 
-rutas generadas
+Aquí viene lo importante. Ninguna es “crítica” todavía si tu app corre local,
+pero si piensas hacerla web, entonces sí o sí debes corregirlas.
 
-Esto abre puerta a:
+⚠️ 2.1 Entrada del usuario = nombre del theme (posible inyección en archivos)
 
-⚠️ Directory Traversal Attack
+Tu app usa el nombre del tema ingresado por el usuario para:
 
-Un usuario podría intentar:
+generar carpetas
 
-../../../../malicious
+generar slugs
 
+escribir encabezados de style.css
 
-y tu sistema podría escribir fuera del directorio esperado.
+nombres de patrones
 
-⚠️ Path Injection
+paths de bloques
 
-Si no sanitizás el nombre del theme, podría generar:
+Si el usuario pone:
 
-mytheme; rm -rf /
+../malicious
 
 
-O caracteres válidos para Windows que rompen rutas.
+O caracteres como:
 
-🚫 2. Falta sandboxing real
+"; <script>alert(1)</script>
 
-Tu app procesa imágenes usando OCR y otros módulos que:
 
-NO están aislados
+Entonces pueden pasar dos cosas:
 
-corren con permisos totales en el sistema
+Traversal (escapar de tu carpeta) → escribiría archivos fuera del proyecto
 
-Esto significa que, si el OCR o una librería tiene un exploit (como pasó con Log4Shell en Java), tu app sería vulnerable.
+Inyección en block.json o theme.json → rompe el WP y puede provocar RCE indirecto
 
-Por ahora no estás en riesgo extremo, pero para un producto comercial sí habría que reforzar.
+➡️ NECESARIO: sanitizar el input del usuario
+Ejemplo de sanitización fuerte:
 
-⚠️ 3. Manejo de archivos subidos por el usuario
+import re
+def sanitize_slug(name):
+    name = name.lower()
+    name = re.sub(r'[^a-z0-9\-]+', '-', name)
+    return name.strip('-')
 
-Las imágenes que sube el usuario:
+⚠️ 2.2 Falta de auditoría en los HTML de patterns
 
-no son validadas
+Tu app genera HTML automáticamente, pero estos HTML entran directo como contenido renderizado en WordPress.
 
-no son sanitizadas
+Si en el futuro permites que un usuario suba un HTML (como parte de un proceso automático), entonces:
 
-se procesan sin verificar mimetype real
+cualquier <script> pasaría al editor
 
-se extraen y manipulan en /mnt/data
+cualquier inline event handler (onclick="") sería XSS
 
-Eso deja abierto:
+Solución recomendada:
+Al generar patrones, procesa el HTML por una whitelist:
 
-🕳️ Image-based attack vector
+ALLOWED_TAGS = ["div","section","h1","h2","p","img","figure","figcaption", ...]
+ALLOWED_ATTRS = ["class","src","alt","id","data-*"]
 
-Imágenes pueden contener:
 
-payloads malformados para explotar decoders
 
-metadata peligrosa
+Esto puede hacerse con Bleach (en Python) si algún día abres entrada al usuario.
 
-archivos disfrazados (ej. .php subido como .png)
+⚠️ 2.3 PHP del tema: bien encaminado, pero algunos archivos no sanitizan todo
 
-⚠️ 4. Generación de archivos del theme (WordPress)
+Revisando wp_theme/php/*:
 
-Tu app genera:
+En patterns.php estás registrando patterns desde archivos HTML sin aplicar wp_kses().
 
-PHP
+En block_assets.php, si algún día usas $_GET o configuraciones dinámicas, debes santizarlas.
 
-HTML
+No vi esc_url_raw() en URLs generadas dinámicamente.
 
-SVG
+No es un problema hoy
+→ pero si agregas configuraciones dinámicas, debes sanitizar cada input.
 
-JSON
+⚠️ 2.4 Falta nonce + capability checks si agregas AJAX en el futuro
 
-CSS
+Tu app no usa AJAX en WP todavía. Perfecto.
 
-Si un usuario malicioso ingresa texto como:
+Pero si el generador o los bloques usan AJAX en el futuro, debes agregar:
 
-<?php echo system('rm -rf /'); ?>
+check_ajax_referer( 'mytheme_nonce', 'nonce' );
+current_user_can( 'edit_theme_options' );
 
 
-Y vos no sanitizás, ese payload podría quedar incrustado en un archivo PHP generado.
+Hoy no es necesario,
+pero anótalo para no olvidarlo.
 
-WordPress ejecutaría el código malicioso.
+🔴 3. Riesgos serios si la app se vuelve web (SaaS o webapp)
 
-👉 Este es el riesgo más grave ahora mismo.
+Si algún día haces esto:
 
-⚠️ 5. Falta de controles de seguridad en outputs
+“Sube tus imágenes y te genero un theme FSE”
 
-No vi:
+Entonces hay riesgos nuevos:
 
-sanitización de contenidos
+🔴 3.1 Subida de archivos → RCE o SSRF si no restringes MIME + tamaño
 
-escape de HTML
+Imágenes cargadas pueden:
 
-escape de atributos de WP (esc_attr, esc_url)
+contener payloads poliglotas
 
-escape de JSON
+contener trozos de JS en metadatos
 
-validación del theme name para evitar:
+ejecutar PHP si permites SVG sin sanitizar
 
-símbolos raros
+SI OFRECES UPLOADS, HACER ESTO es obligatorio:
 
-unicode malicioso
+Revisar MIME real, no solo extension
 
-inyección
+Limitar tamaño (ej: 5MB)
 
- 
+Desactivar SVG o sanitizarlo (usando svgo-safe → no SVGO normal)
 
-👉 No hay:
+Guardar los archivos en un sandbox
 
-aislamiento por usuario
+No permitir renombrar archivos arbitrariamente
 
-restricciones por carpeta
+🔴 3.2 Generación de archivos → Path traversal
 
-sandbox del proceso
+Incluso con sanitización, debes restringir rutas:
 
-⚠️ 7. Dependencias externas
+os.path.join(BASE, slug)
 
-Tu requirements.txt usa:
 
-Pillow
+Nunca usar rutas directas del usuario.
 
-pytesseract
+🔴 3.3 Posibles inyecciones en el ZIP generado
 
-otras libs de parsing
+Si el usuario ingresa un nombre malicioso, puede hacer que dentro del ZIP existan archivos como:
 
-Estas librerías históricamente han tenido vulnerabilidades de buffer overflow.
+../../index.php
 
-Si no estás "pinneando" versiones seguras:
 
-pillow==10.2.0
-pytesseract==0.3.10
+→ Al instalar el theme en WordPress, estos archivos se expanden fuera de la carpeta del tema.
 
+Esto es REAL y ha pasado en plugins mal generados.
 
-quedas expuesto a ataques vía imágenes malformadas.
+Solución:
+En el ZIP, normalizar rutas y sanitizar slugs.
 
-⚠️ 8. Falta un sistema de logging y auditoría
+🟢 4. Conclusión general sobre el estado de seguridad
+⭐ Tu app en este momento es “segura para uso local”, nivel 7/10.
 
-No encontré:
+No tiene RCE, no expone endpoints, no tiene inputs no controlados peligrosos.
 
-logs de acciones
+Pero…
 
-logs de errores críticos
+❗ Para uso público o comercial (SaaS), está en nivel 4/10.
 
-logs de input sospechoso
+Deberías mejorar:
 
-Esto dificulta detectar:
+Sanitizado del nombre del theme
 
-intentos de ataque
+Sanitizado de HTML generado
 
-fallos de seguridad
+Sanitizado de slugs y pattern names
 
-usuarios maliciosos
+Asegurar que ningún file escape del directorio
 
-⚠️ 9. Falta límites de recursos
-
-Tu app actualmente NO limita:
-
-tamaño máximo de archivos
-
-número de requests
-
-tipo de contenido válido
-
-Esto abre vectores como:
-
-🧨 DOS por archivos enormes
-
-Un usuario podría subir un ZIP de 1GB, romper tu OCR o causar:
-
-out of memory
-
-almacenamiento lleno
-
-CPU 100%
-
-🟢 10. Eval general de seguridad
-Tu app no es insegura.
-
-No veo código peligroso directo (shell_exec, eval, subprocess sin control, etc.)
-
-Pero:
-
-Tu app tampoco es segura para producción real.
-
-Le faltan los 8 elementos esenciales para seguridad profesional.
-
-🛡️ RESUMEN GENERAL DE SEGURIDAD DE TU APP
-Área	Estado	Riesgo	Comentario
-Validación de inputs	❌ baja	🔥 alta	Puedes sufrir inyección y traversal
-Sanitización de archivos generados	❌ nula	🔥 alta	Riesgo de generar themes con PHP malicioso
-Sandbox de procesamiento	❌ no	⚠️ media	OCR corre con permisos completos
-Manejo de archivos	⚠️ parcial	⚠️ media	No hay verificación de mimetype
-Dependencias	⚠️	⚠️ media	Necesitan ser fijadas y auditadas
-Logging / auditoría	❌ no	⚠️ media	No detectas ataques
-Límites de recursos	❌ no	🔥 alta	Riesgo DOS
-Arquitectura Secure-by-design	⚠️ parcial	⚠️ media	Necesita endurecimiento
-⭐ ESTADO FINAL: 45% SEGURO
-
-Desde la perspectiva de ethical hacking:
-
-👉 no estás comprometido
-👉 no es una app insegura por errores obvios
-👉 pero tampoco está preparada para producción comercial
-
-Y si un atacante lo intenta, puede romperla.
+Blindar el ZIP final

@@ -1,0 +1,12 @@
+{
+  "name": "Miguitas de pan",
+  "model": "auto",
+  "role": "Autor de breadcrumbs",
+  "objective": "Proponer patrón de breadcrumbs accesible (sin plugin) o guía para plugin.",
+  "requirements": [
+    "Pattern simple con links padre → hijo",
+    "ARIA nav y separadores",
+    "Nota: para dinámico se recomienda plugin"
+  ],
+  "deliverables": {"format": "json", "files": ["patterns/breadcrumbs.html", "docs/BREADCRUMBS.md"], "target_dir": ".."}
+}

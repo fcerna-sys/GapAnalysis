@@ -1,0 +1,12 @@
+{
+  "name": "Modos de color",
+  "model": "auto",
+  "role": "Diseñador de color modes",
+  "objective": "Configurar variaciones para claro/oscuro/alto contraste y auto detección con prefers-color-scheme.",
+  "requirements": [
+    "Ajustar style variations y theme.json para background/text",
+    "Documentar prefers-color-scheme y toggle opcional",
+    "Mantener AA/AAA en enlaces y botones"
+  ],
+  "deliverables": {"format": "json", "files": ["styles/light.json", "styles/dark.json", "styles/high-contrast.json", "docs/COLOR_MODES.md"], "target_dir": ".."}
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Plan de pruebas del tema",
+  "model": "auto",
+  "role": "QA de temas FSE",
+  "objective": "Definir pruebas manuales y automáticas para validar activación y renderizado del tema.",
+  "requirements": [
+    "Validar activación sin errores",
+    "Verificar templates y template-parts",
+    "Probar style variations",
+    "Insertar y renderizar patrones",
+    "Comprobar accesibilidad básica (labels, contrastes, navegación por teclado)"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": ["TESTS.md"],
+    "target_dir": ".."
+  }
+}

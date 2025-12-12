@@ -1,0 +1,12 @@
+{
+  "name": "CPT scaffold (opcional)",
+  "model": "auto",
+  "role": "Arquitecto de contenido",
+  "objective": "Proponer registro de Custom Post Types con plantillas y patrones base.",
+  "requirements": [
+    "CPT portfolio y testimonials",
+    "Templates single-portfolio.html y archive-portfolio.html",
+    "Nota: mejor en plugin, proveer scaffolding"
+  ],
+  "deliverables": {"format": "json", "files": ["templates/single-portfolio.html", "templates/archive-portfolio.html", "docs/README_CPT.md"], "target_dir": ".."}
+}

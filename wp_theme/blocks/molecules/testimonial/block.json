@@ -8,14 +8,36 @@
   "style": "file:./style.css",
   "render": "file:./render.php",
   "attributes": {
-    "text": {"type": "string", "default": "Excelente servicio."},
-    "author": {"type": "string", "default": "Nombre"},
-    "role": {"type": "string", "default": "Cargo"},
-    "avatarUrl": {"type": "string", "default": ""}
+    "text": {
+      "type": "string",
+      "default": "Excelente servicio."
+    },
+    "author": {
+      "type": "string",
+      "default": "Nombre"
+    },
+    "role": {
+      "type": "string",
+      "default": "Cargo"
+    },
+    "avatarUrl": {
+      "type": "string",
+      "default": ""
+    }
   },
   "supports": {
-    "spacing": {"margin": true},
-    "color": {"background": true, "text": false},
-    "html": false
-  }
+    "spacing": {
+      "margin": true
+    },
+    "color": {
+      "background": true,
+      "text": false
+    },
+    "html": false,
+    "customClassName": false
+  },
+  "example": {
+    "attributes": {}
+  },
+  "version": "1.0.0"
 }

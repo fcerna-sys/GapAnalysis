@@ -8,6 +8,11 @@ import json
 from typing import Dict, List, Optional, Set
 import subprocess
 import shutil
+def _validate_bem_class(class_name: str, bem_prefix: str) -> bool:
+    if not class_name or not bem_prefix:
+        return False
+    pattern = rf'^{re.escape(bem_prefix)}-[a-z0-9-]+(__[a-z0-9-]+)?(--[a-z0-9-]+)?$'
+    return bool(re.match(pattern, class_name))
 
 
 def setup_build_pipeline(theme_dir: str, css_framework: str, bem_prefix: str = 'img2html'):
@@ -26,6 +31,9 @@ def setup_build_pipeline(theme_dir: str, css_framework: str, bem_prefix: str = '
         os.makedirs(css_dir, exist_ok=True)
         os.makedirs(js_dir, exist_ok=True)
         
+        # Validación BEM
+        validate_bem_in_theme(theme_dir, bem_prefix)
+
         # 2. Generar manifest de bloques para carga condicional
         generate_block_manifest(theme_dir, bem_prefix)
         
@@ -55,12 +63,76 @@ def setup_build_pipeline(theme_dir: str, css_framework: str, bem_prefix: str = '
         traceback.print_exc()
 
 
+def validate_bem_in_theme(theme_dir: str, bem_prefix: str):
+    invalid: Set[str] = set()
+
+    def _collect_from_php(path: str):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception:
+            return
+        for m in re.finditer(r'class\s*=\s*"([^"]+)"', content):
+            classes = re.split(r"\s+", m.group(1))
+            for cls in classes:
+                if cls.startswith(f"{bem_prefix}-") and not _validate_bem_class(cls, bem_prefix):
+                    invalid.add(cls)
+
+    def _collect_from_css(path: str):
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception:
+            return
+        for cls in re.findall(r"\.([a-z0-9_-]+)", content, flags=re.I):
+            if cls.startswith(f"{bem_prefix}-") and not _validate_bem_class(cls, bem_prefix):
+                invalid.add(cls)
+
+    blocks_dir = os.path.join(theme_dir, 'blocks')
+    for level in ['atoms', 'molecules', 'organisms']:
+        level_dir = os.path.join(blocks_dir, level)
+        if not os.path.isdir(level_dir):
+            continue
+        for block_name in os.listdir(level_dir):
+            block_path = os.path.join(level_dir, block_name)
+            if not os.path.isdir(block_path):
+                continue
+            _collect_from_php(os.path.join(block_path, 'render.php'))
+            _collect_from_css(os.path.join(block_path, 'style.css'))
+            _collect_from_css(os.path.join(block_path, 'editor.css'))
+
+    patterns_dir = os.path.join(theme_dir, 'patterns')
+    if os.path.isdir(patterns_dir):
+        for fname in os.listdir(patterns_dir):
+            if fname.endswith('.php') or fname.endswith('.html'):
+                _collect_from_php(os.path.join(patterns_dir, fname))
+
+    templates_dir = os.path.join(theme_dir, 'templates')
+    if os.path.isdir(templates_dir):
+        for root, _, files in os.walk(templates_dir):
+            for fname in files:
+                if fname.endswith('.html') or fname.endswith('.php'):
+                    _collect_from_php(os.path.join(root, fname))
+
+    parts_dir = os.path.join(theme_dir, 'parts')
+    if os.path.isdir(parts_dir):
+        for root, _, files in os.walk(parts_dir):
+            for fname in files:
+                if fname.endswith('.html') or fname.endswith('.php'):
+                    _collect_from_php(os.path.join(root, fname))
+
+    if invalid:
+        msg = "\n".join(sorted(invalid))
+        raise RuntimeError(f"Clases BEM inválidas detectadas para prefijo '{bem_prefix}':\n{msg}")
+
+
 def generate_block_manifest(theme_dir: str, bem_prefix: str):
     """
     Genera blocks-manifest.php con todos los bloques y sus assets.
     """
     blocks_dir = os.path.join(theme_dir, 'blocks')
     manifest_path = os.path.join(theme_dir, 'blocks-manifest.php')
+    manifest_json_path = os.path.join(theme_dir, 'blocks-manifest.json')
     
     manifest = {}
     
@@ -85,6 +157,7 @@ def generate_block_manifest(theme_dir: str, bem_prefix: str):
                     block_data = json.load(f)
                 
                 block_name_full = block_data.get('name', f'{bem_prefix}/{level}-{block_name}')
+                block_version = block_data.get('version', '1.0.0')
                 
                 # Buscar archivos CSS y JS del bloque
                 style_path = os.path.join(block_path, 'style.css')
@@ -111,6 +184,7 @@ def generate_block_manifest(theme_dir: str, bem_prefix: str):
                     assets['script'] = [rel_script]
                 
                 if assets:
+                    assets['version'] = block_version
                     manifest[block_name_full] = assets
                     
             except Exception:
@@ -130,6 +204,11 @@ return {_php_array(manifest)};
     
     with open(manifest_path, 'w', encoding='utf-8') as f:
         f.write(manifest_php)
+    try:
+        with open(manifest_json_path, 'w', encoding='utf-8') as jf:
+            json.dump(manifest, jf, indent=2)
+    except Exception:
+        pass
 
 
 def _php_array(data: Dict) -> str:
@@ -362,9 +441,7 @@ const content = [
     '{theme_dir}/patterns/**/*.php'
 ];
 
-const cssFiles = [
-    'assets/css/*.css'
-];
+// Los archivos CSS se listan desde el directorio
 
 const safelist = [
     /^{bem_prefix}-/,
@@ -377,19 +454,22 @@ const safelist = [
 ];
 
 async function purge() {{
-    const purgeCSSResult = await new PurgeCSS().purge({{
-        content: content,
-        css: cssFiles,
-        safelist: safelist,
-        defaultExtractor: (content) => content.match(/[A-Za-z0-9-_/:]*[A-Za-z0-9-_/]/g) || []
-    }});
-    
-    purgeCSSResult.forEach((result, index) => {{
-        const filePath = cssFiles[index];
-        const purgedPath = filePath.replace('.css', '.purged.css');
-        fs.writeFileSync(purgedPath, result.css);
-        console.log(`✓ Purged: ${{path.basename(filePath)}}`);
-    }});
+    if (!fs.existsSync(cssDir)) return;
+    const files = fs.readdirSync(cssDir).filter(f => f.endsWith('.css') && !f.endsWith('.min.css') && !f.endsWith('.purged.css'));
+    for (const file of files) {{
+        const filePath = path.join(cssDir, file);
+        const results = await new PurgeCSS().purge({{
+            content: content,
+            css: [filePath],
+            safelist: safelist,
+            defaultExtractor: (content) => content.match(/[A-Za-z0-9-_/:]*[A-Za-z0-9-_/]/g) || []
+        }});
+        if (results && results[0]) {{
+            const purgedPath = path.join(cssDir, file.replace('.css', '.purged.css'));
+            fs.writeFileSync(purgedPath, results[0].css);
+            console.log(`✓ Purged: ${{file}}`);
+        }}
+    }}
 }}
 
 purge();
@@ -623,4 +703,3 @@ pause
         os.chmod(build_script, 0o755)
     except Exception:
         pass
-

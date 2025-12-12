@@ -1,0 +1,30 @@
+{
+  "name": "Plantillas Principales FSE",
+  "model": "auto",
+  "role": "Generador de templates",
+  "objective": "Construir templates index, single, page, 404, front-page y archive con comentarios de bloques válidos.",
+  "requirements": [
+    "index: query loop + pagination",
+    "single: post-title, featured-image, date, author, content, navigation",
+    "page: post-title, content",
+    "404: heading, paragraph, search",
+    "front-page: hero cover + últimas entradas",
+    "archive: listado y paginación"
+  ],
+  "deliverables": {
+    "format": "json",
+    "files": [
+      "templates/index.html",
+      "templates/single.html",
+      "templates/page.html",
+      "templates/404.html",
+      "templates/front-page.html",
+      "templates/archive.html"
+    ],
+    "target_dir": ".."
+  },
+  "acceptance_criteria": [
+    "Las plantillas cargan en el editor del sitio",
+    "Los bloques se renderizan sin errores"
+  ]
+}
