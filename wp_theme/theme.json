@@ -8,13 +8,15 @@
       "wideSize": "1200px"
     },
     "typography": {
-      "dropCap": true,
+      "dropCap": false,
       "fontStyle": true,
       "fontWeight": true,
       "textDecoration": true,
       "textTransform": true,
       "letterSpacing": true,
       "fluid": true,
+      "customFontSize": false,
+      "customLineHeight": false,
       "fontFamilies": [
         {
           "fontFamily": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Oxygen-Sans, Ubuntu, Cantarell, \"Helvetica Neue\", sans-serif",
@@ -82,6 +84,9 @@
     },
     "color": {
       "defaultPalette": false,
+      "custom": false,
+      "gradients": false,
+      "defaultGradients": false,
       "palette": [
         {
           "color": "#1e293b",
@@ -154,13 +159,10 @@
       "blockGap": true,
       "margin": true,
       "padding": true,
+      "customSpacingSize": false,
       "units": [
         "px",
-        "em",
-        "rem",
-        "vh",
-        "vw",
-        "%"
+        "rem"
       ]
     }
   },

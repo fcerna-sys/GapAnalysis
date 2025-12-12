@@ -1397,7 +1397,6 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
                 "background": False,  # Deshabilitado para simplificar
                 "link": True,
                 "gradients": False  # Deshabilitado
-                "link": True
             },
             "spacing": {
                 "margin": True,
@@ -2301,7 +2300,6 @@ def ensure_global_patterns(theme_dir: str, theme_slug: Optional[str] = None, pla
         except Exception as e:
             print(f"Advertencia: Error al generar patterns automáticos: {e}")
     
-    try:
     try:
         from blocks_builder import get_bem_prefix
         bem_prefix = get_bem_prefix(theme_slug)
@@ -3760,4 +3758,3 @@ def generate_theme_screenshot(theme_dir: str, plan: Dict, dna: Optional[Dict] = 
         
     except Exception as e:
         print(f"Error al generar screenshot: {e}")
-

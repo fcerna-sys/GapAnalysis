@@ -38,3 +38,20 @@ function img2html_register_patterns() {
     }
 }
 add_action('init', 'img2html_register_patterns');
+
+function img2html_register_atomic_blocks(){
+  $base = get_template_directory().'/blocks';
+  $groups = ['atoms','molecules'];
+  foreach ($groups as $grp){
+    $dir = $base.'/'.$grp;
+    if (is_dir($dir)){
+      foreach (glob($dir.'/*', GLOB_ONLYDIR) as $blockDir){
+        $blockJson = $blockDir.'/block.json';
+        if (file_exists($blockJson)){
+          register_block_type($blockDir);
+        }
+      }
+    }
+  }
+}
+add_action('init','img2html_register_atomic_blocks');

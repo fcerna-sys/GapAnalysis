@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atom-heading",
+  "title": "Título (Átomo)",
+  "category": "widgets",
+  "description": "Título básico reutilizable",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "text": {"type": "string", "default": "Título"},
+    "level": {"type": "number", "default": 2},
+    "align": {"type": "string", "default": "left"}
+  },
+  "supports": {
+    "align": ["left","center","right"],
+    "spacing": {"margin": true}
+  }
+}

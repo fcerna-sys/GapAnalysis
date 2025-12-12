@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/molecule-pricing-feature",
+  "title": "Pricing Feature (Molécula)",
+  "category": "widgets",
+  "description": "Feature de pricing con precio, lista de features y CTA",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "title": {"type": "string", "default": "Plan Básico"},
+    "price": {"type": "string", "default": "$19"},
+    "features": {"type": "array", "default": ["Feature A","Feature B","Feature C"]},
+    "buttonText": {"type": "string", "default": "Comprar"},
+    "buttonUrl": {"type": "string", "default": "#"}
+  },
+  "supports": {
+    "spacing": {"margin": true, "padding": true},
+    "color": {"background": true}
+  }
+}

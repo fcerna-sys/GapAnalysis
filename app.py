@@ -465,6 +465,12 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
             )
                 # Configurar framework CSS
                 setup_css_framework(wp_theme_dir, css_framework)
+                try:
+                    from theme_builder import apply_typography_and_spacing, update_theme_json_colors
+                    apply_typography_and_spacing(wp_theme_dir, dna, plan)
+                    update_theme_json_colors(wp_theme_dir, dna)
+                except Exception as _e:
+                    pass
                 # Crear bloques personalizados (con prefijo BEM desde theme_slug)
                 create_custom_blocks(wp_theme_dir, css_framework, plan, theme_slug)
                 # Generar screenshot SVG
@@ -773,23 +779,14 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
                 theme_tags=theme_tags,
                 theme_license=theme_license
             )
-                wp_theme_dir, 
-                plan, 
-                dna, 
-                images, 
-                theme_name, 
-                theme_description, 
-                theme_slug, 
-                css_framework,
-                theme_version=ctx.get('theme_version', '1.0.0'),
-                theme_author=ctx.get('theme_author', ''),
-                theme_uri=ctx.get('theme_uri', ''),
-                theme_textdomain=ctx.get('theme_textdomain', ''),
-                theme_tags=ctx.get('theme_tags', ''),
-                theme_license=ctx.get('theme_license', 'GPLv2 or later')
-            )
             # Configurar framework CSS
             setup_css_framework(wp_theme_dir, css_framework)
+            try:
+                from theme_builder import apply_typography_and_spacing, update_theme_json_colors
+                apply_typography_and_spacing(wp_theme_dir, dna, plan)
+                update_theme_json_colors(wp_theme_dir, dna)
+            except Exception:
+                pass
             # Crear bloques personalizados
             create_custom_blocks(wp_theme_dir, css_framework, plan, theme_slug)
             # Generar screenshot SVG

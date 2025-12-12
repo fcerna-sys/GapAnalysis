@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atom-paragraph",
+  "title": "Párrafo (Átomo)",
+  "category": "text",
+  "description": "Párrafo básico reutilizable",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "text": {"type": "string", "default": "Texto del párrafo"},
+    "align": {"type": "string", "default": "left"}
+  },
+  "supports": {
+    "spacing": {"margin": true}
+  }
+}

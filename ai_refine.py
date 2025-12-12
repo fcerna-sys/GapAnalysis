@@ -429,6 +429,7 @@ add_action('init','img2html_register_patterns');
         base_theme = {
             "version": 3,
             "settings": {
+                "appearanceTools": True,
                 "layout": {"contentSize": "800px", "wideSize": "1200px"},
                 "color": {"palette": [
                     {"name":"Text","slug":"text","color":"#1e293b"},
@@ -438,9 +439,30 @@ add_action('init','img2html_register_patterns');
                     {"name":"Surface","slug":"surface","color":"#f1f5f9"},
                     {"name":"Accent","slug":"accent","color":"#ef4444"}
                 ]},
-                "typography": {"fluid": True, "fontFamilies": [
-                    {"fontFamily":"Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif","slug":"inter","name":"Inter"}
-                ]}
+                "typography": {
+                    "fluid": True,
+                    "fontFamilies": [
+                        {"fontFamily":"Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif","slug":"inter","name":"Inter"}
+                    ],
+                    "fontSizes": [
+                        {"name":"xs","slug":"xs","size":"clamp(0.8rem, 0.75rem + 0.3vw, 0.9rem)"},
+                        {"name":"sm","slug":"sm","size":"clamp(0.9rem, 0.85rem + 0.3vw, 1.0rem)"},
+                        {"name":"base","slug":"base","size":"clamp(1.0rem, 0.95rem + 0.4vw, 1.125rem)"},
+                        {"name":"lg","slug":"lg","size":"clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem)"},
+                        {"name":"xl","slug":"xl","size":"clamp(1.5rem, 1.3rem + 0.8vw, 1.875rem)"},
+                        {"name":"2xl","slug":"2xl","size":"clamp(1.875rem, 1.6rem + 1.0vw, 2.25rem)"}
+                    ]
+                },
+                "spacing": {
+                    "spacingSizes": [
+                        {"slug":"8","size":"8px","name":"8"},
+                        {"slug":"12","size":"12px","name":"12"},
+                        {"slug":"16","size":"16px","name":"16"},
+                        {"slug":"24","size":"24px","name":"24"},
+                        {"slug":"32","size":"32px","name":"32"},
+                        {"slug":"48","size":"48px","name":"48"}
+                    ]
+                }
             }
         }
     try:
@@ -557,6 +579,53 @@ add_action('init','img2html_register_patterns');
 <!-- /wp:comments -->
 """
     _write_file(os.path.join(theme_dir, 'patterns', 'comments.html'), pattern_comments)
+
+    # Atoms
+    atoms = {
+        'atom-button.html': """<!-- wp:buttons -->
+<div class=\"wp-block-buttons img2html-button\"><!-- wp:button {\"className\":\"img2html-button__primary\"} -->
+<div class=\"wp-block-button img2html-button__primary\"><a class=\"wp-block-button__link\">Acción</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->""",
+        'atom-heading.html': """<!-- wp:heading {\"level\":2,\"className\":\"img2html-heading img2html-heading--section\"} --><h2 class=\"img2html-heading img2html-heading--section\">Título</h2><!-- /wp:heading -->""",
+        'atom-paragraph.html': """<!-- wp:paragraph {\"className\":\"img2html-paragraph\"} --><p class=\"img2html-paragraph\">Texto descriptivo.</p><!-- /wp:paragraph -->""",
+        'atom-icon.html': """<!-- wp:group {\"className\":\"img2html-icon\"} --><div class=\"wp-block-group img2html-icon\"></div><!-- /wp:group -->""",
+        'atom-container.html': """<!-- wp:group {\"layout\":{\"type\":\"constrained\"},\"className\":\"img2html-container\"} --><div class=\"wp-block-group img2html-container\"></div><!-- /wp:group -->"""
+    }
+    for fname, content in atoms.items():
+        _write_file(os.path.join(theme_dir, 'patterns', fname), content)
+
+    # Molecules
+    molecules = {
+        'molecule-card.html': """<!-- wp:group {\"className\":\"img2html-card\",\"style\":{\"spacing\":{\"padding\":{\"top\":\"var(--wp--preset--spacing--16)\",\"bottom\":\"var(--wp--preset--spacing--16)\",\"left\":\"var(--wp--preset--spacing--16)\",\"right\":\"var(--wp--preset--spacing--16)\"}}}} -->
+<div class=\"wp-block-group img2html-card\">
+<!-- wp:image {\"sizeSlug\":\"large\",\"className\":\"img2html-card__imagen\"} /-->
+<!-- wp:heading {\"level\":3,\"className\":\"img2html-card__titulo\"} --><h3 class=\"img2html-card__titulo\">Título</h3><!-- /wp:heading -->
+<!-- wp:paragraph {\"className\":\"img2html-card__texto\"} --><p class=\"img2html-card__texto\">Descripción corta.</p><!-- /wp:paragraph -->
+<!-- wp:buttons {\"className\":\"img2html-card__acciones\"} --><div class=\"wp-block-buttons img2html-card__acciones\"><!-- wp:button {\"className\":\"img2html-button__primary\"} --><div class=\"wp-block-button img2html-button__primary\"><a class=\"wp-block-button__link\">Ver más</a></div><!-- /wp:button --></div><!-- /wp:buttons -->
+</div>
+<!-- /wp:group -->""",
+        'molecule-testimonial-small.html': """<!-- wp:group {\"className\":\"img2html-testimonial\"} --><div class=\"wp-block-group img2html-testimonial\"><!-- wp:paragraph {\"className\":\"img2html-testimonial__texto\"} --><p class=\"img2html-testimonial__texto\">“Excelente servicio.”</p><!-- /wp:paragraph --><!-- wp:paragraph {\"className\":\"img2html-testimonial__autor\"} --><p class=\"img2html-testimonial__autor\">— Autor</p><!-- /wp:paragraph --></div><!-- /wp:group -->""",
+        'molecule-pricing-feature.html': """<!-- wp:group {\"className\":\"img2html-pricing-feature\"} --><div class=\"wp-block-group img2html-pricing-feature\"><!-- wp:heading {\"level\":3,\"className\":\"img2html-pricing-feature__titulo\"} --><h3 class=\"img2html-pricing-feature__titulo\">Plan Pro</h3><!-- /wp:heading --><!-- wp:list {\"className\":\"img2html-pricing-feature__lista\"} --><ul class=\"img2html-pricing-feature__lista\"><li>Característica A</li><li>Característica B</li></ul><!-- /wp:list --><!-- wp:buttons --><div class=\"wp-block-buttons\"><!-- wp:button {\"className\":\"img2html-button__primary\"} --><div class=\"wp-block-button img2html-button__primary\"><a class=\"wp-block-button__link\">Comprar</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div><!-- /wp:group -->"""
+    }
+    for fname, content in molecules.items():
+        _write_file(os.path.join(theme_dir, 'patterns', fname), content)
+
+    # Synced pattern seed (convertible a reusable block)
+    synced_cta = """<!-- wp:group {\"layout\":{\"type\":\"constrained\"},\"className\":\"img2html-cta\"} -->
+<div class=\"wp-block-group img2html-cta\"><!-- wp:heading {\"level\":2} --><h2>¿Listo para comenzar?</h2><!-- /wp:heading --><!-- wp:buttons --><div class=\"wp-block-buttons\"><!-- wp:button {\"className\":\"img2html-button__primary\"} --><div class=\"wp-block-button img2html-button__primary\"><a class=\"wp-block-button__link\">Empezar</a></div><!-- /wp:button --></div><!-- /wp:buttons --></div>
+<!-- /wp:group -->"""
+    _write_file(os.path.join(theme_dir, 'patterns', 'synced-cta-primary.html'), synced_cta)
+
+    # Auto docs (components)
+    try:
+        proj_docs = os.path.join(os.path.dirname(base_dir), 'docs', 'components')
+        os.makedirs(proj_docs, exist_ok=True)
+        _write_file(os.path.join(proj_docs, 'card.md'), "# Card\n\nUso: Inserta el patrón 'img2html/molecule-card' y sustituye imagen, título y texto. BEM: img2html-card/__imagen/__titulo/__texto.")
+        _write_file(os.path.join(proj_docs, 'testimonial-small.md'), "# Testimonial Small\n\nUso: Inserta 'img2html/molecule-testimonial-small'. Edita texto y autor. BEM: img2html-testimonial/__texto/__autor.")
+        _write_file(os.path.join(proj_docs, 'pricing-feature.md'), "# Pricing Feature\n\nUso: Inserta 'img2html/molecule-pricing-feature'. Lista de características y botón de compra.")
+    except Exception:
+        pass
 
 def _optimize_image_for_ai(image_path, max_width=2048, max_height=2048, quality=85):
     """

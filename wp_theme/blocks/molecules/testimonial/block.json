@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/molecule-testimonial",
+  "title": "Testimonial (Molécula)",
+  "category": "widgets",
+  "description": "Testimonial pequeño con avatar, texto y autor",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "attributes": {
+    "text": {"type": "string", "default": "Excelente servicio."},
+    "author": {"type": "string", "default": "Nombre"},
+    "role": {"type": "string", "default": "Cargo"},
+    "avatarUrl": {"type": "string", "default": ""}
+  },
+  "supports": {
+    "spacing": {"margin": true, "padding": true}
+  }
+}
