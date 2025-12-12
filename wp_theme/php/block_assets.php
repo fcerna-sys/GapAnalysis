@@ -134,7 +134,14 @@ function img2html_enqueue_block_manifest_assets(){
         'img2html/molecule-card' => ['img2html-card'],
         'img2html/molecule-testimonial' => ['img2html-testimonial'],
         'img2html/molecule-features-list' => ['img2html-features-list'],
-        'img2html/molecule-team-member' => ['img2html-team-member']
+        'img2html/molecule-team-member' => ['img2html-team-member'],
+        'img2html/atom-button' => ['img2html-button'],
+        'img2html/atom-container' => ['img2html-container'],
+        'img2html/atom-icon' => ['img2html-icon'],
+        'img2html/atom-paragraph' => ['img2html-paragraph'],
+        'img2html/atom-input' => ['img2html-input'],
+        'img2html/atom-badge' => ['img2html-badge'],
+        'img2html/atom-link' => ['img2html-link']
       ];
       foreach ($classes as $cls){
         if ($name && isset($skip_map[$name])){
