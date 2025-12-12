@@ -18,19 +18,31 @@ function img2html_enqueue_block_manifest_assets(){
       $deps_script = isset($cfg['deps_script']) ? (array)$cfg['deps_script'] : [];
       $version = isset($cfg['version']) ? $cfg['version'] : null;
       foreach ($styles as $rel){
-        $uri = get_theme_file_uri($rel);
-        $path = get_theme_file_path($rel);
+        $rel_min = preg_replace('/\.css$/', '.min.css', $rel);
+        $path_min = get_theme_file_path($rel_min);
+        $use_rel = file_exists($path_min) ? $rel_min : $rel;
+        $uri = get_theme_file_uri($use_rel);
+        $path = get_theme_file_path($use_rel);
         if (file_exists($path)){
           $ver = $version ? $version : filemtime($path);
-          wp_enqueue_style('img2html-block-'.md5($block.$rel), $uri, $deps_style, $ver);
+          wp_enqueue_style('img2html-block-'.md5($block.$use_rel), $uri, $deps_style, $ver);
         }
       }
       foreach ($scripts as $rel){
-        $uri = get_theme_file_uri($rel);
-        $path = get_theme_file_path($rel);
+        $rel_min = preg_replace('/\.js$/', '.min.js', $rel);
+        $path_min = get_theme_file_path($rel_min);
+        $use_rel = file_exists($path_min) ? $rel_min : $rel;
+        $uri = get_theme_file_uri($use_rel);
+        $path = get_theme_file_path($use_rel);
         if (file_exists($path)){
           $ver = $version ? $version : filemtime($path);
-          wp_enqueue_script('img2html-block-'.md5($block.$rel), $uri, $deps_script, $ver, true);
+          wp_enqueue_script('img2html-block-'.md5($block.$use_rel), $uri, $deps_script, $ver, true);
+        }
+      }
+        $path = get_theme_file_path($use_rel);
+        if (file_exists($path)){
+          $ver = $version ? $version : filemtime($path);
+          wp_enqueue_script('img2html-block-'.md5($block.$use_rel), $uri, $deps_script, $ver, true);
         }
       }
     }
@@ -93,19 +105,25 @@ function img2html_enqueue_block_manifest_assets(){
         $deps_script = isset($cfg['deps_script']) ? (array)$cfg['deps_script'] : [];
         $version = isset($cfg['version']) ? $cfg['version'] : null;
         foreach ($styles as $rel){
-          $uri = get_theme_file_uri($rel);
-          $path = get_theme_file_path($rel);
+          $rel_min = preg_replace('/\.css$/', '.min.css', $rel);
+          $path_min = get_theme_file_path($rel_min);
+          $use_rel = file_exists($path_min) ? $rel_min : $rel;
+          $uri = get_theme_file_uri($use_rel);
+          $path = get_theme_file_path($use_rel);
           if (file_exists($path)){
             $ver = $version ? $version : filemtime($path);
-            wp_enqueue_style('img2html-block-'.md5($name.$rel), $uri, $deps_style, $ver);
+            wp_enqueue_style('img2html-block-'.md5($name.$use_rel), $uri, $deps_style, $ver);
           }
         }
         foreach ($scripts as $rel){
-          $uri = get_theme_file_uri($rel);
-          $path = get_theme_file_path($rel);
+          $rel_min = preg_replace('/\.js$/', '.min.js', $rel);
+          $path_min = get_theme_file_path($rel_min);
+          $use_rel = file_exists($path_min) ? $rel_min : $rel;
+          $uri = get_theme_file_uri($use_rel);
+          $path = get_theme_file_path($use_rel);
           if (file_exists($path)){
             $ver = $version ? $version : filemtime($path);
-            wp_enqueue_script('img2html-block-'.md5($name.$rel), $uri, $deps_script, $ver, true);
+            wp_enqueue_script('img2html-block-'.md5($name.$use_rel), $uri, $deps_script, $ver, true);
           }
         }
       }

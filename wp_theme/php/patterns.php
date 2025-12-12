@@ -1,19 +1,20 @@
 <?php
 function img2html_register_patterns(){
-  register_block_pattern_category('img2html', ['label'=>'Img2HTML']);
+  $prefix = function_exists('img2html_bem_prefix') ? img2html_bem_prefix() : 'img2html';
+  register_block_pattern_category($prefix, ['label'=>ucwords(str_replace('-', ' ', $prefix))]);
   $dir = get_theme_file_path('patterns');
   if (!is_dir($dir)) return;
-  register_block_pattern_category('img2html-sections', ['label'=>'Img2HTML Sections']);
+  register_block_pattern_category($prefix.'-sections', ['label'=>ucwords(str_replace('-', ' ', $prefix.' sections'))]);
   $files = array_merge(glob($dir.'/*.html'), glob($dir.'/*.php'));
-  $registered_categories = ['img2html' => true];
+  $registered_categories = [$prefix => true];
   foreach ($files as $file){
     $ext = pathinfo($file, PATHINFO_EXTENSION);
     $slug = basename($file, '.'.$ext);
     $content_raw = file_get_contents($file);
     if (!$content_raw) continue;
     $title = ucwords(str_replace('-', ' ', $slug));
-    $description = 'Patrón img2html: '.$title;
-    $categories = ['img2html'];
+    $description = 'Patrón '.$prefix.': '.$title;
+    $categories = [$prefix];
     if ($ext === 'php'){
       if (preg_match('/\*\s*Title:\s*(.*?)\n/s', $content_raw, $m)) $title = trim($m[1]);
       if (preg_match('/\*\s*Description:\s*(.*?)\n/s', $content_raw, $m)) $description = trim($m[1]);
@@ -31,7 +32,7 @@ function img2html_register_patterns(){
         $registered_categories[$cat] = true;
       }
     }
-    register_block_pattern('img2html/'.$slug,[
+    register_block_pattern($prefix.'/'.$slug,[
       'title'=>$title,
       'description'=>$description,
       'content'=>$content,

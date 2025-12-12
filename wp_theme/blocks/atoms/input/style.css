@@ -1,2 +1,1 @@
-.img2html-input{display:block;padding:.5rem .75rem;border:1px solid var(--wp--preset--color--muted, #ddd);border-radius:6px}
-.img2html-input--full{width:100%}
+@import url("../../assets/components/img2html-input.css");
