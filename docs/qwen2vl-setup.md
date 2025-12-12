@@ -181,3 +181,4 @@ La aplicación tiene validación robusta de JSON y fallbacks automáticos:
 
 
 
+

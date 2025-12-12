@@ -76,3 +76,4 @@ funcs = [n for n in dir(backup) if callable(getattr(backup, n, None))]
 
 Los errores de sintaxis en el backup no impiden que el sistema funcione, ya que los módulos manejan los errores y proporcionan stubs cuando es necesario.
 
+

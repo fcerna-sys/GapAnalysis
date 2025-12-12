@@ -79,3 +79,4 @@
 
 El archivo `blocks_builder_backup.py` se mantiene como respaldo, pero **ya no es necesario** para el funcionamiento del sistema. Todo el código está en los módulos modulares.
 
+

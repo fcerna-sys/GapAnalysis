@@ -241,3 +241,4 @@ build:
 ### Error: "npm no encontrado"
 **Solución**: Las optimizaciones (minify/purge) requieren Node.js. Instala Node.js o usa `--no-minify --no-purge`
 
+

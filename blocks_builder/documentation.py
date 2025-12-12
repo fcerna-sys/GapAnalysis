@@ -698,3 +698,4 @@ Estos patterns se actualizan globalmente:
     with open(index_path, 'w', encoding='utf-8') as f:
         f.write(index_content)
 
+

@@ -49,3 +49,4 @@ def add_pattern_instructions(pattern_content: str, pattern_slug: str, bem_prefix
     
     return pattern_content
 
+

@@ -132,3 +132,4 @@ Este archivo es un script temporal de análisis, NO es parte del código funcion
 - 6 funciones helpers
 - **Total: 58 funciones disponibles**
 
+

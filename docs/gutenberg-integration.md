@@ -246,3 +246,4 @@ Los bloques generados:
 - ✅ **Flexibilidad**: Atributos dinámicos configurables
 - ✅ **Experiencia mejorada**: Controles familiares para usuarios de WordPress
 
+
