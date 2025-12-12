@@ -68,6 +68,7 @@ function img2html_register_synced_patterns() {
     register_block_pattern_category('img2html-hero', array('label' => __('Hero', 'img2html')));
     register_block_pattern_category('img2html-cards', array('label' => __('Cards', 'img2html')));
     register_block_pattern_category('img2html-testimonials', array('label' => __('Testimonials', 'img2html')));
+    register_block_pattern_category('img2html-sections', array('label' => __('Sections', 'img2html')));
 
     foreach (glob($patterns_dir . '/*.php') as $file) {
         $slug = basename($file, '.php');

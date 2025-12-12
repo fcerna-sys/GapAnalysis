@@ -1245,6 +1245,15 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
             if sem_color['slug'] not in existing_slugs:
                 palette.append(sem_color)
         
+        # Asegurar accent y foreground si faltan
+        have_accent = any(p.get('slug') == 'accent' for p in palette)
+        if not have_accent and primary_color:
+            pr = _hex_to_rgb(primary_color)
+            comp = _rgb_to_hex((255 - pr[0], 255 - pr[1], 255 - pr[2]))
+            palette.append({"name": "Accent", "slug": "accent", "color": comp})
+        have_foreground = any(p.get('slug') == 'foreground' for p in palette)
+        if not have_foreground and text_color:
+            palette.append({"name": "Foreground", "slug": "foreground", "color": text_color})
         if palette:
             color_settings['palette'] = palette
         
@@ -1656,6 +1665,38 @@ def generate_advanced_theme_json(theme_dir: str, dna: Optional[Dict] = None, pla
                     "bottom": "var(--wp--preset--spacing--md)"
                 }
             }
+        })
+
+        # Bloques personalizados base
+        block_styles.setdefault('img2html/molecule-card', {
+            "color": {
+                "background": "var(--wp--preset--color--background)",
+                "text": "var(--wp--preset--color--text)"
+            },
+            "border": {"radius": "var(--wp--preset--border-radius--medium)", "color": "var(--wp--preset--color--surface)", "width": "1px", "style": "solid"},
+            "spacing": {"padding": {"top": "var(--wp--preset--spacing--md)", "right": "var(--wp--preset--spacing--md)", "bottom": "var(--wp--preset--spacing--md)", "left": "var(--wp--preset--spacing--md)"}}
+        })
+        block_styles.setdefault('img2html/molecule-testimonial', {
+            "color": {"background": "var(--wp--preset--color--background)", "text": "var(--wp--preset--color--text)"},
+            "border": {"radius": "var(--wp--preset--border-radius--medium)", "color": "var(--wp--preset--color--surface)", "width": "1px", "style": "solid"},
+            "spacing": {"padding": {"top": "var(--wp--preset--spacing--md)", "bottom": "var(--wp--preset--spacing--md)", "left": "var(--wp--preset--spacing--md)", "right": "var(--wp--preset--spacing--md)"}}
+        })
+        block_styles.setdefault('img2html/molecule-team-member', {
+            "color": {"background": "var(--wp--preset--color--background)"},
+            "border": {"radius": "var(--wp--preset--border-radius--medium)", "color": "var(--wp--preset--color--surface)", "width": "1px", "style": "solid"},
+            "spacing": {"padding": {"top": "var(--wp--preset--spacing--md)", "bottom": "var(--wp--preset--spacing--md)", "left": "var(--wp--preset--spacing--md)", "right": "var(--wp--preset--spacing--md)"}}
+        })
+        block_styles.setdefault('img2html/molecule-features-list', {
+            "spacing": {"margin": {"bottom": "var(--wp--preset--spacing--md)"}, "padding": {"top": "var(--wp--preset--spacing--sm)"}}
+        })
+        block_styles.setdefault('img2html/molecule-pricing-feature', {
+            "color": {"background": "var(--wp--preset--color--background)"},
+            "border": {"radius": "var(--wp--preset--border-radius--medium)", "color": "var(--wp--preset--color--surface)", "width": "1px", "style": "solid"},
+            "spacing": {"padding": {"top": "var(--wp--preset--spacing--lg)", "bottom": "var(--wp--preset--spacing--lg)", "left": "var(--wp--preset--spacing--lg)", "right": "var(--wp--preset--spacing--lg)"}}
+        })
+        block_styles.setdefault('img2html/organism-hero', {
+            "spacing": {"padding": {"top": "var(--wp--preset--spacing--xl)", "bottom": "var(--wp--preset--spacing--xl)"}},
+            "elements": {"heading": {"typography": {"fontSize": "var(--wp--preset--font-size--xx-large)", "fontWeight": "800"}}}
         })
         
         # ========================================
@@ -3758,3 +3799,10 @@ def generate_theme_screenshot(theme_dir: str, plan: Dict, dna: Optional[Dict] = 
         
     except Exception as e:
         print(f"Error al generar screenshot: {e}")
+        # Bloques personalizados: controles de editor
+        blocks.setdefault('img2html/molecule-card', {"color": {"background": True}, "spacing": {"margin": True, "padding": True}, "typography": {"fontFamily": False, "fontSize": False}})
+        blocks.setdefault('img2html/molecule-testimonial', {"color": {"background": True}, "spacing": {"margin": True, "padding": True}, "typography": {"fontFamily": False}})
+        blocks.setdefault('img2html/molecule-team-member', {"color": {"background": True}, "spacing": {"margin": True, "padding": True}, "typography": {"fontFamily": False}})
+        blocks.setdefault('img2html/molecule-features-list', {"spacing": {"margin": True, "padding": True}})
+        blocks.setdefault('img2html/molecule-pricing-feature', {"color": {"background": True}, "spacing": {"margin": True, "padding": True}})
+        blocks.setdefault('img2html/organism-hero', {"spacing": {"padding": True}, "color": {"background": True}, "typography": {"fontFamily": False}})
