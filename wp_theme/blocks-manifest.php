@@ -6,6 +6,7 @@ return [
   'core/gallery' => [
     'style' => ['assets/blocks/core-gallery.css'],
     'script' => ['assets/blocks/core-gallery.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/button' => [
@@ -18,6 +19,7 @@ return [
   'core/image' => [
     'style' => ['assets/blocks/core-image.css'],
     'script' => ['assets/blocks/core-image.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/quote' => [
@@ -47,6 +49,7 @@ return [
   'core/navigation' => [
     'style' => ['assets/blocks/core-navigation.css'],
     'script' => ['assets/blocks/core-navigation.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/list' => [
@@ -67,11 +70,13 @@ return [
   'core/video' => [
     'style' => ['assets/blocks/core-video.css'],
     'script' => ['assets/blocks/core-video.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/embed' => [
     'style' => ['assets/blocks/core-embed.css'],
     'script' => ['assets/blocks/core-embed.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/file' => [
@@ -80,6 +85,7 @@ return [
   'core/search' => [
     'style' => ['assets/blocks/core-search.css'],
     'script' => ['assets/blocks/core-search.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/query-pagination' => [
@@ -97,6 +103,7 @@ return [
   'core/latest-posts' => [
     'style' => ['assets/blocks/core-latest-posts.css'],
     'script' => ['assets/blocks/core-latest-posts.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/latest-comments' => [
@@ -108,6 +115,7 @@ return [
   'core/social-links' => [
     'style' => ['assets/blocks/core-social-links.css'],
     'script' => ['assets/blocks/core-social-links.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ],
   'core/tag-cloud' => [
@@ -173,6 +181,7 @@ return [
   'core/table' => [
     'style' => ['assets/blocks/core-table.css'],
     'script' => ['assets/blocks/core-table.js'],
+    'defer' => true,
     'deps_script' => ['wp-dom-ready']
   ]
 ];

@@ -5,8 +5,18 @@
   "title": "Card (Molécula)",
   "category": "widgets",
   "description": "Tarjeta compuesta con imagen, título, texto y acciones",
+  "keywords": ["card","tarjeta","molecule","component"],
   "style": "file:./style.css",
   "render": "file:./render.php",
+  "example": {
+    "attributes": {
+      "title": "Título",
+      "text": "Descripción corta.",
+      "imageUrl": "https://via.placeholder.com/640x360",
+      "buttonText": "Ver más",
+      "buttonUrl": "#"
+    }
+  },
   "attributes": {
     "title": {"type": "string", "default": "Título"},
     "text": {"type": "string", "default": "Descripción corta."},

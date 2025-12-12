@@ -34,15 +34,14 @@ function img2html_enqueue_block_manifest_assets(){
         $use_rel = file_exists($path_min) ? $rel_min : $rel;
         $uri = get_theme_file_uri($use_rel);
         $path = get_theme_file_path($use_rel);
+        $async = !empty($cfg['async']);
+        $defer = !empty($cfg['defer']);
         if (file_exists($path)){
           $ver = $version ? $version : filemtime($path);
-          wp_enqueue_script('img2html-block-'.md5($block.$use_rel), $uri, $deps_script, $ver, true);
-        }
-      }
-        $path = get_theme_file_path($use_rel);
-        if (file_exists($path)){
-          $ver = $version ? $version : filemtime($path);
-          wp_enqueue_script('img2html-block-'.md5($block.$use_rel), $uri, $deps_script, $ver, true);
+          $handle = 'img2html-block-'.md5($block.$use_rel);
+          wp_enqueue_script($handle, $uri, $deps_script, $ver, true);
+          if ($async) wp_script_add_data($handle, 'async', true);
+          if ($defer) wp_script_add_data($handle, 'defer', true);
         }
       }
     }
@@ -83,11 +82,19 @@ function img2html_enqueue_block_manifest_assets(){
           }
         }
         foreach ($scripts as $rel){
-          $uri = get_theme_file_uri($rel);
-          $path = get_theme_file_path($rel);
+          $rel_min = preg_replace('/\.js$/', '.min.js', $rel);
+          $path_min = get_theme_file_path($rel_min);
+          $use_rel = file_exists($path_min) ? $rel_min : $rel;
+          $uri = get_theme_file_uri($use_rel);
+          $path = get_theme_file_path($use_rel);
+          $async = !empty($cfg['async']);
+          $defer = !empty($cfg['defer']);
           if (file_exists($path)){
             $ver = $version ? $version : filemtime($path);
-            wp_enqueue_script('img2html-block-'.md5($block.$rel), $uri, $deps_script, $ver, true);
+            $handle = 'img2html-block-'.md5($block.$use_rel);
+            wp_enqueue_script($handle, $uri, $deps_script, $ver, true);
+            if ($async) wp_script_add_data($handle, 'async', true);
+            if ($defer) wp_script_add_data($handle, 'defer', true);
           }
         }
       }
@@ -123,7 +130,8 @@ function img2html_enqueue_block_manifest_assets(){
           $path = get_theme_file_path($use_rel);
           if (file_exists($path)){
             $ver = $version ? $version : filemtime($path);
-            wp_enqueue_script('img2html-block-'.md5($name.$use_rel), $uri, $deps_script, $ver, true);
+            $handle = 'img2html-block-'.md5($name.$use_rel);
+            wp_enqueue_script($handle, $uri, $deps_script, $ver, true);
           }
         }
       }

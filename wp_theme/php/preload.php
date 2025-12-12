@@ -1,10 +1,29 @@
 <?php
-function img2html_preload_featured(){
-  if (is_singular()){ 
-    $src = get_the_post_thumbnail_url(get_the_ID(),'full');
-    if ($src){
-      echo '<link rel="preload" as="image" href="'.esc_url($src).'" imagesrcset="'.esc_attr(wp_get_attachment_image_srcset(get_post_thumbnail_id(), 'full')).'">';
-    }
+function img2html_preload_fonts(){
+  $fonts_dir = get_theme_file_path('assets/fonts');
+  if (!is_dir($fonts_dir)) return;
+  foreach (glob($fonts_dir.'/*.woff2') as $font){
+    $href = get_theme_file_uri('assets/fonts/'.basename($font));
+    echo '<link rel="preload" href="'.esc_url($href).'" as="font" type="font/woff2" crossorigin>';
   }
 }
-add_action('wp_head','img2html_preload_featured',1);
+add_action('wp_head','img2html_preload_fonts',1);
+
+function img2html_preload_critical_css($html, $handle){
+  $targets = [
+    'assets/blocks/core-navigation.css',
+    'assets/blocks/core-site-title.css'
+  ];
+  if (preg_match('/href="([^"]+)"/', $html, $m)){
+    $href = $m[1];
+    foreach ($targets as $t){
+      if (strpos($href, $t) !== false){
+        $preload = '<link rel="preload" href="'.esc_url($href).'" as="style" onload="this.onload=null;this.rel=\'stylesheet\'">';
+        $noscript = '<noscript>'.$html.'</noscript>';
+        return $preload.$noscript;
+      }
+    }
+  }
+  return $html;
+}
+add_filter('style_loader_tag','img2html_preload_critical_css',10,2);

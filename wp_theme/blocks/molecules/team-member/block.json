@@ -5,8 +5,16 @@
   "title": "Miembro del equipo (Molécula)",
   "category": "widgets",
   "description": "Tarjeta de miembro con avatar, nombre y rol",
+  "keywords": ["team","miembro","equipo","molecule"],
   "style": "file:./style.css",
   "render": "file:./render.php",
+  "example": {
+    "attributes": {
+      "name": "Nombre",
+      "role": "Rol",
+      "avatarUrl": "https://via.placeholder.com/128"
+    }
+  },
   "attributes": {
     "name": {"type": "string", "default": "Nombre"},
     "role": {"type": "string", "default": "Rol"},
