@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guía de Estilos</title>
+  <style>
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, sans-serif;margin:0}
+    header{padding:16px 20px;border-bottom:1px solid #e5e7eb}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px}
+    .sw{border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;background:#fff}
+    .box{height:80px}
+    .info{padding:10px}
+    .info code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  </style>
+  </head>
+<body>
+  <header>
+    <h1 style="margin:0">Guía de Estilos</h1>
+    <p style="margin:6px 0 0 0;color:#64748b">Paleta tomada de theme.json</p>
+  </header>
+  <section class="grid">
+    <div class="sw"><div class="box" style="background:#1e293b"></div><div class="info"><strong>Text</strong><br><code>#1e293b</code></div></div>
+    <div class="sw"><div class="box" style="background:#ffffff"></div><div class="info"><strong>Background</strong><br><code>#ffffff</code></div></div>
+    <div class="sw"><div class="box" style="background:#3b82f6"></div><div class="info"><strong>Primary</strong><br><code>#3b82f6</code></div></div>
+    <div class="sw"><div class="box" style="background:#64748b"></div><div class="info"><strong>Secondary</strong><br><code>#64748b</code></div></div>
+    <div class="sw"><div class="box" style="background:#f1f5f9"></div><div class="info"><strong>Surface</strong><br><code>#f1f5f9</code></div></div>
+    <div class="sw"><div class="box" style="background:#ef4444"></div><div class="info"><strong>Accent</strong><br><code>#ef4444</code></div></div>
+  </section>
+  <section style="padding:16px">
+    <h2 style="margin:0 0 10px 0">Componentes</h2>
+    <p style="color:#64748b;margin:0 0 12px 0">Consulta la documentación generada en <code>wp_theme/docs/components</code> y los patrones en <code>wp_theme/docs/patterns</code>.</p>
+  </section>
+</body>
+</html>

@@ -1,8 +1,8 @@
-# Párrafo (Átomo)
+# Miembro del equipo (Molécula)
 
-**Tipo**: Atom  
-**Nombre del Bloque**: `img2html/atom-paragraph`  
-**Categoría**: `text`  
+**Tipo**: Molecule  
+**Nombre del Bloque**: `img2html/molecule-team-member`  
+**Categoría**: `widgets`  
 **Prefijo BEM**: `img2html`
 
 
@@ -11,7 +11,7 @@
 
 ## 📋 Propósito
 
-Párrafo básico reutilizable
+Tarjeta de miembro con avatar, nombre y rol
 
 ---
 
@@ -29,9 +29,9 @@ Este bloque no tiene variantes predefinidas. Se puede personalizar mediante atri
 
 ### Clases CSS Principales
 
-- **Clase base**: `img2html-atom-paragraph`
-- **Elementos**: `img2html-atom-paragraph__elemento`
-- **Modificadores**: `img2html-atom-paragraph--modificador`
+- **Clase base**: `img2html-molecule-team-member`
+- **Elementos**: `img2html-molecule-team-member__elemento`
+- **Modificadores**: `img2html-molecule-team-member--modificador`
 
 ---
 
@@ -39,28 +39,29 @@ Este bloque no tiene variantes predefinidas. Se puede personalizar mediante atri
 
 | Atributo | Tipo | Default | Descripción |
 |----------|------|---------|-------------|
-| `text` | `string` | `Texto del párrafo` | Atributo text |
-| `align` | `string` | `left` | Atributo align |
+| `name` | `string` | `Nombre` | Atributo name |
+| `role` | `string` | `Rol` | Atributo role |
+| `avatarUrl` | `string` | `` | Atributo avatarUrl |
 
 ### Características Soportadas
 
 - **spacing**:
   - `margin`: True
-- **typography**:
 - **color**:
+  - `background`: True
 
 
 ---
 
 ## ✅ Cuándo Usar
 
-Usa este bloque cuando necesites paragraph en tu contenido.
+Usa este bloque cuando necesites team member en tu contenido.
 
 ---
 
 ## ❌ Cuándo NO Usar
 
-Evita usar este bloque cuando paragraph no sea necesario o haya alternativas más simples.
+Evita usar este bloque cuando team member no sea necesario o haya alternativas más simples.
 
 ---
 
@@ -79,25 +80,26 @@ Evita usar este bloque cuando paragraph no sea necesario o haya alternativas má
 ### En el Editor de Bloques
 
 ```
-<!-- wp:img2html/atom-paragraph /-->
+<!-- wp:img2html/molecule-team-member /-->
 ```
 
 ### Con Atributos
 
 ```html
-<!-- wp:img2html/atom-paragraph {"attribute1": "value1", "attribute2": true} /-->
+<!-- wp:img2html/molecule-team-member {"attribute1": "value1", "attribute2": true} /-->
 ```
 
 ### Ejemplo Completo
 
 ```html
-<!-- wp:img2html/atom-paragraph {
-  "text": "Texto del párrafo",
-  "align": "left"
+<!-- wp:img2html/molecule-team-member {
+  "name": "Nombre",
+  "role": "Rol",
+  "avatarUrl": ""
 } /-->
 ```
 
-O en el editor de bloques, simplemente busca "Paragraph" y agrégalo a tu contenido.
+O en el editor de bloques, simplemente busca "Team Member" y agrégalo a tu contenido.
 
 ---
 
@@ -109,8 +111,8 @@ Este bloque es independiente pero puede combinarse con otros bloques del tema.
 
 ## 📚 Recursos Adicionales
 
-- **Archivo del bloque**: `blocks/atoms/paragraph/`
-- **Assets**: `assets/blocks/atoms/paragraph/`
+- **Archivo del bloque**: `blocks/molecules/team-member/`
+- **Assets**: `assets/blocks/molecules/team-member/`
 - **Estilos**: Usa metodología BEM con prefijo `img2html`
 
 ---

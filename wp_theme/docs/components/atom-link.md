@@ -1,7 +1,7 @@
-# Párrafo (Átomo)
+# Link (Átomo)
 
 **Tipo**: Atom  
-**Nombre del Bloque**: `img2html/atom-paragraph`  
+**Nombre del Bloque**: `img2html/atom-link`  
 **Categoría**: `text`  
 **Prefijo BEM**: `img2html`
 
@@ -11,7 +11,7 @@
 
 ## 📋 Propósito
 
-Párrafo básico reutilizable
+Enlace básico reutilizable.
 
 ---
 
@@ -29,9 +29,9 @@ Este bloque no tiene variantes predefinidas. Se puede personalizar mediante atri
 
 ### Clases CSS Principales
 
-- **Clase base**: `img2html-atom-paragraph`
-- **Elementos**: `img2html-atom-paragraph__elemento`
-- **Modificadores**: `img2html-atom-paragraph--modificador`
+- **Clase base**: `img2html-atom-link`
+- **Elementos**: `img2html-atom-link__elemento`
+- **Modificadores**: `img2html-atom-link--modificador`
 
 ---
 
@@ -39,14 +39,15 @@ Este bloque no tiene variantes predefinidas. Se puede personalizar mediante atri
 
 | Atributo | Tipo | Default | Descripción |
 |----------|------|---------|-------------|
-| `text` | `string` | `Texto del párrafo` | Atributo text |
-| `align` | `string` | `left` | Atributo align |
+| `text` | `string` | `Leer más` | Atributo text |
+| `url` | `string` | `#` | Atributo url |
+| `target` | `string` | `` | Atributo target |
+| `rel` | `string` | `` | Atributo rel |
 
 ### Características Soportadas
 
 - **spacing**:
   - `margin`: True
-- **typography**:
 - **color**:
 
 
@@ -54,13 +55,13 @@ Este bloque no tiene variantes predefinidas. Se puede personalizar mediante atri
 
 ## ✅ Cuándo Usar
 
-Usa este bloque cuando necesites paragraph en tu contenido.
+Usa este bloque cuando necesites link en tu contenido.
 
 ---
 
 ## ❌ Cuándo NO Usar
 
-Evita usar este bloque cuando paragraph no sea necesario o haya alternativas más simples.
+Evita usar este bloque cuando link no sea necesario o haya alternativas más simples.
 
 ---
 
@@ -79,25 +80,26 @@ Evita usar este bloque cuando paragraph no sea necesario o haya alternativas má
 ### En el Editor de Bloques
 
 ```
-<!-- wp:img2html/atom-paragraph /-->
+<!-- wp:img2html/atom-link /-->
 ```
 
 ### Con Atributos
 
 ```html
-<!-- wp:img2html/atom-paragraph {"attribute1": "value1", "attribute2": true} /-->
+<!-- wp:img2html/atom-link {"attribute1": "value1", "attribute2": true} /-->
 ```
 
 ### Ejemplo Completo
 
 ```html
-<!-- wp:img2html/atom-paragraph {
-  "text": "Texto del párrafo",
-  "align": "left"
+<!-- wp:img2html/atom-link {
+  "text": "Leer más",
+  "url": "#",
+  "target": ""
 } /-->
 ```
 
-O en el editor de bloques, simplemente busca "Paragraph" y agrégalo a tu contenido.
+O en el editor de bloques, simplemente busca "Link" y agrégalo a tu contenido.
 
 ---
 
@@ -109,8 +111,8 @@ Este bloque es independiente pero puede combinarse con otros bloques del tema.
 
 ## 📚 Recursos Adicionales
 
-- **Archivo del bloque**: `blocks/atoms/paragraph/`
-- **Assets**: `assets/blocks/atoms/paragraph/`
+- **Archivo del bloque**: `blocks/atoms/link/`
+- **Assets**: `assets/blocks/atoms/link/`
 - **Estilos**: Usa metodología BEM con prefijo `img2html`
 
 ---
