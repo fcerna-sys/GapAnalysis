@@ -1,0 +1,35 @@
+{
+  "pages": [
+    {
+      "slug": "home",
+      "title": "Inicio",
+      "template": "front-page",
+      "blocks": [
+        {
+          "type": "hero",
+          "data": {
+            "title": "Creamos experiencias digitales",
+            "subtitle": "Diseño moderno y escalable",
+            "cta_text": "Contactanos",
+            "cta_url": "/contacto",
+            "image": "hero.jpg"
+          }
+        },
+        {
+          "type": "card-grid",
+          "items": [
+            { "title": "Servicio 1", "text": "Descripción del servicio", "image": "service-1.jpg" },
+            { "title": "Servicio 2", "text": "Descripción del servicio", "image": "service-2.jpg" },
+            { "title": "Servicio 3", "text": "Descripción del servicio", "image": "service-3.jpg" }
+          ]
+        }
+      ]
+    }
+  ],
+  "media": [
+    { "file": "hero.jpg", "title": "Hero Image" },
+    { "file": "service-1.jpg", "title": "Service 1" },
+    { "file": "service-2.jpg", "title": "Service 2" },
+    { "file": "service-3.jpg", "title": "Service 3" }
+  ]
+}
