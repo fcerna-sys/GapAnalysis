@@ -17,8 +17,9 @@ $base = function_exists('img2html_bem') ? img2html_bem('pricing-feature') : 'img
     </ul>
   <?php endif; ?>
   <div class="wp-block-buttons <?php echo esc_attr(function_exists('img2html_bem') ? img2html_bem('pricing-feature','actions') : $base.'__actions'); ?>">
-    <?php $btn_base = function_exists('img2html_bem') ? img2html_bem('button') : 'img2html-button'; $btn_primary = function_exists('img2html_bem') ? img2html_bem('button','primary') : 'img2html-button__primary'; ?>
-    <div class="wp-block-button <?php echo esc_attr($btn_base.' '.$btn_primary); ?>">
+    <?php $btn_base = function_exists('img2html_bem') ? img2html_bem('button') : 'img2html-button'; $btn_primary = function_exists('img2html_bem') ? img2html_bem('button','', 'primary') : 'img2html-button--primary'; ?>
+    <?php $pf_btn = function_exists('img2html_bem') ? img2html_bem('pricing-feature','button') : $base.'__button'; $pf_btn_primary = function_exists('img2html_bem') ? img2html_bem('pricing-feature','button','primary') : $base.'__button--primary'; ?>
+    <div class="wp-block-button <?php echo esc_attr($btn_base.' '.$btn_primary.' '.$pf_btn.' '.$pf_btn_primary); ?>">
       <a class="wp-block-button__link" href="<?php echo esc_url($btnUrl); ?>"><?php echo esc_html($btnText); ?></a>
     </div>
   </div>

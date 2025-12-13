@@ -8,3 +8,12 @@
 .img2html-hero--right{text-align:right}
 .img2html-hero--center .img2html-hero__actions{justify-content:center}
 .img2html-hero--right .img2html-hero__actions{justify-content:flex-end}
+.img2html-hero__layout{display:grid;gap:1rem;align-items:center}
+.img2html-hero__media img{max-width:100%;height:auto;border-radius:12px}
+@media (min-width:768px){
+  .img2html-hero__layout{grid-template-columns:1fr 1fr}
+  .img2html-hero--image-right .img2html-hero__media{order:2}
+  .img2html-hero--image-right .img2html-hero__content{order:1}
+  .img2html-hero--image-left .img2html-hero__media{order:1}
+  .img2html-hero--image-left .img2html-hero__content{order:2}
+}

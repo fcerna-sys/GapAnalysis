@@ -10,3 +10,6 @@
 .img2html-cta__button--secondary { border: 1px solid currentColor; }
 .img2html-cta--bg-primary { background: rgba(29,78,216,.08); }
 .img2html-cta--bg-neutral { background: rgba(0,0,0,.04); }
+.img2html-cta--bg-gradient { background: linear-gradient(135deg, rgba(29,78,216,.12), rgba(147,197,253,.12)); }
+.img2html-cta--bg-solid { background: var(--wp--preset--color--primary, #1d4ed8); color: var(--wp--preset--color--background, #fff); }
+.img2html-cta--bg-minimal { background: transparent; border: 1px dashed rgba(0,0,0,.1); }

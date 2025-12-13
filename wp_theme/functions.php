@@ -83,54 +83,7 @@ function img2html_register_atomic_blocks(){
 }
 add_action('init','img2html_register_atomic_blocks');
 
-// Registrar patrones sincronizados desde archivos PHP con metadata
-function img2html_register_synced_patterns() {
-    $patterns_dir = get_theme_file_path('patterns');
-    if (!is_dir($patterns_dir)) return;
 
-    // Definir categorías comunes
-    register_block_pattern_category('img2html-header', array('label' => __('Header', 'img2html')));
-    register_block_pattern_category('img2html-footer', array('label' => __('Footer', 'img2html')));
-    register_block_pattern_category('img2html-call-to-action', array('label' => __('Call to Action', 'img2html')));
-    register_block_pattern_category('img2html-hero', array('label' => __('Hero', 'img2html')));
-    register_block_pattern_category('img2html-cards', array('label' => __('Cards', 'img2html')));
-    register_block_pattern_category('img2html-testimonials', array('label' => __('Testimonials', 'img2html')));
-    register_block_pattern_category('img2html-sections', array('label' => __('Sections', 'img2html')));
-
-    foreach (glob($patterns_dir . '/*.php') as $file) {
-        $slug = basename($file, '.php');
-        $slug = sanitize_title($slug);
-        $content = file_get_contents($file);
-        if (!$content) continue;
-
-        // Extraer contenido HTML después de ?>
-        $html_content = preg_replace('/.*?\?>/s', '', $content);
-
-        // Extraer metadatos del encabezado
-        preg_match('/Title:\s*(.+)/', $content, $title_match);
-        preg_match('/Description:\s*(.+)/', $content, $desc_match);
-        preg_match('/Categories:\s*(.+)/', $content, $cat_match);
-        preg_match('/Sync Status:\s*(synced|unsynced)/i', $content, $sync_match);
-
-        $title = isset($title_match[1]) ? sanitize_text_field(trim($title_match[1])) : sanitize_text_field(ucwords(str_replace('-', ' ', $slug)));
-        $description = isset($desc_match[1]) ? sanitize_text_field(trim($desc_match[1])) : sanitize_text_field('Patrón reutilizable');
-        $cat_string = isset($cat_match[1]) ? trim($cat_match[1]) : 'img2html';
-        $categories = array_map(function($c){ return sanitize_text_field(trim($c)); }, explode(',', $cat_string));
-        $is_synced = isset($sync_match[1]) && strtolower($sync_match[1]) === 'synced';
-
-        register_block_pattern(
-            'img2html/' . $slug,
-            array(
-                'title' => $title,
-                'description' => $description,
-                'content' => wp_kses_post(trim($html_content)),
-                'categories' => $categories,
-                'syncStatus' => $is_synced ? 'synced' : 'unsynced',
-            )
-        );
-    }
-}
-add_action('init', 'img2html_register_synced_patterns', 20);
 
 // Inyectar Critical CSS inline
 function img2html_critical_css() {

@@ -5,11 +5,11 @@ $cols = isset($attributes['columns']) ? max(1, intval($attributes['columns'])) :
 $prefix = function_exists('img2html_bem_prefix') ? img2html_bem_prefix() : 'img2html';
 $base = $prefix.'-cards-grid';
 $classes = $base.' '.$base.'--cols-'.$cols;
+$extra = (isset($attributes['className']) && is_string($attributes['className'])) ? ' '.sanitize_html_class($attributes['className']) : '';
 ?>
-<div class="<?php echo esc_attr($classes); ?>">
+<div class="<?php echo esc_attr($classes.$extra); ?>">
   <h2 class="<?php echo esc_attr($base.'__title'); ?>"><?php echo esc_html($title); ?></h2>
   <div class="<?php echo esc_attr($base.'__container'); ?>">
     <?php echo $content; ?>
   </div>
 </div>
-

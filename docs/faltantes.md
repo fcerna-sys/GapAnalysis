@@ -1,184 +1,290 @@
-Voy directo a lo importante: ✅ lo que ya está bien hecho, ⚠️ lo que está parcial y 🔴 lo que falta, y al final te dejo una lista priorizada de tareas concretas (con archivos/ubicaciones y ejemplos).
+OBJETIVO DEL SISTEMA (definición clara)
 
-✅ Lo que YA cubriste (muy bien)
+A partir de imágenes analizadas por IA, generar un tema WordPress que:
 
-Prefijo dinámico / namespace
+tenga estructura, bloques y estilos
 
-blocks_builder/prefix_manager.py existe y aplica normalización y slugificación. Buen trabajo: el prefijo se propaga a nombres de bloques, slugs y (parcialmente) patterns.
+pero además pre-cargue contenido dinámico real:
 
-Atomic design pipeline (atoms → molecules → organisms)
+textos
 
-blocks_builder/atoms.py, molecules.py, organisms.py presentes y generan block.json con bem_prefix. Arquitectura lista para componer.
+imágenes
 
-theme.json avanzado
+secciones
 
-theme_json_builder/ presente con paletas, tipografías y presets. wp_theme/theme.json existe y está bien formado.
+páginas
 
-Generación de patterns
+Todo eso insertado automáticamente en la base de datos al instalar el tema, mediante:
 
-Hay carpeta wp_theme/patterns/ con muchos HTML y wp_theme/php/patterns.php que registra las patterns en init. Además existe wp_theme/patterns.json. Esto cubre la parte patterns (aunque con placeholders de slug a revisar).
+un script SQL o
 
-Assets por bloque + manifest + encolado condicional
+un script SH (WP-CLI recomendado)
 
-wp_theme/assets/blocks/* contiene CSS por bloque.
+🧠 PRINCIPIO CLAVE (muy importante)
 
-wp_theme/php/block_assets.php implementa un manifest loader y encolado condicional (usa has_block() y hook render_block). IMPLEMENTADO correctamente → muy importante para performance.
+❌ NO guardar textos reales en el theme
+✅ El theme solo define estructura y presentación
 
-Generación de archivos WP base
+👉 Todo el contenido detectado en la imagen debe ir a la base de datos:
 
-Existe wp_theme/php/*.php (assets, security, seo, settings…) y templates. Tu app ya produce una estructura de tema instalable.
+posts
 
-Documentación automática
+pages
 
-blocks_builder/documentation.py y docs/ muestran que ya generas docs por componente. Excelente para equipos.
+media
 
-Editor UX (parcial pero presente)
+custom post types
 
-blocks_builder/editor_ux.py y blocks_builder/editors.py muestran controles configurados, limitación de opciones y placeholders. Ya hay trabajo en coherencia editor.
+block content (Gutenberg)
 
-Resultado: la mayor parte de la arquitectura "falta → hecho" ya la completaste. Muy buen salto.
+Esto es 100% correcto y profesional.
 
-⚠️ Lo que está PARCIAL o debería revisarse/afinarse
+🧱 ARQUITECTURA PROPUESTA (visión general)
+image → IA → data estructurada (JSON)
+                    ↓
+           ┌──────────────────┐
+           │ theme generator  │ → theme WP (bloques, styles)
+           └──────────────────┘
+                    ↓
+           ┌──────────────────┐
+           │ content exporter │ → SQL o SH (WP-CLI)
+           └──────────────────┘
+                    ↓
+             WordPress install
 
-BEM estricto y validador integrado
+📦 1. FORMATO DE DATOS INTERMEDIO (CLAVE)
 
-Hay soporte de prefijo y bem_prefix en atoms.py, y blocks_builder/bem_validator.py existe.
+Antes de pensar en SQL o SH, todo lo que la IA detecta debe convertirse a un JSON estructurado.
 
-Falta aplicar BEM de forma automática y forzada en todos los templates/HTML finales y validar en el build pipeline (falla el build si no cumple).
+📄 Ejemplo de content.json
+{
+  "pages": [
+    {
+      "slug": "home",
+      "title": "Inicio",
+      "template": "front-page",
+      "blocks": [
+        {
+          "type": "hero",
+          "data": {
+            "title": "Creamos experiencias digitales",
+            "subtitle": "Diseño moderno y escalable",
+            "cta_text": "Contactanos",
+            "cta_url": "/contacto"
+          }
+        },
+        {
+          "type": "card-grid",
+          "items": [
+            {
+              "title": "Servicio 1",
+              "text": "Descripción del servicio",
+              "image": "service-1.jpg"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
 
-Uso total del prefijo en patterns.json y HTML de patterns
 
-wp_theme/patterns.json y archivos HTML todavía usan my-theme/... o placeholders. Necesitas un paso que reemplace my-theme por el slug generado por prefix_manager para salida final.
+📌 Este JSON es el contrato entre:
 
-CSS por atom concretos + scoping
+IA
 
-wp_theme/assets/blocks/ tiene CSS core y por bloque, pero algunos atoms (botón, heading, etc.) aún no tienen archivos CSS atómicos separados en la salida final. Generas CSS por bloque desde blocks_builder/styles.py pero hay que garantizar que cada atom produzca assets/blocks/atom-*.css y que quede referenciado en el manifest.
+generador de theme
 
-Meta/versionado en manifest y style en functions.php
+generador de contenido
 
-Existe blocks-manifest.php y uso de filemtime para versiones, pero revisaría que version_manager.py incremente builds y que los block.json contengan "version" consistente y se refleje en blocks-manifest.php.
+🧠 2. MAPEO IA → WORDPRESS (reglas claras)
 
-Patrones sincronizados (FSE) — naming y synced patterns PHP
+Tu amigo debe respetar estas reglas:
 
-wp_theme/php/patterns.php registra patterns desde HTML en /patterns/ — perfecto.
+📝 Textos detectados en la imagen
 
-Falta comprobar que esas patterns sean synced patterns (la diferencia es cómo se gestionan en editor para sincronización). Normalmente synced patterns requieren generar patterns/*.php con register_block_pattern() o usar register_block_pattern_from_file. Tu approach registra HTML en runtime — funciona, pero conviene generar también patterns/*.php para instalaciones sin dependencia del generator.
+➡️ Van a bloques Gutenberg
 
-Locking/Restringir opciones críticas en editor
+wp:heading
 
-Hay mejoras de editor UX pero falta aplicar block locking o supports flags en block.json para evitar ediciones que rompan el diseño principal.
+wp:paragraph
 
-Docs por-theme final
+wp:button
 
-Generas docs de componentes, pero falta un índice de docs por tema final y README generado dentro de cada theme output (ej. wp_theme/README.md con instrucciones de instalación, changelog y notas de uso).
+bloques custom del theme
 
-🔴 Lo que FALTA y es crítico para completar (prioridad alta)
+Nunca hardcodeados en PHP.
 
-Aplicar BEM + validación automática en el build
+🖼️ Imágenes detectadas
+Flujo correcto:
 
-Integrar blocks_builder/bem_validator.py en pipeline: si una clase no sigue ^{prefix}-[a-z0-9]+(__[a-z0-9]+)?(--[a-z0-9]+)?$ el build debe fallar o corregirla automaticamente.
+Copiar imagen a:
 
-Reemplazo final de placeholders de slugs/prefijos en patterns y JSON
+/wp-content/uploads/YYYY/MM/
 
-Reemplazar "my-theme/*" por "{slug}/*" en wp_theme/patterns.json y en los HTML de wp_theme/patterns/*.html.
 
-Atom-level CSS output y manifest linking
+❌ NO dejarlas en /theme/assets/
 
-Asegurar que blocks_builder/styles.py genere y escriba físicamente /wp_theme/assets/blocks/{block}.css y que blocks-manifest.php/blocks-manifest.json lo liste.
+Insertar en la DB:
 
-Generación final de block.json + render.php para bloques dinámicos
+wp_posts (post_type = attachment)
 
-Aunque generas block.json desde atoms, verifica que todos los bloques generados tengan style, editorScript, script si corresponde, y render.php si son server-side.
+wp_postmeta (metadata imagen)
 
-Final packaging step
+Usar el ID del attachment en los bloques
 
-Añadir un paso package_theme(theme_name) que:
+📌 Esto es obligatorio para:
 
-crea la carpeta final output/{theme_slug}/...
+responsive images
 
-escribe style.css con cabecera WP (Theme Name, Author, Version, Text Domain)
+SEO
 
-copia theme.json, blocks/, patterns/, assets/, php/
+editor
 
-ejecuta zip para entrega
+🧰 3. FORMA RECOMENDADA DE INSERTAR CONTENIDO
+⭐ OPCIÓN RECOMENDADA: WP-CLI (SH)
 
-Versioning integrado en el build
+Mucho mejor que SQL puro.
 
-Asegurar que blocks_builder/versioning.py actualice style.css y block.json "version" y blocks-manifest.php.
+📄 Ejemplo: import-content.sh
+wp media import images/*.jpg --title="Hero Image"
 
-Pasos concretos que te recomiendo ahora (priorizados)
+wp post create \
+  --post_type=page \
+  --post_title="Inicio" \
+  --post_name="home" \
+  --post_status=publish \
+  --post_content="$(cat home.blocks.html)"
 
-(Alta) Integrar validación BEM en pipeline (pre-commit/build):
 
-Archivo: blocks_builder/bem_validator.py → ejecutarlo desde app.py build step.
+✅ Ventajas:
 
-Regla sugerida (Python):
+WordPress se encarga de IDs
 
-import re
-pattern = re.compile(rf'^{prefix}-[a-z0-9]+(?:__[a-z0-9]+)?(?:--[a-z0-9]+)?$')
+menos errores
 
+portable
 
-Si no cumple → auto-fix simple (convertir espacios/majus/minús) o marcar error.
+seguro
 
-(Alta) Reemplazo automático de placeholders en patterns:
+🧩 4. GENERACIÓN DE BLOQUES (HTML GUTENBERG)
 
-Implementar función en blocks_builder/registration.py o theme_engine/generator.py que lea wp_theme/patterns.json y wp_theme/patterns/*.html y reemplace my-theme por slug antes del empaquetado.
+Tu app debe generar contenido en formato Gutenberg, no HTML plano.
 
-(Alta) Garantizar atom CSS output y manifest:
+Ejemplo:
+<!-- wp:mytheme/hero {"title":"Creamos experiencias digitales"} /-->
 
-blocks_builder/styles.py ya genera CSS strings; añade escritura física a wp_theme/assets/blocks/{slug}.css.
+<!-- wp:paragraph -->
+<p>Diseño moderno y escalable</p>
+<!-- /wp:paragraph -->
 
-Actualiza wp_theme/blocks-manifest.php o blocks-manifest.php para listar los nuevos archivos.
 
-(Media) Bloques: asegurar block.json completos:
+Ese HTML:
 
-Revisar blocks_builder/atoms.py y que block.json incluya style: file:./style.css y editorScript si se usa JS.
+se guarda en post_content
 
-Para bloques dinámicos, generar render.php que use render_callback o serverSideRender.
+WordPress lo interpreta como bloques
 
-(Media) Locking + supports:
+📌 Clave para FSE real
 
-En cada block.json añadir supports: { "customClassName": false, "html": false } o lo que consideres conveniente.
+🧬 5. MAPEO BLOQUE ↔ CONTENIDO
 
-Añadir example y description para cada bloque para mejorar UX.
+Define una tabla clara para el programador:
 
-(Baja) Generar README.md y docs/index.md dentro del theme final con instrucciones rápidas y changelog.
+Bloque	Fuente IA	Destino WP
+hero.title	texto grande	wp:heading
+hero.subtitle	texto chico	wp:paragraph
+hero.image	imagen	attachment + block attr
+card.title	texto	wp:heading
+card.text	texto	wp:paragraph
 
-Fragmentos de código útiles (lista rápida para incorporar ya)
+👉 Sin esto, el sistema se rompe.
 
-Reemplazo slug en patterns (pseudo-Python):
+🗃️ 6. DÓNDE SE INSERTA CADA COSA EN WP
+📄 Páginas
 
-def replace_pattern_placeholders(theme_dir, slug):
-    patterns_dir = os.path.join(theme_dir, 'wp_theme', 'patterns')
-    for path in glob.glob(os.path.join(patterns_dir, '*.html')):
-        txt = open(path,'r',encoding='utf-8').read()
-        txt = txt.replace('my-theme/', f'{slug}/')
-        open(path,'w',encoding='utf-8').write(txt)
-    # update patterns.json similarly
+wp_posts
 
+post_type = page
 
-Escribir CSS atómico físico:
+📝 Posts / blog
 
-def write_block_css(out_dir, block_name, css_text):
-    path = os.path.join(out_dir, 'wp_theme','assets','blocks', f'{block_name}.css')
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(css_text)
+wp_posts
 
+post_type = post
 
-BEM validator simple:
+🖼️ Imágenes
 
-import re
-def validate_bem(cls, prefix):
-    p = re.compile(rf'^{re.escape(prefix)}-[a-z0-9]+(?:__[a-z0-9]+)?(?:--[a-z0-9]+)?$')
-    return bool(p.match(cls))
+wp_posts → attachment
 
-Resumen final — ¿dónde estás ahora?
+wp_postmeta → _wp_attached_file, _wp_attachment_metadata
 
-Estado general: ~80–90% del camino hacia un generador profesional FSE.
+🎨 Tema
 
-Lo mayormente completado: arquitectura, patterns (HTML + registro), assets por bloque, theme.json dinámico, atoms pipeline, docs.
+solo estructura
 
-Lo que falta (crítico): BEM enforcement, reemplazo final de slugs en patterns, escritura física y linkage del CSS atómico en el manifest, asegurar block.json/render.php por cada bloque, packaging final y versioning consistente.
+nada de contenido real
 
- 
+🧩 7. EJECUCIÓN AUTOMÁTICA AL ACTIVAR EL THEME (opcional)
+
+Si quieres algo más mágico:
+
+add_action('after_switch_theme', function () {
+  if (file_exists(get_theme_file_path('import-content.sh'))) {
+    // mostrar instrucción o ejecutar vía WP-CLI
+  }
+});
+
+
+⚠️ NO ejecutar SQL automáticamente sin confirmación.
+
+📋 8. CHECKLIST (entregable)
+
+Pásale esto tal cual:
+
+✅ Debe hacer
+
+Convertir salida IA → JSON estructurado
+
+Generar bloques Gutenberg válidos
+
+Insertar imágenes como attachments
+
+Insertar páginas/posts por WP-CLI
+
+Usar IDs reales de media
+
+Mantener el theme libre de contenido
+
+❌ No debe hacer
+
+Hardcodear textos en PHP
+
+Guardar imágenes solo en el theme
+
+Usar HTML plano fuera de bloques
+
+Insertar contenido directo con SQL sin WP
+
+🏁 CONCLUSIÓN CLARA
+
+Lo que estás planteando es:
+
+🔥 Un generador de themes + contenido inicial tipo demo profesional
+
+Eso:
+
+es exactamente lo que hacen themes premium
+
+está muy bien pensado
+
+y tu arquitectura lo soporta perfectamente
+
+Si quieres, en el próximo mensaje puedo:
+
+escribir el pseudo-código exacto del importador
+
+definir el esquema JSON final
+
+o ayudarte a diseñar el WP-CLI completo
+

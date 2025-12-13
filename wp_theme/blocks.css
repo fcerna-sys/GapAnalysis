@@ -40,3 +40,7 @@ textarea{
 .wp-block-image.is-style-rounded img{border-radius:8px}
 .wp-block-group.is-style-card{border:1px solid var(--wp--preset--color--surface);padding:1rem;border-radius:8px}
 .wp-block-quote.is-style-highlight{border-left:4px solid var(--wp--preset--color--primary);padding-left:1rem}
+.has-lead-font-size{font-size:var(--wp--preset--font-size--lead)}
+.has-caption-font-size{font-size:var(--wp--preset--font-size--caption);color:var(--wp--preset--color--secondary)}
+.has-overline-font-size{font-size:var(--wp--preset--font-size--overline);text-transform:uppercase;letter-spacing:.08em}
+.wp-block-heading.is-style-overline{font-size:var(--wp--preset--font-size--overline);text-transform:uppercase;letter-spacing:.08em;color:var(--wp--preset--color--secondary)}

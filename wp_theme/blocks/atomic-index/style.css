@@ -1,0 +1,13 @@
+.img2html-atomic-index{display:block}
+.img2html-atomic-index__section{margin-bottom:var(--wp--preset--spacing--xl)}
+.img2html-atomic-index__heading{margin-bottom:var(--wp--preset--spacing--md)}
+.img2html-atomic-index__grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:var(--wp--preset--spacing--md)}
+.img2html-atomic-index__card{border:1px solid var(--wp--preset--color--surface);border-radius:var(--wp--preset--border-radius--medium);background:var(--wp--preset--color--background);padding:var(--wp--preset--spacing--md);box-shadow:var(--wp--preset--shadow--xs)}
+.img2html-atomic-index__card-title{font-weight:700;margin-bottom:var(--wp--preset--spacing--sm)}
+.img2html-atomic-index__card-subtitle{font-size:var(--wp--preset--font-size--caption);color:var(--wp--preset--color--secondary);margin-bottom:var(--wp--preset--spacing--sm)}
+.img2html-atomic-index__card:not(:has(.img2html-atomic-index__card-title)) .img2html-atomic-index__card-body{margin-top:0}
+.img2html-atomic-index__card-body{display:block}
+.img2html-atomic-index--compact .img2html-atomic-index__card-body > *{background-color:transparent !important;box-shadow:none !important;border:none !important;padding:0 !important;margin:0 0 var(--wp--preset--spacing--sm) 0 !important}
+.img2html-atomic-index--compact .img2html-atomic-index__card{padding:var(--wp--preset--spacing--sm)}
+.img2html-atomic-index--minimal .img2html-atomic-index__card{padding:var(--wp--preset--spacing--sm)}
+.img2html-atomic-index--minimal .img2html-atomic-index__card-body{display:none}

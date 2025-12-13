@@ -40,6 +40,15 @@
       "type": "string",
       "default": "left"
     }
+    ,
+    "imageUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "imageAlt": {
+      "type": "string",
+      "default": ""
+    }
   },
   "supports": {
     "spacing": {

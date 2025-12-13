@@ -1,0 +1,31 @@
+:root{
+  --img2html-color-primary: var(--wp--preset--color--primary);
+  --img2html-color-secondary: var(--wp--preset--color--secondary);
+  --img2html-color-accent: var(--wp--preset--color--accent);
+  --img2html-color-surface: var(--wp--preset--color--surface);
+  --img2html-color-text: var(--wp--preset--color--text);
+  --img2html-color-background: var(--wp--preset--color--background);
+
+  --img2html-space-xxs: var(--wp--preset--spacing--xxs);
+  --img2html-space-xs: var(--wp--preset--spacing--xs);
+  --img2html-space-sm: var(--wp--preset--spacing--sm);
+  --img2html-space-md: var(--wp--preset--spacing--md);
+  --img2html-space-lg: var(--wp--preset--spacing--lg);
+  --img2html-space-xl: var(--wp--preset--spacing--xl);
+  --img2html-space-2xl: var(--wp--preset--spacing--2xl);
+  --img2html-space-3xl: var(--wp--preset--spacing--3xl);
+  --img2html-space-4xl: var(--wp--preset--spacing--4xl);
+  --img2html-space-5xl: var(--wp--preset--spacing--5xl);
+
+  --img2html-radius-xs: var(--wp--preset--border-radius--x-small);
+  --img2html-radius-sm: var(--wp--preset--border-radius--small);
+  --img2html-radius-md: var(--wp--preset--border-radius--medium);
+  --img2html-radius-lg: var(--wp--preset--border-radius--large);
+  --img2html-radius-pill: var(--wp--preset--border-radius--pill);
+
+  --img2html-shadow-xs: var(--wp--preset--shadow--xs);
+  --img2html-shadow-sm: var(--wp--preset--shadow--sm);
+  --img2html-shadow-md: var(--wp--preset--shadow--md);
+  --img2html-shadow-lg: var(--wp--preset--shadow--lg);
+  --img2html-shadow-xl: var(--wp--preset--shadow--xl);
+}

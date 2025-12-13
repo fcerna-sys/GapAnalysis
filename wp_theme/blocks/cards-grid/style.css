@@ -5,4 +5,5 @@
 .img2html-cards-grid--cols-2 .img2html-cards-grid__container { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .img2html-cards-grid--cols-3 .img2html-cards-grid__container { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .img2html-cards-grid--cols-4 .img2html-cards-grid__container { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
+.img2html-cards-grid--carousel .img2html-cards-grid__container { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(240px, 1fr); overflow-x: auto; gap: 1rem; scroll-snap-type: x mandatory; }
+.img2html-cards-grid--carousel .img2html-cards-grid__container > * { scroll-snap-align: start; }

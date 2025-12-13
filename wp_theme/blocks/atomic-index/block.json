@@ -1,0 +1,34 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "img2html/atomic-index",
+  "title": "Atomic Index",
+  "category": "design",
+  "description": "Cuadrícula de bloques por grupo (Átomos, Moléculas, Organismos)",
+  "style": "file:./style.css",
+  "render": "file:./render.php",
+  "editorScript": "file:./editor.js",
+  "attributes": {
+    "showAtoms": { "type": "boolean", "default": true },
+    "showMolecules": { "type": "boolean", "default": true },
+    "showOrganisms": { "type": "boolean", "default": true },
+    "query": { "type": "string", "default": "" },
+    "limitPerGroup": { "type": "number", "default": 0 },
+    "order": { "type": "string", "default": "alpha" },
+    "onlyComplete": { "type": "boolean", "default": false },
+    "cardTemplate": { "type": "string", "default": "compact" },
+    "showTitle": { "type": "boolean", "default": true }
+    ,
+    "titleSource": { "type": "string", "default": "title" }
+    ,
+    "showSubtitleTechnical": { "type": "boolean", "default": false }
+  },
+  "supports": {
+    "spacing": { "margin": true, "padding": true },
+    "color": { "background": true, "text": true },
+    "html": false,
+    "customClassName": false
+  },
+  "example": { "attributes": {} },
+  "version": "1.0.0"
+}

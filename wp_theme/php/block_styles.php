@@ -7,5 +7,6 @@ function img2html_register_block_styles(){
   register_block_style('core/image',['name'=>'rounded','label'=>'Redondeada']);
   register_block_style('core/group',['name'=>'card','label'=>'Card']);
   register_block_style('core/quote',['name'=>'highlight','label'=>'Destacada']);
+  register_block_style('core/heading',[ 'name' => 'overline', 'label' => 'Overline' ]);
 }
 add_action('init','img2html_register_block_styles');
