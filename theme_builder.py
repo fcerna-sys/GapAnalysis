@@ -661,6 +661,7 @@ def build_complete_theme(theme_dir: str, plan: Dict, dna: Optional[Dict] = None,
     # Templates FSE esenciales y biblioteca de patterns
     ensure_fse_templates(theme_dir, plan)
     ensure_pattern_library(theme_dir)
+    normalize_patterns_json_slugs(theme_dir, theme_slug)
     
     # Configurar carga condicional de assets (CRÍTICO para performance)
     from blocks_builder.assets import setup_conditional_assets
@@ -685,10 +686,16 @@ def build_complete_theme(theme_dir: str, plan: Dict, dna: Optional[Dict] = None,
         ensure_block_css_written(theme_dir, bem)
         ensure_assets_block_css(theme_dir, bem)
         ensure_assets_block_js(theme_dir, bem)
+        version = get_project_version(theme_dir)
+        if version:
+            ensure_block_json_versions(theme_dir, version)
     except Exception:
         ensure_block_css_written(theme_dir, 'img2html')
         ensure_assets_block_css(theme_dir, 'img2html')
         ensure_assets_block_js(theme_dir, 'img2html')
+        version = get_project_version(theme_dir)
+        if version:
+            ensure_block_json_versions(theme_dir, version)
 
     # Generar archivo php para CPT y WooCommerce opcional
     ensure_cpt_php(theme_dir, plan)
@@ -2107,7 +2114,12 @@ def ensure_pattern_library(theme_dir: str):
             with open(path, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-        # Actualizar patterns.json para incluirlos
+        # Actualizar patterns.json para incluirlos con prefijo dinámico
+        try:
+            from blocks_builder import get_bem_prefix
+            bem_prefix = get_bem_prefix(os.path.basename(theme_dir))
+        except Exception:
+            bem_prefix = 'img2html'
         patterns_json = os.path.join(theme_dir, 'patterns.json')
         try:
             with open(patterns_json, 'r', encoding='utf-8') as f:
@@ -2116,10 +2128,10 @@ def ensure_pattern_library(theme_dir: str):
             data = {"$schema": "https://schemas.wp.org/trunk/theme.json"}
         existing = set(data.get('patterns', []))
         for name in patterns.keys():
-            slug = f"img2html/{os.path.splitext(name)[0]}"
+            slug = f"{bem_prefix}/{os.path.splitext(name)[0]}"
             existing.add(slug)
         # Incluir patterns especiales para CPT si se usan
-        for slug in ["img2html/portfolio", "img2html/services", "img2html/testimonials", "img2html/contact"]:
+        for slug in [f"{bem_prefix}/portfolio", f"{bem_prefix}/services", f"{bem_prefix}/testimonials", f"{bem_prefix}/contact"]:
             existing.add(slug)
         data['patterns'] = sorted(existing)
         with open(patterns_json, 'w', encoding='utf-8') as f:
@@ -2127,6 +2139,52 @@ def ensure_pattern_library(theme_dir: str):
 
     except Exception as e:
         print(f"Error al crear patterns: {e}")
+
+def get_project_version(theme_dir: str) -> str:
+    try:
+        candidates = [
+            os.path.join(theme_dir, 'VERSION'),
+            os.path.join(os.path.dirname(theme_dir), 'VERSION'),
+            os.path.join(os.path.dirname(os.path.dirname(theme_dir)), 'VERSION')
+        ]
+        for path in candidates:
+            if os.path.isfile(path):
+                with open(path, 'r', encoding='utf-8') as f:
+                    ver = f.read().strip()
+                    if ver:
+                        return ver
+    except Exception:
+        pass
+    return ''
+
+def normalize_patterns_json_slugs(theme_dir: str, theme_slug: str = None):
+    try:
+        from blocks_builder import get_bem_prefix
+        bem_prefix = get_bem_prefix(theme_slug or 'img2html')
+    except Exception:
+        bem_prefix = theme_slug or 'img2html'
+    patterns_json = os.path.join(theme_dir, 'patterns.json')
+    if not os.path.isfile(patterns_json):
+        return
+    try:
+        with open(patterns_json, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception:
+        return
+    slugs = data.get('patterns') or []
+    normalized = set()
+    for slug in slugs:
+        parts = str(slug).split('/')
+        if len(parts) == 2:
+            normalized.add(f"{bem_prefix}/{parts[1]}")
+        else:
+            normalized.add(f"{bem_prefix}/{str(slug)}".replace('//', '/'))
+    data['patterns'] = sorted(normalized)
+    try:
+        with open(patterns_json, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
 
 
 def generate_automatic_patterns(theme_dir: str, theme_slug: str, plan: Dict, dna: Optional[Dict] = None):

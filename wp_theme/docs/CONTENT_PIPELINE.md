@@ -28,3 +28,4 @@
 - Apariencia → Content muestra errores y advertencias antes de generar.
 - Errores bloquean la generación (slugs duplicados, JSON inválido).
 - Advertencias no bloquean (imagenes faltantes, campos opcionales vacíos).
+ - Valida `iconColor` contra la paleta de `theme.json` (slugs desconocidos generan advertencia).

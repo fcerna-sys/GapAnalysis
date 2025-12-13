@@ -20,6 +20,7 @@ $table_prefix = 'wp_';
 define('WP_DEBUG', false);
 define('WP_HOME', 'http://127.0.0.1:8080');
 define('WP_SITEURL', 'http://127.0.0.1:8080');
+define('DISALLOW_FILE_EDIT', true);
 
 if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/');

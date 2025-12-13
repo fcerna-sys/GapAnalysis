@@ -11,7 +11,8 @@
   "attributes": {
     "file": { "type": "string", "default": "THEME_GUIDE.md" },
     "section": { "type": "string", "default": "" },
-    "showTitle": { "type": "boolean", "default": true }
+    "showTitle": { "type": "boolean", "default": true },
+    "searchEnabled": { "type": "boolean", "default": true }
   },
   "supports": { "html": false }
 }

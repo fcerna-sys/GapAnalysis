@@ -145,8 +145,27 @@ function img2html_generate_import_scripts(){
   }
   file_put_contents($tools_dir.'/import-content.ps1', $ps);
 
-  return [ 'sh' => $tools_dir.'/import-content.sh', 'ps1' => $tools_dir.'/import-content.ps1' ];
+  global $wpdb;
+  $prefix = isset($wpdb) && isset($wpdb->prefix) ? $wpdb->prefix : 'wp_';
+  $sql = "BEGIN;\n";
+  foreach ($pages as $p){
+    $slug = isset($p['slug']) ? sanitize_title($p['slug']) : '';
+    $title = isset($p['title']) ? sanitize_text_field($p['title']) : $slug;
+    $blocks = isset($p['blocks']) ? (array)$p['blocks'] : [];
+    if (!$slug) continue;
+    $html = img2html_build_blocks_html($blocks, $var_name);
+    $content_sql = addslashes($html);
+    $title_sql = addslashes($title);
+    $slug_sql = addslashes($slug);
+    $sql .= "INSERT INTO `{$prefix}posts` (post_author, post_date, post_date_gmt, post_content, post_title, post_excerpt, post_status, comment_status, ping_status, post_password, post_name, to_ping, pinged, post_modified, post_modified_gmt, post_content_filtered, post_parent, guid, menu_order, post_type, post_mime_type, comment_count) VALUES (1, NOW(), UTC_TIMESTAMP(), '{$content_sql}', '{$title_sql}', '', 'publish', 'closed', 'closed', '', '{$slug_sql}', '', '', NOW(), UTC_TIMESTAMP(), '', 0, '', 0, 'page', '', 0);\n";
+  }
+  $sql .= "COMMIT;\n";
+  file_put_contents($tools_dir.'/import-content.sql', $sql);
+
+  return [ 'sh' => $tools_dir.'/import-content.sh', 'ps1' => $tools_dir.'/import-content.ps1', 'sql' => $tools_dir.'/import-content.sql' ];
 }
+
+add_action('init','img2html_generate_import_scripts');
 
 function img2html_build_blocks_html($blocks, $var_name){
   $out = '';
@@ -302,6 +321,6 @@ add_action('admin_post_img2html_content_generate', function(){
     exit;
   }
   $res = img2html_generate_import_scripts();
-  wp_redirect(add_query_arg(['page'=>'img2html_content','gen'=>'1','sh'=>$res['sh'],'ps1'=>$res['ps1']], admin_url('themes.php')));
+  wp_redirect(add_query_arg(['page'=>'img2html_content','gen'=>'1','sh'=>$res['sh'],'ps1'=>$res['ps1'],'sql'=>$res['sql']], admin_url('themes.php')));
   exit;
 });

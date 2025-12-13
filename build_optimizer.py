@@ -8,9 +8,15 @@ import json
 from typing import Dict, List, Optional, Set
 import subprocess
 import shutil
+try:
+    from blocks_builder.bem_validator import validate_bem_class as _ext_validate_bem
+except Exception:
+    _ext_validate_bem = None
 def _validate_bem_class(class_name: str, bem_prefix: str) -> bool:
     if not class_name or not bem_prefix:
         return False
+    if _ext_validate_bem:
+        return _ext_validate_bem(class_name, bem_prefix)
     pattern = rf'^{re.escape(bem_prefix)}-[a-z0-9-]+(__[a-z0-9-]+)?(--[a-z0-9-]+)?$'
     return bool(re.match(pattern, class_name))
 

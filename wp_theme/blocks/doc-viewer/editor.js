@@ -8,7 +8,8 @@
     { label: 'PATTERNS_GUIDE.md', value: 'PATTERNS_GUIDE.md' },
     { label: 'EXTEND.md', value: 'EXTEND.md' },
     { label: 'COMPOSE.md', value: 'COMPOSE.md' },
-    { label: 'STYLE.md', value: 'STYLE.md' }
+    { label: 'STYLE.md', value: 'STYLE.md' },
+    { label: 'app-overview.html', value: 'app-overview.html' }
   ];
   wp.hooks.addFilter('blocks.registerBlockType','img2html/doc-viewer-edit',function(settings, blockName){
     if (blockName !== NAME) return settings;
@@ -20,7 +21,8 @@
           el(PanelBody, { title: 'Doc Viewer' },
             el(SelectControl, { label: 'Archivo', value: a.file || 'THEME_GUIDE.md', options: DOCS, onChange: setAttr('file') }),
             el(TextControl, { label: 'Sección (opcional)', value: a.section || '', onChange: setAttr('section') }),
-            el(ToggleControl, { label: 'Mostrar título', checked: !!a.showTitle, onChange: setAttr('showTitle') })
+            el(ToggleControl, { label: 'Mostrar título', checked: !!a.showTitle, onChange: setAttr('showTitle') }),
+            el(ToggleControl, { label: 'Habilitar búsqueda', checked: a.searchEnabled !== false, onChange: setAttr('searchEnabled') })
           )
         ),
         el('div', {}, 'Se renderiza en el front‑end')

@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Img2HTML — Documentación de la Aplicación</title>
+  <style>
+    :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#94a3b8;--accent:#38bdf8;--border:#1f2937}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6}
+    a{color:var(--accent);text-decoration:none}
+    header{padding:24px;border-bottom:1px solid var(--border)}
+    h1{margin:0;font-size:28px}
+    main{display:grid;grid-template-columns:280px 1fr}
+    nav{border-right:1px solid var(--border);max-height:calc(100vh - 72px);overflow:auto}
+    nav ul{list-style:none;margin:0;padding:0}
+    nav li{border-bottom:1px solid var(--border)}
+    nav a{display:block;padding:12px 16px}
+    section{padding:24px}
+    h2{font-size:22px;margin:24px 0 8px}
+    h3{font-size:18px;margin:18px 0 6px}
+    code,pre{background:#0b1220;color:#cbd5e1;border:1px solid var(--border)}
+    code{padding:2px 6px;border-radius:6px}
+    pre{padding:12px;border-radius:8px;overflow:auto}
+    .muted{color:var(--muted)}
+    .kbd{background:#0b1220;border:1px solid #334155;padding:2px 6px;border-radius:6px}
+    .list{margin:8px 0 12px}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .block{border:1px solid var(--border);border-radius:8px;padding:12px;background:#0b1220}
+    .table{width:100%;border-collapse:collapse}
+    .table th,.table td{border:1px solid var(--border);padding:8px;text-align:left}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Img2HTML — Documentación de la Aplicación</h1>
+    <p class="muted">Generador de tema WordPress desde imágenes con pipeline de contenido, diseño inteligente y reglas de composición atómica.</p>
+  </header>
+  <main>
+    <nav>
+      <ul>
+        <li><a href="#resumen">Resumen</a></li>
+        <li><a href="#arquitectura">Arquitectura</a></li>
+        <li><a href="#funcionalidades">Funcionalidades</a></li>
+        <li><a href="#bloques">Bloques</a></li>
+        <li><a href="#atomic-index">Atomic Index</a></li>
+        <li><a href="#atomic-validator">Validador</a></li>
+        <li><a href="#themejson">theme.json inteligente</a></li>
+        <li><a href="#content-pipeline">Pipeline de contenido</a></li>
+        <li><a href="#admin-ui">Administración</a></li>
+        <li><a href="#estructura">Estructura del repo</a></li>
+        <li><a href="#seguridad">Seguridad</a></li>
+        <li><a href="#versionado">Versionado</a></li>
+        <li><a href="#pendientes">Pendientes</a></li>
+        <li><a href="#docs">Documentos</a></li>
+        <li><a href="#indice">Índice automático</a></li>
+      </ul>
+    </nav>
+    <div>
+      <section id="resumen">
+        <h2>Resumen</h2>
+        <ul class="list">
+          <li>El theme no guarda contenido real; todo se inserta en la base de datos por scripts (WP‑CLI).</li>
+          <li>Contratos claros vía <code>docs/</code> y <code>wp_theme/content/content.json</code>.</li>
+          <li>Reforzado por Atomic Design: composición bottom‑up.</li>
+          <li>Diseño inteligente: derivación tipográfica y de spacing según ancho y perfil.</li>
+        </ul>
+      </section>
+
+      <section id="arquitectura">
+        <h2>Arquitectura</h2>
+        <p><strong>Flujo:</strong> imagen → IA → JSON → theme (bloques/estilos) → scripts WP‑CLI → DB.</p>
+        <table class="table">
+          <thead><tr><th>Capa</th><th>Ubicación</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td>Registro base</td><td><code>wp_theme/functions.php</code></td><td>Patrones, menús, bloques atom/molecule/organism y raíz.</td></tr>
+            <tr><td>Bloques</td><td><code>wp_theme/blocks/*</code></td><td>Átomos, moléculas, organismos, editor, render, estilos.</td></tr>
+            <tr><td>Assets/BEM</td><td><code>wp_theme/php/assets.php</code></td><td>Encola CSS y helpers BEM.</td></tr>
+            <tr><td>Atomic Index</td><td><code>wp_theme/blocks/atomic-index/*</code></td><td>Exploración de bloques por categorías.</td></tr>
+            <tr><td>Validador</td><td><code>wp_theme/php/composition-validator.php</code></td><td>Reglas de composición y avisos.</td></tr>
+            <tr><td>theme.json derive</td><td><code>wp_theme/php/themejson-derive.php</code></td><td>Escala tipográfica, ritmo vertical, defaults.</td></tr>
+            <tr><td>Panel derive</td><td><code>wp_theme/php/menu/derive.php</code></td><td>Perfiles <em>compact/medium/ample</em>.</td></tr>
+            <tr><td>Pipeline contenido</td><td><code>wp_theme/php/content-pipeline.php</code></td><td>Validación y scripts <em>import-content</em>.</td></tr>
+            <tr><td>Docs</td><td><code>wp_theme/php/menu/docs.php</code></td><td>Visor admin + <code>wp_theme/docs/app-overview.html</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="funcionalidades">
+        <h2>Funcionalidades clave</h2>
+        <ul class="list">
+          <li>Generación de bloques atómicos desde IA.</li>
+          <li>Validación de composición (átomos, moléculas, organismos) al guardar.</li>
+          <li>Derivación de diseño desde el layout y perfiles.</li>
+          <li>Pipeline para insertar contenido (texto/imágenes/páginas) con WP‑CLI.</li>
+          <li>Doc Viewer para documentación embebida con búsqueda.</li>
+        </ul>
+      </section>
+
+      <section id="bloques">
+        <h2>Bloques</h2>
+        <h3>Átomos</h3>
+        <div class="grid">
+          <div class="block"><strong>Heading</strong><br><code>img2html/atom-heading</code><br>Atributos: <code>text</code>, <code>level</code>, <code>align</code></div>
+          <div class="block"><strong>Paragraph</strong><br><code>img2html/atom-paragraph</code><br>Atributos: <code>text</code>, <code>align</code></div>
+          <div class="block"><strong>Button</strong><br><code>img2html/atom-button</code><br>Atributos: <code>text</code>, <code>url</code>, <code>variant</code>, <code>fullWidth</code></div>
+          <div class="block"><strong>Icon</strong><br><code>img2html/atom-icon</code><br>Atributos: <code>name</code>, <code>size</code>, <code>color</code></div>
+          <div class="block"><strong>Link</strong><br><code>img2html/atom-link</code></div>
+          <div class="block"><strong>Badge</strong><br><code>img2html/atom-badge</code></div>
+          <div class="block"><strong>Input</strong><br><code>img2html/atom-input</code></div>
+          <div class="block"><strong>Container</strong><br><code>img2html/atom-container</code></div>
+        </div>
+        <h3>Moléculas y Organismos</h3>
+        <ul class="list">
+          <li>Moléculas: <code>features-list</code> (soporta íconos y color), <code>team-member</code>, <code>pricing-feature</code>, <code>testimonial</code>.</li>
+          <li>Organismos: <code>hero</code> y composiciones con columnas/grupos.</li>
+        </ul>
+      </section>
+
+      <section id="atomic-index">
+        <h2>Atomic Index</h2>
+        <ul class="list">
+          <li>Agrupa por Átomos/Moléculas/Organismos con búsqueda y orden.</li>
+          <li>Plantillas de tarjeta (<em>compact/detailed/minimal</em>), <code>showTitle</code>, <code>titleSource</code>, subtítulo técnico.</li>
+          <li>Filtro “Solo completos” (render + styles).</li>
+        </ul>
+      </section>
+
+      <section id="atomic-validator">
+        <h2>Validador de Composición</h2>
+        <ul class="list">
+          <li>Átomos sin hijos; Moléculas solo con átomos; Organismos con moléculas/átomos.</li>
+          <li>Prohíbe <code>core/html</code> en moléculas y organismos.</li>
+          <li>Reporta a <code>post_meta</code> y muestra aviso en el editor.</li>
+        </ul>
+      </section>
+
+      <section id="themejson">
+        <h2>theme.json inteligente</h2>
+        <ul class="list">
+          <li>Escala modular derivada del ancho de contenido.</li>
+          <li>Ritmo vertical y <code>spacingSizes</code> generados.</li>
+          <li>Perfiles de diseño (<em>compact/medium/ample</em>) ajustan ratio, baseline y line-height.</li>
+          <li>Defaults por bloque (paragraph/heading/list/image).</li>
+        </ul>
+      </section>
+
+      <section id="content-pipeline">
+        <h2>Pipeline de contenido</h2>
+        <ul class="list">
+          <li>JSON intermedio: <code>wp_theme/content/content.json</code>.</li>
+          <li>Generación de scripts: <code>wp_theme/tools/import-content.sh</code>, <code>wp_theme/tools/import-content.ps1</code>.</li>
+          <li>Validación: errores bloquean (slugs duplicados, JSON); advertencias informan (media faltante, color fuera de paleta).</li>
+          <li>Inserta media como attachments y usa IDs reales en bloques <code>core/image</code>.</li>
+          <li>Átomos preferidos (heading/paragraph/button) en la generación cuando están disponibles.</li>
+        </ul>
+        <pre>
+Ejecutar:
+  bash wp-content/themes/&lt;slug&gt;/tools/import-content.sh
+  powershell -ExecutionPolicy Bypass -File wp-content/themes/&lt;slug&gt;/tools/import-content.ps1
+        </pre>
+      </section>
+
+      <section id="admin-ui">
+        <h2>Administración</h2>
+        <ul class="list">
+          <li>Theme Derive: selección de perfil y recalculo.</li>
+          <li>Content: validación y generación de scripts.</li>
+          <li>Docs: visor de documentación embebido.</li>
+        </ul>
+      </section>
+
+      <section id="estructura">
+        <h2>Estructura del repositorio</h2>
+        <ul class="list">
+          <li><code>wordpress/</code>: instalación WP para desarrollo.</li>
+          <li><code>wp_theme/</code>: tema generado con bloques y lógica.</li>
+          <li><code>docs/</code>: guías, manuales y esta documentación HTML.</li>
+        </ul>
+      </section>
+
+      <section id="inventario-bloques">
+        <h2>Inventario — Bloques</h2>
+        <h3>Raíz</h3>
+        <ul class="list">
+          <li><code>atomic-index</code></li>
+          <li><code>card</code>, <code>cards-grid</code></li>
+          <li><code>classic-menu</code></li>
+          <li><code>contact-info</code></li>
+          <li><code>cta</code></li>
+          <li><code>doc-viewer</code></li>
+          <li><code>footer</code>, <code>header</code></li>
+          <li><code>hero</code></li>
+          <li><code>social-links</code></li>
+        </ul>
+        <h3>Átomos</h3>
+        <ul class="list">
+          <li><code>badge</code>, <code>button</code>, <code>container</code>, <code>heading</code>, <code>icon</code>, <code>input</code>, <code>link</code>, <code>paragraph</code></li>
+        </ul>
+        <h3>Moléculas</h3>
+        <ul class="list">
+          <li><code>card</code>, <code>features-list</code> (iconos/color/size), <code>pricing-feature</code>, <code>team-member</code>, <code>testimonial</code></li>
+        </ul>
+        <h3>Organismos</h3>
+        <ul class="list">
+          <li><code>hero</code></li>
+        </ul>
+      </section>
+
+      <section id="inventario-php">
+        <h2>Inventario — Módulos PHP</h2>
+        <h3>Core del tema</h3>
+        <ul class="list">
+          <li><code>assets.php</code> (CSS editor/front + helpers BEM)</li>
+          <li><code>block_assets.php</code>, <code>block_hooks.php</code>, <code>block_styles.php</code>, <code>block_variations.php</code></li>
+          <li><code>composition-validator.php</code></li>
+          <li><code>conditional-assets.php</code>, <code>lazy-loading.php</code>, <code>preload.php</code>, <code>performance.php</code></li>
+          <li><code>editor.php</code>, <code>i18n.php</code></li>
+          <li><code>media.php</code>, <code>navigation.php</code></li>
+          <li><code>rest.php</code>, <code>schema.php</code>, <code>seo.php</code></li>
+          <li><code>settings.php</code>, <code>shortcodes.php</code>, <code>taxonomies.php</code>, <code>cpt.php</code></li>
+          <li><code>security.php</code>, <code>security_headers.php</code>, <code>security_rest.php</code></li>
+          <li><code>themejson-derive.php</code></li>
+          <li><code>woocommerce.php</code></li>
+        </ul>
+        <h3>Menús/Admin</h3>
+        <ul class="list">
+          <li><code>php/menu/atomic.php</code>, <code>class-app-walker.php</code></li>
+          <li><code>php/menu/custom-fields.php</code>, <code>php/menu/save-fields.php</code></li>
+          <li><code>php/menu/derive.php</code> (Theme Derive)</li>
+          <li><code>php/menu/docs.php</code> (Docs en admin)</li>
+          <li><code>php/menu/editor-data.php</code></li>
+        </ul>
+        <h3>Documentación/Auto</h3>
+        <ul class="list">
+          <li><code>php/docs-auto.php</code>, <code>php/docs-pages.php</code></li>
+          <li><code>php/admin/docs-auto-ui.php</code>, <code>php/admin/patterns-auto-ui.php</code>, <code>php/admin/performance-ui.php</code></li>
+        </ul>
+        <h3>Patrones</h3>
+        <ul class="list">
+          <li>Amplio catálogo: heroes, CTAs, features, pricing tables, forms, FAQs, gallery, queries, timeline, team, testimonials, breadcrumbs, newsletters, portfolios, roadmaps, stats, services, etc.</li>
+          <li>Archivos: <code>php/pattern-*.php</code>, registro en <code>patterns.php</code> y utilidades en <code>patterns-auto.php</code>.</li>
+        </ul>
+      </section>
+
+      <section id="detalles">
+        <h2>Detalles adicionales</h2>
+        <ul class="list">
+          <li>Critical CSS inline: <code>functions.php</code> inyecta <code>assets/css/critical.css</code> o <code>critical.min.css</code> en <code>wp_head</code>.</li>
+          <li>Registro de patrones desde <code>patterns/*.html</code> con sanitización.</li>
+          <li>Registro de bloques: <em>atoms/molecules/organisms</em> y raíz de <code>blocks/</code>.</li>
+          <li>Doc Viewer: bloque para renderizar <code>docs/*.md</code> y <code>docs/*.html</code> con búsqueda.</li>
+          <li>Atomic Index: explorador configurable por categoría, plantilla y fuente de título.</li>
+          <li>Validación de paleta: <code>iconColor</code> de <em>features-list</em> se valida contra <code>theme.json</code>.</li>
+        </ul>
+        <h3>Hooks y acciones</h3>
+        <ul class="list">
+          <li><code>add_action('init')</code>: registrar patrones, menús, bloques.</li>
+          <li><code>add_action('wp_head')</code>: inyectar Critical CSS.</li>
+          <li><code>add_filter('wp_theme_json_data_theme')</code>: fusionar derivación inteligente.</li>
+          <li><code>add_action('save_post')</code>: validar composición atómica.</li>
+          <li><code>add_action('admin_menu')</code>/<code>admin_post</code>: paneles Theme Derive, Content, Docs.</li>
+          <li><code>add_filter('should_load_block_assets_on_demand')</code>: performance de assets.</li>
+        </ul>
+      </section>
+
+      <section id="configuracion">
+        <h2>Configuración y comandos</h2>
+        <ul class="list">
+          <li>Instalación local: <code>wordpress/</code> (Laragon) con el tema <code>wp_theme/</code>.</li>
+          <li>Comandos WP‑CLI para importar contenido: ver <code>wp_theme/tools/import-content.{sh,ps1}</code>.</li>
+          <li>CSS crítico: colocar en <code>wp_theme/assets/css/critical.css</code> o minificado como <code>critical.min.css</code>.</li>
+          <li>Perfiles de diseño: ajustar en Apariencia → Theme Derive.</li>
+        </ul>
+      </section>
+
+      <section id="integraciones">
+        <h2>Integraciones</h2>
+        <ul class="list">
+          <li>WooCommerce: utilidades y compatibilidad en <code>php/woocommerce.php</code>.</li>
+          <li>SEO: ajustes básicos en <code>php/seo.php</code>.</li>
+          <li>REST: utilidades y endpoints en <code>php/rest.php</code>.</li>
+          <li>I18N: configuración en <code>php/i18n.php</code>.</li>
+          <li>Accesibilidad: mejoras en <code>php/accessibility.php</code>.</li>
+          <li>Analítica: hooks en <code>php/analytics.php</code>.</li>
+        </ul>
+      </section>
+
+      <section id="indices">
+        <h2>Índices y variaciones</h2>
+        <ul class="list">
+          <li>Variaciones de bloque: <code>php/block_variations.php</code>.</li>
+          <li>Estilos de bloque: <code>php/block_styles.php</code>/<code>block-styles.php</code>.</li>
+          <li>Hooks de bloque (render/attrs): <code>php/block_hooks.php</code>.</li>
+        </ul>
+      </section>
+
+      <section id="modelado">
+        <h2>Modelado de contenido</h2>
+        <ul class="list">
+          <li>CPT: <code>php/cpt.php</code> (custom post types).</li>
+          <li>Taxonomías: <code>php/taxonomies.php</code>.</li>
+          <li>Navigation: <code>php/navigation.php</code> y menús en <code>functions.php</code>.</li>
+        </ul>
+      </section>
+
+      <section id="performance">
+        <h2>Rendimiento</h2>
+        <ul class="list">
+          <li>Assets on demand: <code>add_filter('should_load_block_assets_on_demand')</code> en <code>php/assets.php</code>.</li>
+          <li>Lazy Loading: <code>php/lazy-loading.php</code>.</li>
+          <li>Preload: <code>php/preload.php</code>.</li>
+          <li>Performance UI: <code>php/admin/performance-ui.php</code>.</li>
+        </ul>
+      </section>
+
+      <section id="seguridad">
+
+      <section id="seguridad">
+        <h2>Seguridad</h2>
+        <ul class="list">
+          <li>No se guarda contenido sensible en el repositorio.</li>
+          <li>Sanitización de atributos y salida en bloques PHP.</li>
+          <li>Validación de paleta para atributos de color externos.</li>
+        </ul>
+        <p class="muted">Referencias: <a href="./seguridad.md">docs/seguridad.md</a></p>
+      </section>
+
+      <section id="versionado">
+        <h2>Versionado</h2>
+        <ul class="list">
+          <li>Estrategia de etiquetado y backups de <code>theme.json</code>.</li>
+        </ul>
+        <p class="muted">Referencias: <a href="./versioning.md">docs/versioning.md</a></p>
+      </section>
+
+      <section id="pendientes">
+        <h2>Pendientes</h2>
+        <ul class="list">
+          <li>Bloqueo opcional de publicación con violaciones de composición.</li>
+          <li>Ampliar tipos del pipeline y mapeo automático a átomos.</li>
+          <li>Analítica de jerarquía para ajustar ratio según uso real de headings.</li>
+        </ul>
+      </section>
+
+      <section id="docs">
+        <h2>Documentos relacionados</h2>
+        <ul class="list">
+          <li><a href="./faltantes.md">faltantes.md</a></li>
+          <li><a href="./gutenberg-integration.md">gutenberg-integration.md</a></li>
+          <li><a href="./manual.md">manual.md</a></li>
+          <li><a href="./menu.md">menu.md</a></li>
+          <li><a href="./prompt.md">prompt.md</a></li>
+          <li><a href="./qwen2vl-setup.md">qwen2vl-setup.md</a></li>
+          <li><a href="./seguridad.md">seguridad.md</a></li>
+          <li><a href="./theme-building.md">theme-building.md</a></li>
+          <li><a href="./versioning.md">versioning.md</a></li>
+          <li><a href="./wordpress.md">wordpress.md</a></li>
+        </ul>
+      </section>
+
+      <section id="indice">
+        <h2>Índice automático</h2>
+        <div id="toc" class="block"></div>
+        <script>(function(){
+          var toc = document.getElementById('toc'); if(!toc) return;
+          var headings = Array.prototype.slice.call(document.querySelectorAll('section h2, section h3'));
+          var ul = document.createElement('ul'); ul.style.listStyle='none'; ul.style.margin='0'; ul.style.padding='0';
+          headings.forEach(function(h){ var sec = h.parentNode; var id = sec.getAttribute('id'); if(!id){ id = h.textContent.toLowerCase().replace(/[^a-z0-9]+/g,'-'); sec.setAttribute('id', id); }
+            var li = document.createElement('li'); li.style.padding='4px 0'; var a = document.createElement('a'); a.href = '#'+id; a.textContent = h.textContent; li.appendChild(a); ul.appendChild(li);
+          }); toc.appendChild(ul);
+        })();</script>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

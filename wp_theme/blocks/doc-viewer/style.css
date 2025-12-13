@@ -1,6 +1,9 @@
 .img2html-doc-viewer{margin:1rem 0}
 .img2html-doc-viewer__title{font-weight:600;margin-bottom:.5rem}
 .img2html-doc-viewer__content{background:var(--wp--preset--color--surface);border:1px solid var(--wp--preset--color--border);border-radius:6px;padding:.75rem}
+.img2html-doc-viewer__search{margin-bottom:.5rem}
+.img2html-doc-viewer__search input[type=search]{width:100%;padding:.5rem;border:1px solid var(--wp--preset--color--border);border-radius:6px}
 .img2html-doc-viewer__content h1,.img2html-doc-viewer__content h2,.img2html-doc-viewer__content h3{margin:.25rem 0 .5rem}
 .img2html-doc-viewer__content p{margin:.5rem 0}
 .img2html-doc-viewer__content ul{margin:.5rem 0 .5rem 1rem}
+.img2html-doc-viewer__mark{background:var(--wp--preset--color--accent);color:var(--wp--preset--color--background);padding:0 .125rem;border-radius:3px}

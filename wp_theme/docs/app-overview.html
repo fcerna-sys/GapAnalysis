@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Img2HTML — Documentación Técnica Completa</title>
+  <style>
+    :root{--bg:#0f172a;--fg:#e5e7eb;--muted:#94a3b8;--accent:#38bdf8}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:var(--bg);color:var(--fg);line-height:1.6}
+    a{color:var(--accent);text-decoration:none}
+    header{padding:24px;border-bottom:1px solid #1f2937}
+    h1{margin:0;font-size:28px}
+    main{display:grid;grid-template-columns:280px 1fr;gap:0}
+    nav{border-right:1px solid #1f2937;max-height:calc(100vh - 72px);overflow:auto}
+    nav ul{list-style:none;margin:0;padding:0}
+    nav li{border-bottom:1px solid #1f2937}
+    nav a{display:block;padding:12px 16px}
+    section{padding:24px}
+    h2{font-size:22px;margin:24px 0 8px}
+    h3{font-size:18px;margin:18px 0 6px}
+    code,pre{background:#0b1220;color:#cbd5e1;border:1px solid #1f2937}
+    code{padding:2px 6px;border-radius:6px}
+    pre{padding:12px;border-radius:8px;overflow:auto}
+    .muted{color:var(--muted)}
+    .kbd{background:#0b1220;border:1px solid #334155;padding:2px 6px;border-radius:6px}
+    .list{margin:8px 0 12px}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .block{border:1px solid #1f2937;border-radius:8px;padding:12px;background:#0b1220}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Img2HTML — Documentación Técnica Completa</h1>
+    <p class="muted">Generador de tema WordPress desde imágenes con pipeline de contenido, diseño inteligente y reglas de composición atómica.</p>
+  </header>
+  <main>
+    <nav>
+      <ul>
+        <li><a href="#resumen">Resumen</a></li>
+        <li><a href="#arquitectura">Arquitectura</a></li>
+        <li><a href="#bloques">Bloques</a></li>
+        <li><a href="#atomic-index">Atomic Index</a></li>
+        <li><a href="#atomic-validator">Validador de Composición</a></li>
+        <li><a href="#themejson">Derivación theme.json</a></li>
+        <li><a href="#content-pipeline">Pipeline de Contenido</a></li>
+        <li><a href="#admin-ui">UI de Administración</a></li>
+        <li><a href="#estructura">Estructura de archivos</a></li>
+        <li><a href="#pendientes">Pendientes sugeridos</a></li>
+      </ul>
+    </nav>
+    <div>
+      <section id="resumen">
+        <h2>Resumen</h2>
+        <p>Objetivo: a partir de imágenes analizadas por IA, generar un tema WordPress que defina estructura, bloques y estilos, y que además permita importar contenido real (textos, imágenes, páginas) mediante scripts externos (WP‑CLI) sin hardcodear contenido en el theme.</p>
+        <ul class="list">
+          <li>Principio: el theme solo define presentación; el contenido va a la base de datos.</li>
+          <li>Contrato: JSON intermedio (<code>content/content.json</code>) entre IA, generador de theme y generador de contenido.</li>
+          <li>Capas: Bloques atómicos, reglas de composición, derivación de diseño, pipeline WP‑CLI, administración y validación.</li>
+        </ul>
+      </section>
+
+      <section id="arquitectura">
+        <h2>Arquitectura</h2>
+        <div class="list">
+          <p><strong>Flujo:</strong> imagen → IA → <code>content.json</code> → theme (bloques/estilos) → scripts WP‑CLI → base de datos WP.</p>
+          <p><strong>Capas principales:</strong></p>
+          <ul>
+            <li>Registro de patrones y menús.</li>
+            <li>Biblioteca de bloques (átomos / moléculas / organismos).</li>
+            <li>Bloque <em>Atomic Index</em> de exploración.</li>
+            <li>Validador de composición (Atomic Design enforcement).</li>
+            <li>Derivación de <code>theme.json</code> (tipografía y ritmo vertical inteligentes).</li>
+            <li>Pipeline de contenido (generación de scripts, validación de entrada).</li>
+            <li>Paneles de administración para derivación y contenido.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="bloques">
+        <h2>Bloques</h2>
+        <h3>Átomos</h3>
+        <div class="grid">
+          <div class="block"><strong>Heading</strong><br><code>img2html/atom-heading</code><br>Atributos: <code>text</code>, <code>level</code>, <code>align</code></div>
+          <div class="block"><strong>Paragraph</strong><br><code>img2html/atom-paragraph</code><br>Atributos: <code>text</code>, <code>align</code></div>
+          <div class="block"><strong>Button</strong><br><code>img2html/atom-button</code><br>Atributos: <code>text</code>, <code>url</code>, <code>variant</code>, <code>fullWidth</code></div>
+          <div class="block"><strong>Icon</strong><br><code>img2html/atom-icon</code><br>Atributos: <code>name</code>, <code>size</code>, <code>color</code></div>
+          <div class="block"><strong>Link</strong><br><code>img2html/atom-link</code><br>Atributos: <code>text</code>, <code>url</code>, <code>target</code>, <code>rel</code></div>
+          <div class="block"><strong>Badge</strong><br><code>img2html/atom-badge</code><br>Atributos: <code>text</code>, <code>variant</code></div>
+          <div class="block"><strong>Input</strong><br><code>img2html/atom-input</code><br>Atributos: <code>type</code>, <code>placeholder</code>, <code>value</code>, <code>fullWidth</code></div>
+          <div class="block"><strong>Container</strong><br><code>img2html/atom-container</code><br>Atributos: <code>padding</code>, <code>background</code>, <code>content</code></div>
+        </div>
+        <h3>Moléculas y Organismos</h3>
+        <ul class="list">
+          <li>Moléculas: <code>features-list</code>, <code>team-member</code>, <code>pricing-feature</code>, <code>testimonial</code>.</li>
+          <li>Organismos: <code>hero</code>, composiciones de columnas y grupos.</li>
+          <li>Regla: moléculas solo contienen átomos; organismos contienen moléculas/átomos.</li>
+        </ul>
+      </section>
+
+      <section id="atomic-index">
+        <h2>Atomic Index</h2>
+        <ul class="list">
+          <li>Control de grupos: mostrar Átomos/Moléculas/Organismos.</li>
+          <li>Búsqueda y límite por grupo.</li>
+          <li>Orden: alfabético o fecha de modificación.</li>
+          <li>Filtro “Solo completos”: bloques con <code>render.php</code> y <code>style.css</code>.</li>
+          <li>Plantillas de tarjeta: <code>compact</code>, <code>detailed</code>, <code>minimal</code>.</li>
+          <li>Título: toggle para mostrar/ocultar; fuente <code>title</code>/<code>slug</code>/<code>name</code>; subtítulo técnico opcional (slug).</li>
+        </ul>
+        <p class="muted">Archivos: <code>blocks/atomic-index/block.json</code>, <code>editor.js</code>, <code>render.php</code>, <code>style.css</code>.</p>
+      </section>
+
+      <section id="atomic-validator">
+        <h2>Validador de Composición</h2>
+        <ul class="list">
+          <li>Átomos: no pueden contener bloques internos.</li>
+          <li>Moléculas: solo aceptan átomos; sin <code>core/html</code>.</li>
+          <li>Organismos: aceptan moléculas/átomos; sin <code>core/html</code> ni bloques ajenos.</li>
+          <li>Ejecuta en <span class="kbd">save_post</span>, guarda reporte en <code>post_meta</code>, muestra aviso en editor.</li>
+        </ul>
+        <p class="muted">Archivo: <code>php/composition-validator.php</code>.</p>
+      </section>
+
+      <section id="themejson">
+        <h2>Derivación de theme.json</h2>
+        <ul class="list">
+          <li>Escala tipográfica modular: calculada según <code>settings.layout.contentSize</code>.</li>
+          <li>Ritmo vertical: baseline derivado, genera <code>spacingSizes</code> y <code>blockGap</code>.</li>
+          <li>Defaults por bloque: paragraph/heading/list/image con márgenes y radius.</li>
+          <li>Perfiles de diseño: <code>compact</code>/<code>medium</code>/<code>ample</code> ajustan ratio, baseline y line-height.</li>
+        </ul>
+        <p class="muted">Archivos: <code>php/themejson-derive.php</code>, <code>php/menu/derive.php</code>.</p>
+      </section>
+
+      <section id="content-pipeline">
+        <h2>Pipeline de Contenido</h2>
+        <ul class="list">
+          <li>JSON intermedio: <code>content/content.json</code> (páginas, bloques, media).</li>
+          <li>Generación de scripts: <code>tools/import-content.sh</code> y <code>tools/import-content.ps1</code>.</li>
+          <li>Inserción: importa imágenes con WP‑CLI y crea páginas con HTML Gutenberg.</li>
+          <li>Validación: errores (JSON, slugs) bloquean; advertencias (media faltante, tipos no soportados) informan.</li>
+          <li>Features con íconos: <code>features-list</code> usa <code>atom-icon</code>, soporta <code>iconColor</code> (paleta) y <code>size</code>.</li>
+          <li>Paleta: valida <code>iconColor</code> contra los slugs de <code>theme.json</code>.</li>
+        </ul>
+        <p class="muted">Archivo: <code>php/content-pipeline.php</code>. Documentación: <code>docs/CONTENT_PIPELINE.md</code>.</p>
+        <pre>
+Tipos soportados:
+ - hero: título, subtítulo, CTA, imagen
+ - card-grid: tarjetas con imagen/título/texto
+ - features-list: lista con íconos opcionales
+ - testimonial: quote + cite
+ - team-member: columnas con imagen, nombre, bio
+ - pricing-feature: columnas con título, precio y lista de features
+        </pre>
+      </section>
+
+      <section id="admin-ui">
+        <h2>UI de Administración</h2>
+        <ul class="list">
+          <li>Theme Derive: selecciona perfil tipográfico (<code>compact</code>/<code>medium</code>/<code>ample</code>) y recalcula.</li>
+          <li>Content: valida <code>content.json</code> y genera scripts WP‑CLI para importar contenido.</li>
+        </ul>
+        <p class="muted">Archivos: <code>php/menu/derive.php</code>, <code>php/content-pipeline.php</code>.</p>
+      </section>
+
+      <section id="estructura">
+        <h2>Estructura de archivos</h2>
+        <ul class="list">
+          <li><code>functions.php</code>: registro de patrones, menús y bloques (<em>atoms/molecules/organisms</em> + raíz).</li>
+          <li><code>php/</code>: assets y helpers BEM, derivación de theme.json, validador, menús admin, pipeline de contenido.</li>
+          <li><code>blocks/</code>: implementación de bloques (JSON, editor, render, estilos).</li>
+          <li><code>content/</code>: JSON intermedio e imágenes fuente.</li>
+          <li><code>tools/</code>: scripts generados de importación y bloques HTML Gutenberg.</li>
+          <li><code>docs/</code>: documentación técnica y composición.</li>
+        </ul>
+      </section>
+
+      <section id="pendientes">
+        <h2>Pendientes sugeridos</h2>
+        <ul class="list">
+          <li>Bloqueo opcional de publicación si hay violaciones de Atomic Design.</li>
+          <li>Extender tipos del pipeline y mapeo automático a átomos.</li>
+          <li>Analítica de patrones para ajustar ratio tipográfico por jerarquía real.</li>
+          <li>Perfil de densidad para ajustar <code>blockGap</code> y <code>lineHeight</code> por página.</li>
+          <li>Validator de media: asegurar que todas las imágenes de <code>blocks</code> están en <code>media[]</code>.</li>
+          <li>Doc Viewer en admin con navegación y búsqueda dentro de esta documentación.</li>
+        </ul>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
