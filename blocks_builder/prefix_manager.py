@@ -206,3 +206,5 @@ def initialize_prefix_manager(theme_slug: Optional[str] = None,
     _global_prefix_manager = PrefixManager(theme_slug, theme_textdomain)
 
 
+
+

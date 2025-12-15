@@ -247,3 +247,5 @@ Los bloques generados:
 - ✅ **Experiencia mejorada**: Controles familiares para usuarios de WordPress
 
 
+
+

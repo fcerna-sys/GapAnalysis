@@ -699,3 +699,5 @@ Estos patterns se actualizan globalmente:
         f.write(index_content)
 
 
+
+

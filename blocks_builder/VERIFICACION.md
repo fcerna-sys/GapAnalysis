@@ -60,3 +60,5 @@ from blocks_builder.organisms import create_slider_block, create_hero_block
 El código está organizado en módulos, pero todas las funciones del backup (2847 líneas) están accesibles a través de las importaciones. Los módulos actúan como "vistas organizadas" del código original, facilitando el mantenimiento sin perder funcionalidad.
 
 
+
+

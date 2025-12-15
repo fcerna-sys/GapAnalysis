@@ -415,3 +415,5 @@ def enhance_patterns_meta_with_versions(theme_dir: str, bem_prefix: str = 'img2h
     print(f"✓ Versiones de patterns actualizadas. Hash del diseño: {design_hash[:8]}...")
 
 
+
+

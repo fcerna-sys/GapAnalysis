@@ -15,10 +15,12 @@ function img2html_minify_js($js){
 function img2html_generate_minified_assets(){
   $base = get_theme_file_path('assets');
   if (!is_dir($base)) return;
-  $dirs = [$base.'/blocks', $base.'/components'];
+  $dirs = [$base.'/blocks', $base.'/blocks/components', $base.'/components'];
   foreach ($dirs as $dir){
     if (!is_dir($dir)) continue;
     foreach (glob($dir.'/*.css') as $file){
+      if (preg_match('/\.min\.css$/', $file)) continue;
+      if (preg_match('/\.purged\.css$/', $file)) continue;
       $min = preg_replace('/\.css$/','.min.css',$file);
       if (!file_exists($min) || filemtime($file) > filemtime($min)){
         $raw = file_get_contents($file);
@@ -29,6 +31,7 @@ function img2html_generate_minified_assets(){
       }
     }
     foreach (glob($dir.'/*.js') as $file){
+      if (preg_match('/\.min\.js$/', $file)) continue;
       $min = preg_replace('/\.js$/','.min.js',$file);
       if (!file_exists($min) || filemtime($file) > filemtime($min)){
         $raw = file_get_contents($file);
