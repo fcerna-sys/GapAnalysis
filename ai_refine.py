@@ -934,6 +934,9 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             model_name = 'gemini-1.5-pro-latest'
             api_key = os.environ.get('GOOGLE_API_KEY') or ''
         prompt_md = _read_file(os.path.join(base_dir, 'docs', 'prompt.md'))
+        # Cargar pipeline avanzado de prompts en formato JSON (pensar como arquitecto, no sólo generador)
+        prompt_pipeline = _read_json(os.path.join(base_dir, 'docs', 'prompt_pipeline.json')) or {}
+        prompt_pipeline_str = json.dumps(prompt_pipeline, ensure_ascii=False, indent=2)
         wp_kb = _read_file(os.path.join(base_dir, 'docs', 'wordpress.md'))
         prompt = (
             "MODO ESTRICTO: Clonación visual estricta del diseño. Prioriza REFERENCIAS VISUALES sobre HTML base y sobre OCR. "
@@ -949,8 +952,9 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             "Usa 'ratios_percent' para width y flex-basis en cada columna, y aplica blockGap/padding para clonar micro-espaciados. "
         )
         strict = (
-            "Rol: Maquetador Web Senior Experto en WordPress FSE. "
-            "Entrega SOLO JSON válido. Usa REFERENCIAS VISUALES como fuente de verdad. "
+            "Rol: Arquitecto de sistemas WordPress, diseñador UX y desarrollador de block themes. "
+            "Piensa en etapas (análisis → layout → mapa global → sistema de diseño → templates → UX de editor → validación). "
+            "Entrega SOLO un objeto JSON válido. Usa REFERENCIAS VISUALES como fuente de verdad. "
         )
         selected = []
         if images:
@@ -973,6 +977,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 {"role":"user","parts":[{"text":prompt}]},
                 {"role":"user","parts":[{"text":"SISTEMA"},{"text":strict}]},
                 {"role":"user","parts":[{"text":"PROMPT_MD"},{"text":prompt_md}]},
+                {"role":"user","parts":[{"text":"PIPELINE_JSON"},{"text":prompt_pipeline_str}]},
                 {"role":"user","parts":[{"text":"WORDPRESS_KB"},{"text":wp_kb}]},
                 {"role":"user","parts":[{"text":"HTML"},{"text":html}]},
                 {"role":"user","parts":[{"text":"CSS"},{"text":css}]},
@@ -999,8 +1004,24 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                     response_text = ''
         elif provider == 'openai' and api_key and endpoint:
             msgs = []
-            msgs.append({"role":"system","content":"Eres un Maquetador Web Senior Experto en WordPress FSE. Debes responder SOLO con un objeto JSON válido. Prioriza REFERENCIAS VISUALES sobre HTML y OCR. Genera clonación visual estricta con micro-espaciados y tipografía inferida."})
-            ucontent = [{"type":"text","text":prompt}, {"type":"text","text":"PROMPT_MD"}, {"type":"text","text":prompt_md}, {"type":"text","text":"WORDPRESS_KB"}, {"type":"text","text":wp_kb}, {"type":"text","text":"HTML"}, {"type":"text","text":html}, {"type":"text","text":"CSS"}, {"type":"text","text":css}, {"type":"text","text":"INFO"}, {"type":"text","text":info_md}, {"type":"text","text":"PLAN"}, {"type":"text","text":json.dumps(plan, ensure_ascii=False)}]
+            msgs.append({"role":"system","content":"Eres un arquitecto de sistemas WordPress FSE, diseñador UX y maquetador senior. Debes responder SOLO con un objeto JSON válido. Piensa como arquitecto: primero analiza, luego diseña arquitectura y sistema de diseño, luego genera código y lo valida."})
+            ucontent = [
+                {"type":"text","text":prompt},
+                {"type":"text","text":"PROMPT_MD"},
+                {"type":"text","text":prompt_md},
+                {"type":"text","text":"PIPELINE_JSON"},
+                {"type":"text","text":prompt_pipeline_str},
+                {"type":"text","text":"WORDPRESS_KB"},
+                {"type":"text","text":wp_kb},
+                {"type":"text","text":"HTML"},
+                {"type":"text","text":html},
+                {"type":"text","text":"CSS"},
+                {"type":"text","text":css},
+                {"type":"text","text":"INFO"},
+                {"type":"text","text":info_md},
+                {"type":"text","text":"PLAN"},
+                {"type":"text","text":json.dumps(plan, ensure_ascii=False)}
+            ]
             ucontent.append({"type":"text","text":"Si el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' (flex-basis) en cada columna (porcentaje). Aplica blockGap y padding para reproducir micro-espaciados."})
             if selected:
                 ucontent.append({"type":"text","text":"Referencias visuales (PRIORIDAD MÁXIMA)"})
@@ -1026,7 +1047,24 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                 response_text = obj.get('choices', [{}])[0].get('message', {}).get('content', '') or ''
         elif provider == 'ollama' and model_name:
             prompt_text = (
-                prompt + "\nPROMPT_MD\n" + prompt_md + "\nWORDPRESS_KB\n" + wp_kb + "\nHTML\n" + html + "\nCSS\n" + css + "\nINFO\n" + info_md + "\nPLAN\n" + json.dumps(plan, ensure_ascii=False) + "\nSi el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje).\nENTREGA SOLO JSON."
+                prompt
+                + "\nSISTEMA\n"
+                + strict
+                + "\nPROMPT_MD\n"
+                + prompt_md
+                + "\nPIPELINE_JSON\n"
+                + prompt_pipeline_str
+                + "\nWORDPRESS_KB\n"
+                + wp_kb
+                + "\nHTML\n"
+                + html
+                + "\nCSS\n"
+                + css
+                + "\nINFO\n"
+                + info_md
+                + "\nPLAN\n"
+                + json.dumps(plan, ensure_ascii=False)
+                + "\nSi el PLAN incluye 'layout_rows' con columnas detectadas, replica esas columnas usando core/columns y grupos. Usa 'ratios_percent' para asignar 'width' en cada columna (porcentaje).\nENTREGA SOLO JSON."
             )
             body = {"model": model_name, "prompt": prompt_text, "format": "json", "stream": False}
             opts = {"temperature": 0.1}
@@ -1057,6 +1095,8 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
             
             ucontent = [
                 {"type": "text", "text": qwen_prompt},
+                {"type": "text", "text": "PIPELINE_JSON"},
+                {"type": "text", "text": prompt_pipeline_str},
                 {"type": "text", "text": "WORDPRESS_KB"},
                 {"type": "text", "text": wp_kb}
             ]
@@ -1171,6 +1211,7 @@ def refine_and_generate_wp(temp_out_dir: str, info_md: str, plan: Dict, theme_di
                             {"role":"user","parts":[{"text":prompt}]},
                             {"role":"user","parts":[{"text":"SISTEMA"},{"text":strict}]},
                             {"role":"user","parts":[{"text":"PROMPT_MD"},{"text":prompt_md}]},
+                            {"role":"user","parts":[{"text":"PIPELINE_JSON"},{"text":prompt_pipeline_str}]},
                             {"role":"user","parts":[{"text":"WORDPRESS_KB"},{"text":wp_kb}]},
                             {"role":"user","parts":[{"text":"HTML"},{"text":html}]},
                             {"role":"user","parts":[{"text":"CSS"},{"text":css}]},

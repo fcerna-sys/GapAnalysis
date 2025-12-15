@@ -1,0 +1,175 @@
+{
+  "meta": {
+    "description": "Pipeline de prompts avanzados para la generación de temas WordPress FSE a partir de ZIP de imágenes.",
+    "version": 1
+  },
+  "mindset": {
+    "role": "Arquitecto de sistemas WordPress, diseñador UX y desarrollador de block themes.",
+    "principles": [
+      "Primero entender el sistema visual completo.",
+      "Luego diseñar la arquitectura de información y navegación.",
+      "Después generar el sistema de diseño (tokens, theme.json).",
+      "Finalmente generar bloques, templates y validarlos.",
+      "Priorizar siempre editabilidad en Gutenberg y mantenibilidad."
+    ]
+  },
+  "stages": [
+    {
+      "id": "image_analysis",
+      "title": "Análisis individual de cada imagen",
+      "description": "Tratar cada imagen como un frame de Figma / diseño de alta fidelidad.",
+      "output_key": "image_analysis",
+      "instructions": [
+        "Identificar el tipo de página (home, landing, post, archive, inner page, etc.).",
+        "Detectar regiones verticales: top bar, header, navegación, hero, secciones principales, sidebars, footer.",
+        "Para cada región: propósito, elementos UI, si el contenido parece estático o dinámico.",
+        "Detectar patrones de UI: menús, sliders, acordeones, tabs, cards, grids.",
+        "Detectar jerarquía tipográfica: headings, cuerpo, labels.",
+        "Detectar esquema de color: primary, secondary, accent, background, surface.",
+        "Detectar posibles componentes reutilizables."
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": ["page_type", "regions", "components"],
+        "properties": {
+          "page_type": { "type": "string" },
+          "regions": { "type": "array" },
+          "components": { "type": "array" }
+        }
+      }
+    },
+    {
+      "id": "layout_and_blocks",
+      "title": "Detección de layout y componentes como bloques",
+      "description": "Convertir secciones visuales en conceptos de bloques Gutenberg.",
+      "output_key": "block_registry",
+      "instructions": [
+        "Convertir cada región visual en un concepto de bloque o composición de bloques.",
+        "Decidir si cada bloque es: core block, bloque estático custom o bloque dinámico custom.",
+        "Para bloques dinámicos: definir atributos, campos editables e inner blocks.",
+        "Identificar variaciones de bloques (por estilo o layout).",
+        "Marcar qué bloques son reutilizables entre páginas."
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": ["blocks"],
+        "properties": {
+          "blocks": { "type": "array" }
+        }
+      }
+    },
+    {
+      "id": "cross_page_inference",
+      "title": "Inteligencia entre páginas",
+      "description": "Unificar análisis de múltiples imágenes/páginas de un mismo proyecto.",
+      "output_key": "global_layout_map",
+      "instructions": [
+        "Detectar componentes repetidos entre páginas: headers, footers, sidebars, menús, secciones hero comunes.",
+        "Diferenciar componentes globales de componentes específicos de página.",
+        "Inferir comportamiento de navegación: menús fijos vs no fijos, elementos solo en home, etc.",
+        "Construir un mapa global de layouts y template parts."
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": ["global_components", "page_components", "template_parts"],
+        "properties": {
+          "global_components": { "type": "array" },
+          "page_components": { "type": "array" },
+          "template_parts": { "type": "array" }
+        }
+      }
+    },
+    {
+      "id": "design_system",
+      "title": "Sistema de diseño y theme.json",
+      "description": "Construir tokens y configuración de theme.json a partir del análisis visual.",
+      "output_key": "design_system",
+      "instructions": [
+        "Definir tokens de color (primary, secondary, accent, background, surface, text) y su paleta.",
+        "Definir familias tipográficas, tamaños y escala (fontSizes, fontFamilies, lineHeight).",
+        "Definir escala de spacing (spacingSizes) y layout (contentSize, wideSize, padding).",
+        "Preparar el objeto theme.json v3 compatible con WordPress 6.x+."
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": ["theme_json"],
+        "properties": {
+          "theme_json": { "type": "object" }
+        }
+      }
+    },
+    {
+      "id": "templates_and_theme",
+      "title": "Generación de templates y theme FSE",
+      "description": "Usar el mapa global y el sistema de diseño para generar el tema completo.",
+      "output_key": "theme_files",
+      "instructions": [
+        "Generar templates basados en bloques: front-page, home/index, page, single, archive, search, 404.",
+        "Generar template parts: header, footer, sidebar (si aplica).",
+        "Componer los templates usando bloques core y bloques custom, siguiendo el design system.",
+        "Usar Query Loop para contenido dinámico (posts, archives, etc.)."
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": ["files"],
+        "properties": {
+          "files": { "type": "object" }
+        }
+      }
+    },
+    {
+      "id": "editability_ux",
+      "title": "Editabilidad extrema en el editor",
+      "description": "Asegurar que el tema sea fácil de editar por usuarios no técnicos.",
+      "output_key": "editor_ux",
+      "instructions": [
+        "Verificar que todos los textos e imágenes significativos sean editables.",
+        "Evitar hardcodear textos en render.php cuando puedan ser atributos o InnerBlocks.",
+        "Proponer dónde usar InnerBlocks para permitir flexibilidad.",
+        "Sugerir bloqueos de ciertos controles cuando romperían el layout.",
+        "Garantizar que los bloques sean entendibles desde el editor (nombres, descripciones, iconos)."
+      ],
+      "output_schema": {
+        "type": "object"
+      }
+    },
+    {
+      "id": "validation_and_quality",
+      "title": "Validación y autocorrección",
+      "description": "Auditoría final de calidad del tema generado.",
+      "output_key": "quality_report",
+      "instructions": [
+        "Revisar buenas prácticas de WordPress (block theme, theme.json, templates).",
+        "Comprobar accesibilidad básica (estructura, encabezados, contraste aproximado).",
+        "Revisar supuestos de responsividad y uso de alignwide/alignfull.",
+        "Detectar sobre-ingeniería o bloques innecesarios.",
+        "Proponer correcciones concretas cuando se detecten problemas."
+      ],
+      "output_schema": {
+        "type": "object",
+        "required": ["issues", "recommendations"],
+        "properties": {
+          "issues": { "type": "array" },
+          "recommendations": { "type": "array" }
+        }
+      }
+    }
+  ],
+  "contract": {
+    "must_return": [
+      "mapping",
+      "files.style.css",
+      "files.functions.php",
+      "files.theme.json",
+      "files.parts/header.html",
+      "files.parts/footer.html",
+      "files.templates/index.html",
+      "files.templates/single.html",
+      "files.templates/page.html",
+      "files.templates/404.html"
+    ],
+    "format": "Un ÚNICO objeto JSON válido, sin texto adicional."
+  }
+}
+
+

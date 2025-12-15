@@ -25,9 +25,18 @@
       <p>Los archivos se guardaron en {{ output_dir }}.</p>
       <a class="button" href="/{{ output_dir }}/index.html" target="_blank">Abrir index.html</a>
       <p style="margin-top:16px"><a class="button" href="/download_static">Descargar ZIP del sitio estático</a></p>
+      <p style="margin-top:16px"><a class="button" href="/download_content">Descargar contenido (WXR)</a></p>
       <p style="margin-top:16px">Tema de WordPress generado en {{ theme_dir }}.</p>
       <a class="button" href="/{{ theme_dir }}/style.css" target="_blank">Ver style.css del tema</a>
       <p style="margin-top:16px"><a class="button" href="/download_theme">Descargar ZIP del tema</a></p>
+      <p style="margin-top:16px"><a class="button" href="/download_bundle">Descargar ZIP combinado (HTML + tema WP)</a></p>
+      <hr style="margin:24px 0;border-color:#1f2330" />
+      <h2 style="font-size:18px;margin-bottom:8px">Fase 2 (opcional): refinar tema desde HTML ajustado</h2>
+      <p>Puedes editar el HTML descargado, comprimirlo en un ZIP y subirlo aquí para regenerar el tema de WordPress usando ese HTML como base.</p>
+      <form action="/refine_theme_from_html" method="post" enctype="multipart/form-data" style="margin-top:12px">
+        <input type="file" name="html_zip" accept=".zip" required />
+        <button type="submit" class="button" style="margin-top:8px">Subir ZIP de HTML refinado y regenerar tema</button>
+      </form>
       {% if used_ai %}
       <p style="margin-top:16px;color:#22c55e">Generación con IA activada.</p>
       {% if provider %}

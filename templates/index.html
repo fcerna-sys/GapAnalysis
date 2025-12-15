@@ -45,10 +45,17 @@
     <div class="card" style="margin-bottom:16px">
       <h2 style="font-size:18px;margin:0 0 8px">Estado de entorno</h2>
       <ul style="list-style:none;padding:0;margin:0;color:#a3a3a3">
-        <li>Gemini: {{ 'OK' if env.gemini else 'Falta clave' }}</li>
-        <li>OpenAI: {{ 'OK' if env.openai else 'Falta clave' }}</li>
-        <li>Vision JSON: {% if env.vision_path %}{{ env.vision_path }}{% else %}No configurado{% endif %} — {% if env.vision_valid %}Válido{% elif env.vision_exists %}No válido{% else %}No existe{% endif %}</li>
-        <li>Ollama endpoint: {{ env.ollama_endpoint }}</li>
+        <li>Modelo local (LM Studio / Ollama): 
+          {% if env.local %}
+            OK{% if env.local_names and env.local_names|length > 0 %} — {{ env.local_names|join(', ') }}{% endif %}
+          {% else %}
+            No configurado
+          {% endif %}
+        </li>
+        <li>Gemini (opcional): {{ 'OK' if env.gemini else 'Falta clave' }}</li>
+        <li>OpenAI (opcional): {{ 'OK' if env.openai else 'Falta clave' }}</li>
+        <li>Vision JSON (opcional): {% if env.vision_path %}{{ env.vision_path }}{% else %}No configurado{% endif %} — {% if env.vision_valid %}Válido{% elif env.vision_exists %}No válido{% else %}No existe{% endif %}</li>
+        <li>Ollama endpoint (si usas Ollama): {{ env.ollama_endpoint }}</li>
       </ul>
     </div>
     {% endif %}
@@ -174,7 +181,12 @@
         <div style="margin-bottom:24px">
           <h3 style="font-size:16px;margin:0 0 16px;color:#fff;font-weight:600">Archivos</h3>
           <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">ZIP de imágenes (obligatorio):</label>
-          <input type="file" name="zipfile" accept=".zip" required style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;margin-bottom:16px" />
+          <input type="file" name="zipfile" accept=".zip" required style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;margin-bottom:8px" />
+          <p style="font-size:12px;color:#6b7280;margin:0;line-height:1.5">
+            Consejo: puedes incluir también tus <strong>fuentes personalizadas</strong> en el mismo ZIP
+            (<code>.ttf</code>, <code>.otf</code>, <code>.woff</code>, <code>.woff2</code>). La app las copiará al tema
+            e intentará registrarlas en <code>theme.json</code> para que aparezcan como familias tipográficas del tema.
+          </p>
         </div>
         
         <!-- Configuración Avanzada -->
@@ -197,11 +209,25 @@
               <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3;margin-bottom:8px">
                 <input type="checkbox" name="precise_slicing" /> Slicing preciso (OpenCV)
               </label>
+              <label style="display:flex;align-items:center;gap:8px;color:#a3a3a3;margin-bottom:8px">
+                <input type="checkbox" name="enable_seo" /> Aplicar SEO básico (meta title/description, Open Graph, alt en imágenes)
+              </label>
             </div>
           </div>
         </details>
         
         <button type="submit" style="width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:16px">Analizar ZIP y Generar Tema</button>
+      </form>
+    </div>
+    
+    <!-- Fase 2: Mejorar un tema existente desde HTML + Theme (opcional) -->
+    <div class="card" style="margin-top:16px">
+      <h2>Mejorar un tema existente desde HTML refinado</h2>
+      <p>Si ya descargaste el bundle (HTML + tema WP), puedes editar el HTML, volver a comprimirlo en un ZIP (idealmente manteniendo las carpetas <code>html/</code> y <code>theme/</code>) y subirlo aquí. La app regenerará el tema usando ese HTML refinado como fuente principal.</p>
+      <form action="/refine_theme_from_html" method="post" enctype="multipart/form-data" style="margin-top:16px">
+        <label style="display:block;margin-bottom:8px;color:#a3a3a3;font-weight:600">ZIP con HTML refinado (y opcionalmente carpeta theme/):</label>
+        <input type="file" name="html_zip" accept=".zip" required style="width:100%;padding:10px;border-radius:12px;border:1px solid #1f2330;color:#fff;background:#0b0c0f;margin-bottom:16px" />
+        <button type="submit" style="width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:15px">Subir ZIP y mejorar tema existente</button>
       </form>
     </div>
   </div>

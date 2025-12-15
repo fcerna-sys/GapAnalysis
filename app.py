@@ -32,6 +32,9 @@ except Exception:
 
 ALLOWED_EXTENSIONS = {'.zip'}
 SAFE_IMAGE_EXTS = {'.png', '.jpg', '.jpeg', '.webp', '.gif'}
+FONT_EXTS = {'.ttf', '.otf', '.woff', '.woff2'}
+SAFE_TEXT_EXTS = {'.txt', '.md', '.markdown'}
+SAFE_XML_EXTS = {'.xml'}
 MAX_ZIP_FILES = 500
 MAX_ZIP_UNCOMPRESSED = 300 * 1024 * 1024  # 300 MB
 PROGRESS = {}
@@ -56,8 +59,13 @@ def _safe_extract_zip(zf: zipfile.ZipFile, dest_dir: str):
         if '..' in name or name.startswith('/') or name.startswith('\\'):
             continue
         ext = os.path.splitext(name)[1].lower()
-        # Solo extraer imágenes admitidas
-        if ext not in SAFE_IMAGE_EXTS:
+        # Solo extraer contenidos que podamos aprovechar: imágenes, fuentes, texto y XML
+        if (
+            ext not in SAFE_IMAGE_EXTS
+            and ext not in FONT_EXTS
+            and ext not in SAFE_TEXT_EXTS
+            and ext not in SAFE_XML_EXTS
+        ):
             continue
         total_uncompressed += getattr(info, 'file_size', 0)
         count += 1
@@ -97,6 +105,10 @@ def index():
             for name in (rm.get('tokens') or []):
                 openai_keys.append(name)
     has_openai = any(os.environ.get(k) for k in openai_keys)
+    # Detectar si hay modelos locales configurados (LM Studio / Ollama)
+    local_models = runtime.get('local_models') or []
+    has_local = any(bool(lm.get('enabled')) for lm in local_models)
+    local_names = [lm.get('name') or lm.get('id') for lm in local_models if lm.get('enabled')]
     ollama_endpoint = os.environ.get('OLLAMA_ENDPOINT') or 'http://localhost:11434/api/generate'
     cred_path = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') or ''
     cred_exists = bool(cred_path and os.path.isfile(cred_path))
@@ -111,6 +123,8 @@ def index():
     env = {
         'gemini': has_gemini,
         'openai': has_openai,
+        'local': has_local,
+        'local_names': [n for n in local_names if n],
         'ollama_endpoint': ollama_endpoint,
         'vision_path': cred_path,
         'vision_exists': cred_exists,
@@ -136,6 +150,7 @@ def upload():
     enable_slicing = request.form.get('enable_slicing') or ''
     precise_slicing = request.form.get('precise_slicing') or ''
     save_env = request.form.get('save_env') or ''
+    enable_seo = request.form.get('enable_seo') or ''
     google_application_credentials = request.form.get('google_application_credentials') or ''
     google_application_credentials_file = request.files.get('google_application_credentials_file')
     if not file or file.filename == '':
@@ -239,6 +254,7 @@ def upload():
     request.environ['img2html_theme_license'] = theme_license
     request.environ['img2html_theme_screenshot'] = screenshot_path
     request.environ['img2html_css_framework'] = css_framework
+    request.environ['img2html_enable_seo'] = bool(enable_seo)
     return render_template('plan.html', plan=plan, batch_id=batch_id, theme_name=theme_name, theme_slug=theme_slug, theme_description=theme_description, theme_version=theme_version, theme_author=theme_author, theme_uri=theme_uri, theme_textdomain=theme_textdomain, theme_tags=theme_tags, theme_license=theme_license, css_framework=css_framework, google_api_key=google_api_key, enable_slicing=enable_slicing, precise_slicing=precise_slicing, save_env=save_env, google_application_credentials=google_application_credentials)
 
 def _set_progress(batch_id, percent, message):
@@ -279,17 +295,28 @@ def _do_convert_async(ctx):
     google_api_key = ctx.get('google_api_key') or ''
     enable_slicing = ctx.get('enable_slicing') or ''
     precise_slicing = ctx.get('precise_slicing') or ''
+    enable_seo = bool(ctx.get('enable_seo'))
     save_env = ctx.get('save_env') or ''
     google_application_credentials = ctx.get('google_application_credentials') or ''
     _set_progress(batch_id, 5, 'Inicializando conversión')
     try:
         batch_dir = os.path.join(UPLOAD_DIR, batch_id)
         images = []
+        fonts = []
+        text_files = []
+        xml_files = []
         for root, _, files in os.walk(batch_dir):
             for f in files:
                 ext = os.path.splitext(f)[1].lower()
-                if ext in {'.png', '.jpg', '.jpeg', '.webp', '.gif'}:
-                    images.append(os.path.join(root, f))
+                full = os.path.join(root, f)
+                if ext in SAFE_IMAGE_EXTS:
+                    images.append(full)
+                elif ext in FONT_EXTS:
+                    fonts.append(full)
+                elif ext in SAFE_TEXT_EXTS:
+                    text_files.append(full)
+                elif ext in SAFE_XML_EXTS:
+                    xml_files.append(full)
         _set_progress(batch_id, 10, 'Cargando imágenes')
         plan = analyze_images(images)
         for s in plan['sections']:
@@ -317,6 +344,11 @@ def _do_convert_async(ctx):
         except Exception:
             ocr_texts, ocr_provider = ({}, '')
         _set_progress(batch_id, 40, f'OCR: {ocr_provider or "N/A"}')
+        # Exportar contenido WXR (para importador de contenidos)
+        try:
+            _export_wxr(TEMP_OUT_DIR, plan, ocr_texts)
+        except Exception:
+            pass
         os.makedirs(TEMP_OUT_DIR, exist_ok=True)
         assets_dir = os.path.join(TEMP_OUT_DIR, 'assets')
         os.makedirs(assets_dir, exist_ok=True)
@@ -388,6 +420,26 @@ def _do_convert_async(ctx):
                     info_md = f.read()
             except Exception:
                 info_md = ''
+        # Añadir información adicional proveniente de archivos de texto/XML del ZIP
+        if text_files or xml_files:
+            extra_sections = []
+            if text_files:
+                extra_sections.append("## Contenido de texto detectado en el ZIP")
+                for tf in text_files:
+                    try:
+                        with open(tf, 'r', encoding='utf-8', errors='ignore') as rf:
+                            snippet = rf.read(4000)
+                        extra_sections.append(f"### {os.path.basename(tf)}\n\n{snippet}\n")
+                    except Exception:
+                        continue
+            if xml_files:
+                extra_sections.append("## Archivos XML detectados en el ZIP")
+                for xf in xml_files:
+                    base = os.path.basename(xf)
+                    # No volcamos XML completo para no inflar el prompt; sólo un aviso
+                    extra_sections.append(f"- {base}")
+            if extra_sections:
+                info_md = (info_md or '') + "\n\n" + "\n".join(extra_sections)
         html_path = os.path.join(TEMP_OUT_DIR, 'index.html')
         css_path = os.path.join(TEMP_OUT_DIR, 'styles.css')
         title = plan['title']
@@ -517,6 +569,9 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
                 create_custom_blocks(wp_theme_dir, css_framework, plan, theme_slug)
                 # Generar screenshot SVG
                 generate_theme_screenshot(wp_theme_dir, plan, dna, theme_name, theme_description)
+                # SEO básico opcional
+                if enable_seo:
+                    _enable_seo_meta(wp_theme_dir)
             except Exception as e:
                 print(f"Error en construcción del tema: {e}")
                 import traceback
@@ -525,6 +580,12 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
             result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images, dna=dna)
             used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
             provider = (result.get('provider') if isinstance(result, dict) else '') or ''
+
+            # Integrar fuentes personalizadas incluidas en el ZIP (si las hay)
+            try:
+                _integrate_fonts_into_theme(wp_theme_dir, fonts)
+            except Exception:
+                pass
         except Exception:
             used_ai = False
             provider = ''
@@ -557,7 +618,8 @@ def start_convert():
         'enable_slicing': request.form.get('enable_slicing') or '',
         'precise_slicing': request.form.get('precise_slicing') or '',
         'save_env': request.form.get('save_env') or '',
-        'google_application_credentials': request.form.get('google_application_credentials') or ''
+        'google_application_credentials': request.form.get('google_application_credentials') or '',
+        'enable_seo': request.form.get('enable_seo') or ''
     }
     _set_progress(batch_id, 1, 'Preparando...')
     t = threading.Thread(target=_do_convert_async, args=(ctx,), daemon=True)
@@ -580,6 +642,7 @@ def convert():
     enable_slicing = request.form.get('enable_slicing') or ''
     precise_slicing = request.form.get('precise_slicing') or ''
     save_env = request.form.get('save_env') or ''
+    enable_seo = request.form.get('enable_seo') or ''
     google_application_credentials = request.form.get('google_application_credentials') or ''
     if not batch_id:
         flash('Falta el identificador del lote')
@@ -589,11 +652,21 @@ def convert():
         flash('El lote indicado no existe')
         return redirect(url_for('index'))
     images = []
+    fonts = []
+    text_files = []
+    xml_files = []
     for root, _, files in os.walk(batch_dir):
         for f in files:
             ext = os.path.splitext(f)[1].lower()
-            if ext in {'.png', '.jpg', '.jpeg', '.webp', '.gif'}:
-                images.append(os.path.join(root, f))
+            full = os.path.join(root, f)
+            if ext in SAFE_IMAGE_EXTS:
+                images.append(full)
+            elif ext in FONT_EXTS:
+                fonts.append(full)
+            elif ext in SAFE_TEXT_EXTS:
+                text_files.append(full)
+            elif ext in SAFE_XML_EXTS:
+                xml_files.append(full)
     if not images:
         flash('El lote no contiene imágenes válidas')
         return redirect(url_for('index'))
@@ -610,6 +683,11 @@ def convert():
         ocr_texts, ocr_provider = extract_texts(images)
     except Exception:
         ocr_texts, ocr_provider = ({}, '')
+    # Exportar contenido WXR (para importador de contenidos)
+    try:
+        _export_wxr(TEMP_OUT_DIR, plan, ocr_texts)
+    except Exception:
+        pass
     os.makedirs(TEMP_OUT_DIR, exist_ok=True)
     assets_dir = os.path.join(TEMP_OUT_DIR, 'assets')
     os.makedirs(assets_dir, exist_ok=True)
@@ -685,6 +763,25 @@ def convert():
                 info_md = f.read()
         except Exception:
             info_md = ''
+    # Añadir información adicional proveniente de archivos de texto/XML del ZIP
+    if text_files or xml_files:
+        extra_sections = []
+        if text_files:
+            extra_sections.append("## Contenido de texto detectado en el ZIP")
+            for tf in text_files:
+                try:
+                    with open(tf, 'r', encoding='utf-8', errors='ignore') as rf:
+                        snippet = rf.read(4000)
+                    extra_sections.append(f"### {os.path.basename(tf)}\n\n{snippet}\n")
+                except Exception:
+                    continue
+        if xml_files:
+            extra_sections.append("## Archivos XML detectados en el ZIP")
+            for xf in xml_files:
+                base = os.path.basename(xf)
+                extra_sections.append(f"- {base}")
+        if extra_sections:
+            info_md = (info_md or '') + "\n\n" + "\n".join(extra_sections)
     html_path = os.path.join(TEMP_OUT_DIR, 'index.html')
     css_path = os.path.join(TEMP_OUT_DIR, 'styles.css')
     title = plan['title']
@@ -838,9 +935,22 @@ img { max-width: 100%; display: block; border-radius: 8px; margin: 8px 0 }
             import traceback
             traceback.print_exc()
         
-        result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images, dna=dna)
-        used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
-        provider = (result.get('provider') if isinstance(result, dict) else '') or ''
+    result = refine_and_generate_wp(TEMP_OUT_DIR, info_md, plan, wp_theme_dir, images=images, dna=dna)
+    used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
+    provider = (result.get('provider') if isinstance(result, dict) else '') or ''
+
+    # SEO básico opcional
+    if enable_seo:
+        try:
+            _enable_seo_meta(wp_theme_dir)
+        except Exception:
+            pass
+
+        # Integrar fuentes personalizadas incluidas en el ZIP (si las hay)
+        try:
+            _integrate_fonts_into_theme(wp_theme_dir, fonts)
+        except Exception:
+            pass
     except Exception:
         used_ai = False
         provider = ''
@@ -859,9 +969,32 @@ def download_theme():
     theme_dir = os.path.join(BASE_DIR, 'wp_theme')
     zip_path = os.path.join(BASE_DIR, 'wp_theme.zip')
     import zipfile
+    # Empaquetado limpio: sólo archivos necesarios para subir a wp-admin
+    exclude_dirs = {
+        'node_modules',
+        '.git',
+        '.github',
+        '.vscode',
+        'build',
+        'dist',
+        '.cache'
+    }
+    exclude_files = {
+        'package.json',
+        'package-lock.json',
+        'yarn.lock',
+        'pnpm-lock.yaml',
+        'composer.json',
+        'composer.lock',
+        '.DS_Store'
+    }
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-        for root, _, files in os.walk(theme_dir):
+        for root, dirs, files in os.walk(theme_dir):
+            # Filtrar directorios de desarrollo
+            dirs[:] = [d for d in dirs if d not in exclude_dirs]
             for f in files:
+                if f in exclude_files:
+                    continue
                 full = os.path.join(root, f)
                 arc = os.path.relpath(full, theme_dir)
                 zf.write(full, arc)
@@ -879,6 +1012,197 @@ def download_static():
                 arc = os.path.relpath(full, out_dir)
                 zf.write(full, arc)
     return send_from_directory(BASE_DIR, 'static_site.zip', as_attachment=True)
+
+@app.route('/download_content', methods=['GET'])
+def download_content():
+    """
+    Descarga el export WXR (contenido OCR/plan) generado en temp_out/content.xml
+    para importarlo en WordPress (Herramientas > Importar > WordPress).
+    """
+    wxr_path = os.path.join(TEMP_OUT_DIR, 'content.xml')
+    if not os.path.isfile(wxr_path):
+        flash('No se encontró content.xml. Vuelve a generar el contenido.')
+        return redirect(url_for('index'))
+    return send_from_directory(TEMP_OUT_DIR, 'content.xml', as_attachment=True)
+
+@app.route('/download_bundle', methods=['GET'])
+def download_bundle():
+    """
+    Descarga un ZIP que contiene:
+    - Carpeta 'html/' con todo el sitio estático generado
+    - Carpeta 'theme/' con el tema WordPress listo para subir
+    Esto permite ajustar primero el HTML y luego reutilizarlo para refinar el tema WP.
+    """
+    static_dir = TEMP_OUT_DIR
+    theme_dir = os.path.join(BASE_DIR, 'wp_theme')
+    bundle_name = 'img2html_bundle.zip'
+    bundle_path = os.path.join(BASE_DIR, bundle_name)
+    import zipfile
+
+    exclude_dirs = {
+        'node_modules',
+        '.git',
+        '.github',
+        '.vscode',
+        'build',
+        'dist',
+        '.cache'
+    }
+    exclude_files = {
+        'package.json',
+        'package-lock.json',
+        'yarn.lock',
+        'pnpm-lock.yaml',
+        'composer.json',
+        'composer.lock',
+        '.DS_Store'
+    }
+
+    with zipfile.ZipFile(bundle_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Incluir HTML estático bajo html/
+        if os.path.isdir(static_dir):
+            for root, _, files in os.walk(static_dir):
+                for f in files:
+                    full = os.path.join(root, f)
+                    rel = os.path.relpath(full, static_dir)
+                    arc = os.path.join('html', rel)
+                    zf.write(full, arc)
+
+        # Incluir tema WordPress bajo theme/
+        if os.path.isdir(theme_dir):
+            for root, dirs, files in os.walk(theme_dir):
+                # Filtrar directorios de desarrollo
+                dirs[:] = [d for d in dirs if d not in exclude_dirs]
+                for f in files:
+                    if f in exclude_files:
+                        continue
+                    full = os.path.join(root, f)
+                    rel = os.path.relpath(full, theme_dir)
+                    arc = os.path.join('theme', rel)
+                    zf.write(full, arc)
+
+    return send_from_directory(BASE_DIR, bundle_name, as_attachment=True)
+
+@app.route('/refine_theme_from_html', methods=['POST'])
+def refine_theme_from_html():
+    """
+    Segunda fase opcional:
+    - El usuario sube un ZIP con HTML/CSS ajustado (por ejemplo, el contenido de la carpeta html/ del bundle).
+    - La app reemplaza el contenido de temp_out con ese HTML.
+    - Se vuelve a generar/refinar el tema de WordPress usando ese HTML como fuente principal.
+    """
+    file = request.files.get('html_zip')
+    if not file or file.filename == '':
+        flash('Adjunta un archivo ZIP válido con el HTML refinado')
+        return redirect(url_for('index'))
+
+    import zipfile
+    import shutil
+
+    # Preparar carpeta temporal para extraer el ZIP
+    batch_id = str(uuid.uuid4())
+    html_batch_dir = os.path.join(UPLOAD_DIR, f'html_refined_{batch_id}')
+    os.makedirs(html_batch_dir, exist_ok=True)
+    zip_path = os.path.join(html_batch_dir, secure_filename(file.filename))
+    file.save(zip_path)
+
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zf:
+            zf.extractall(html_batch_dir)
+    except Exception:
+        flash('No se pudo descomprimir el ZIP de HTML/Tema refinado')
+        return redirect(url_for('index'))
+
+    # Soportar dos casos:
+    # 1) ZIP con carpeta html/ y theme/ (bundle generado por la app)
+    # 2) ZIP con un sitio estático "plano" que contenga index.html en cualquier carpeta
+    html_root_candidate = os.path.join(html_batch_dir, 'html')
+    theme_root_candidate = os.path.join(html_batch_dir, 'theme')
+
+    new_temp_dir = None
+    theme_source_dir = None
+
+    # Preferir estructura html/ + theme/ si existe
+    if os.path.isdir(html_root_candidate) and os.path.isfile(os.path.join(html_root_candidate, 'index.html')):
+        new_temp_dir = html_root_candidate
+        if os.path.isdir(theme_root_candidate):
+            theme_source_dir = theme_root_candidate
+    else:
+        # Buscar index.html en cualquier parte del ZIP
+        for root, _, files in os.walk(html_batch_dir):
+            if 'index.html' in files:
+                new_temp_dir = root
+                break
+
+    if not new_temp_dir:
+        flash('El ZIP debe contener un index.html (sitio estático refinado)')
+        return redirect(url_for('index'))
+
+    # Sustituir el contenido de TEMP_OUT por el HTML refinado
+    try:
+        if os.path.isdir(TEMP_OUT_DIR):
+            shutil.rmtree(TEMP_OUT_DIR)
+        shutil.copytree(new_temp_dir, TEMP_OUT_DIR)
+    except Exception:
+        flash('No se pudo actualizar el HTML base con el contenido refinado')
+        return redirect(url_for('index'))
+
+    # Si el ZIP incluye una carpeta theme/, usarla como base del tema antes de refinar
+    wp_theme_dir = os.path.join(BASE_DIR, 'wp_theme')
+    try:
+        if theme_source_dir and os.path.isdir(theme_source_dir):
+            if os.path.isdir(wp_theme_dir):
+                shutil.rmtree(wp_theme_dir)
+            shutil.copytree(theme_source_dir, wp_theme_dir)
+        else:
+            os.makedirs(wp_theme_dir, exist_ok=True)
+    except Exception:
+        flash('No se pudo preparar la carpeta del tema a partir del ZIP proporcionado')
+        return redirect(url_for('index'))
+
+    # Construir un plan mínimo para que el refinador pueda trabajar
+    minimal_plan = {
+        "title": "Sitio refinado",
+        "sections": [
+            {
+                "name": "refined",
+                "label": "Refinado",
+                "slug": "refinado",
+                "images": []
+            }
+        ],
+        "count": 1
+    }
+
+    # Volver a generar / refinar el tema a partir del nuevo HTML
+    result = refine_and_generate_wp(
+        TEMP_OUT_DIR,
+        info_md='',
+        plan=minimal_plan,
+        theme_dir=wp_theme_dir,
+        images=None,
+        dna=None
+    )
+    used_ai = bool(result.get('used_ai')) if isinstance(result, dict) else False
+    provider = (result.get('provider') if isinstance(result, dict) else '') or ''
+
+    # Mostrar de nuevo la pantalla de resultado
+    PROGRESS.setdefault(batch_id, {})
+    PROGRESS[batch_id]['used_ai'] = used_ai
+    PROGRESS[batch_id]['provider'] = provider
+    PROGRESS[batch_id]['ocr_provider'] = ''
+    PROGRESS[batch_id]['saved_env'] = False
+    PROGRESS[batch_id]['ready'] = True
+
+    return render_template(
+        'done.html',
+        output_dir='temp_out',
+        theme_dir='wp_theme',
+        used_ai=used_ai,
+        saved_env=False,
+        provider=provider,
+        ocr_provider=''
+    )
 
 @app.route('/install_theme', methods=['POST'])
 def install_theme():
@@ -955,3 +1279,188 @@ def _is_valid_service_account_json(obj):
         return t == 'service_account' and bool(pid and pkid and pk and email)
     except Exception:
         return False
+
+def _export_wxr(temp_out_dir: str, plan: Dict, ocr_texts: Dict):
+    """
+    Genera un archivo WXR (XML de exportación WP) básico con el contenido
+    detectado (títulos por sección y texto OCR de las imágenes).
+    """
+    try:
+        import datetime
+        now = datetime.datetime.utcnow().isoformat() + "Z"
+        items = []
+        for idx, sec in enumerate(plan.get('sections', [])):
+            title = sec.get('label') or sec.get('name') or f'Sección {idx+1}'
+            slug = sec.get('slug') or f'section-{idx+1}'
+            paragraphs = []
+            for img in sec.get('images', []):
+                txt = ocr_texts.get(img, '')
+                if txt:
+                    paragraphs.append(txt)
+            content = '<br/><br/>'.join(paragraphs) if paragraphs else ''
+            item = f"""
+  <item>
+    <title><![CDATA[{title}]]></title>
+    <link>https://example.com/{slug}</link>
+    <pubDate>{now}</pubDate>
+    <dc:creator><![CDATA[img2html]]></dc:creator>
+    <guid isPermaLink="false">img2html-{slug}</guid>
+    <description></description>
+    <content:encoded><![CDATA[{content}]]></content:encoded>
+    <excerpt:encoded><![CDATA[]]></excerpt:encoded>
+    <wp:post_name>{slug}</wp:post_name>
+    <wp:post_type>page</wp:post_type>
+    <wp:status>publish</wp:status>
+  </item>"""
+            items.append(item)
+
+        wxr = f"""<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0"
+    xmlns:excerpt="http://wordpress.org/export/1.2/excerpt/"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:wp="http://wordpress.org/export/1.2/">
+<channel>
+  <title>Img2HTML Export</title>
+  <link>https://example.com</link>
+  <description>Contenido generado desde imágenes</description>
+  <pubDate>{now}</pubDate>
+  <wp:wxr_version>1.2</wp:wxr_version>
+  {''.join(items)}
+</channel>
+</rss>"""
+        with open(os.path.join(temp_out_dir, 'content.xml'), 'w', encoding='utf-8') as f:
+            f.write(wxr)
+    except Exception:
+        pass
+
+def _integrate_fonts_into_theme(theme_dir: str, font_paths):
+    """
+    Copia fuentes personalizadas al tema y las registra en theme.json
+    usando la API de fuentes de theme.json (fontFamilies + fontFace).
+    """
+    try:
+        if not font_paths:
+            return
+        theme_json_path = os.path.join(theme_dir, 'theme.json')
+        if not os.path.isfile(theme_json_path):
+            return
+
+        import json as _json
+        import shutil as _shutil
+
+        with open(theme_json_path, 'r', encoding='utf-8') as f:
+            data = _json.load(f)
+
+        settings = data.setdefault('settings', {})
+        typo = settings.setdefault('typography', {})
+        families = typo.setdefault('fontFamilies', [])
+
+        fonts_dir = os.path.join(theme_dir, 'assets', 'fonts')
+        os.makedirs(fonts_dir, exist_ok=True)
+
+        for src in font_paths:
+            if not os.path.isfile(src):
+                continue
+            base = os.path.basename(src)
+            name_root, _ext = os.path.splitext(base)
+            if not name_root:
+                continue
+            slug = _sanitize_slug(name_root)
+
+            # Evitar duplicar familias por slug
+            if any(fam.get('slug') == slug for fam in families):
+                # Asegurar que el archivo exista en assets/fonts
+                dest_full_existing = os.path.join(fonts_dir, base)
+                if not os.path.isfile(dest_full_existing):
+                    _shutil.copy2(src, dest_full_existing)
+                continue
+
+            dest_full = os.path.join(fonts_dir, base)
+            if not os.path.isfile(dest_full):
+                _shutil.copy2(src, dest_full)
+
+            dest_rel = f"assets/fonts/{base}"
+            family_name = name_root.replace('-', ' ').replace('_', ' ').title()
+
+            families.append({
+                "fontFamily": f"\"{family_name}\", system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+                "name": family_name,
+                "slug": slug,
+                "fontFace": [
+                    {
+                        "fontFamily": family_name,
+                        "fontStyle": "normal",
+                        "fontWeight": "400",
+                        "src": [f"file:./{dest_rel}"]
+                    }
+                ]
+            })
+
+        with open(theme_json_path, 'w', encoding='utf-8') as f:
+            _json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception:
+        # No romper el flujo si algo falla con las fuentes
+        pass
+
+def _enable_seo_meta(theme_dir: str):
+    """
+    Crea un archivo PHP que inyecta meta title/description básicos,
+    Open Graph y asegura alt en imágenes si falta atributo.
+    """
+    try:
+        php_dir = os.path.join(theme_dir, 'php')
+        os.makedirs(php_dir, exist_ok=True)
+        seo_php = os.path.join(php_dir, 'seo-meta.php')
+        content = """<?php
+/**
+ * SEO básico para el tema generado.
+ * Inyecta meta description y Open Graph, y asegura alt en imágenes.
+ */
+if (!function_exists('img2html_seo_meta_tags')) {
+    function img2html_seo_meta_tags() {
+        if (is_admin()) return;
+        $title = wp_get_document_title();
+        $desc  = get_bloginfo('description');
+        $url   = home_url(add_query_arg(array(),$GLOBALS['wp']->request));
+        $img   = get_theme_file_uri('screenshot.png');
+        if (!$img) {
+            $img = get_theme_file_uri('screenshot.jpg');
+        }
+        if (!$img) {
+            $img = get_theme_file_uri('screenshot.webp');
+        }
+        echo '<meta name=\"description\" content=\"' . esc_attr($desc) . '\" />' . \"\\n\";
+        echo '<meta property=\"og:title\" content=\"' . esc_attr($title) . '\" />' . \"\\n\";
+        echo '<meta property=\"og:description\" content=\"' . esc_attr($desc) . '\" />' . \"\\n\";
+        echo '<meta property=\"og:url\" content=\"' . esc_url($url) . '\" />' . \"\\n\";
+        if ($img) {
+            echo '<meta property=\"og:image\" content=\"' . esc_url($img) . '\" />' . \"\\n\";
+        }
+        echo '<meta name=\"twitter:card\" content=\"summary_large_image\" />' . \"\\n\";
+    }
+    add_action('wp_head', 'img2html_seo_meta_tags', 5);
+}
+
+// Filtro para asegurar alt en imágenes cuando falte (fallback con el título del post o del sitio)
+if (!function_exists('img2html_filter_image_alt')) {
+    function img2html_filter_image_alt($attr, $attachment = null) {
+        if (empty($attr['alt'])) {
+            if ($attachment) {
+                $alt = trim(strip_tags(get_post_field('post_title', $attachment->ID)));
+            }
+            if (empty($alt)) {
+                $alt = get_bloginfo('name');
+            }
+            $attr['alt'] = $alt;
+        }
+        return $attr;
+    }
+    add_filter('wp_get_attachment_image_attributes', 'img2html_filter_image_alt', 10, 2);
+}
+"""
+        with open(seo_php, 'w', encoding='utf-8') as f:
+            f.write(content)
+    except Exception:
+        pass
